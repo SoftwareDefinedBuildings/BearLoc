@@ -7,7 +7,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 
-public class BOSS extends Activity implements OnClickListener {
+public class BOSSActivity extends Activity implements OnClickListener {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -32,14 +32,14 @@ public class BOSS extends Activity implements OnClickListener {
 
   @Override
   public void onClick(View v) {
-    Intent intent = null;
+    Intent intent;
     switch (v.getId()) {
     case R.id.loc_button:
-      intent = new Intent(this, Loc.class);
+      intent = new Intent(this, LocActivity.class);
       startActivity(intent);
       break;
     case R.id.about_button:
-      intent = new Intent(this, About.class);
+      intent = new Intent(this, AboutActivity.class);
       startActivity(intent);
       break;
     case R.id.exit_button:

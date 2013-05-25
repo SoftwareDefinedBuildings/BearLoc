@@ -32,6 +32,13 @@
             android:name=".LocActivity"
             android:label="@string/loc_title" >
         </activity>
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/settings_title" >
+            <intent-filter>
+                <category android:name="android.intent.category.PREFERENCE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

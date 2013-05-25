@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <Preference
+        android:summary="@string/pref_server_category_summ"
+        android:title="@string/pref_server_category" >
+        <intent
+            android:action="com.example.boss.PREF_SERVER"
+            android:targetClass="com.example.boss.SettingsActivity"
+            android:targetPackage="com.example.boss" />
+    </Preference>
+
+</PreferenceScreen>

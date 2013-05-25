@@ -8,11 +8,10 @@ import android.widget.TextView;
 public class AboutActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-     super.onCreate(savedInstanceState);
-     setContentView(R.layout.about);
-     
-     TextView aboutView = (TextView) findViewById(R.id.about_view);
-     Linkify.addLinks(aboutView, Linkify.ALL);
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.about);
+
+    TextView aboutView = (TextView) findViewById(R.id.about_view);
+    Linkify.addLinks(aboutView, Linkify.ALL);
   }
 }
-

@@ -4,6 +4,7 @@
     <string name="app_name">BOSS</string>
     <string name="menu_settings">Settings</string>
     <string name="main_title">BOSS</string>
+    <string name="settings_title">Settings</string>
     <string name="loc_label">Localization</string>
     <string name="about_label">About</string>
     <string name="exit_label">Exit</string>
@@ -17,4 +18,10 @@ This paper generated considerable discussion in the TPC meeting, as is often the
 On balance, the novelty of the problem domain, and the desire to see more work in this area won out: the paper it brings to our attention a problem domain that seems ripe for further work. The practical evaluation, using a 4 year-old 140,000 sq. ft. building, coupled with the architectural (pun intended!) description of the system and its features seems a good fit to this community. Finally, the authors also publicly release the code for several components of BOSS: we hope that this combination of released tools and a new problem domain will spark future work in this interesting and, in many ways, under-considered area.\n
 For more information, please visit <a href="http://sdb.cs.berkeley.edu/">http://sdb.cs.berkeley.edu/</a>,\n or contact <a href="mailto:kaifei@berkeley.edu">kaifei@Berkeley.EDU</a>\n\n</string>
 
+    <string name="pref_server_category_summ">Server settings</string>
+    <string name="pref_server_category">Server</string>
+    <string name="pref_server_addr_summ">Domain name or IP address of server</string>
+    <string name="pref_server_addr">Server Address</string>
+    <string name="pref_server_port_summ">Port of BOSS service on server</string>
+    <string name="pref_server_port">Server Port</string>
 </resources>

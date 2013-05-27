@@ -9,14 +9,13 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.Spinner;
 
-public class LocActivity extends Activity implements
-    OnItemSelectedListener, LocClientListener {
+public class LocActivity extends Activity implements OnItemSelectedListener,
+    LocClientListener {
 
   private Spinner semSpinner;
-  private ImageView mapImageView;
+  private MapImageView mapImageView;
 
   private String curSemantic;
   private BOSSLocClient locClient;
@@ -33,15 +32,9 @@ public class LocActivity extends Activity implements
     setListeners();
   }
 
-  @Override
-  protected void onResume() {
-    super.onResume();
-    // TODO
-  }
-
   private void findViews() {
     semSpinner = (Spinner) findViewById(R.id.sem_spinner);
-    mapImageView = (ImageView) findViewById(R.id.map_view);
+    mapImageView = (MapImageView) findViewById(R.id.map_view);
   }
 
   private void setAdapters() {

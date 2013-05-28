@@ -70,7 +70,7 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
 
   @Override
   public void onMapReturned(Bitmap bitmap) {
-    mapImageView.setImageBitmap(bitmap);
+    mapImageView.setMap(bitmap);
   }
 
   @Override

@@ -1,29 +1,34 @@
 package com.example.boss;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
-import android.graphics.PointF;
-import android.support.v4.view.MotionEventCompat;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.widget.ImageView;
 
 public class MapImageView extends ImageView {
 
-  // These matrices will be used to move and zoom image
-  private Matrix matrix = new Matrix();
-  private Matrix savedMatrix = new Matrix();
+  private Bitmap map;
+  private Rect mapDestRect;
+  private Paint mapPaint;
+  private boolean newMap;
 
-  // We can be in one of these 3 states
-  private static final int NONE = 0;
-  private static final int DRAG = 1;
-  private static final int ZOOM = 2;
-  private int mode = NONE;
+  private float posX;
+  private float posY;
 
-  // Remember some things for zooming
-  private PointF start = new PointF();
-  private PointF mid = new PointF();
-  private float oldDist = 1f;
+  private float lastTouchX;
+  private float lastTouchY;
+
+  private float scaleFactor = 1.0f;
+  private float scaleMidX;
+  private float scaleMidY;
+
+  private MyGestureDetector gestureDetector;
 
   public MapImageView(Context context) {
     this(context, null, 0);
@@ -35,62 +40,136 @@ public class MapImageView extends ImageView {
 
   public MapImageView(Context context, AttributeSet attrs, int defStyle) {
     super(context, attrs, defStyle);
+
+    setFocusable(true);
+
+    mapDestRect = new Rect();
+    mapPaint = new Paint();
+    newMap = false;
+
+    mapPaint.setFilterBitmap(true);
+
+    gestureDetector = new MyGestureDetector(context, new GestureListener());
   }
 
   @Override
   public boolean onTouchEvent(MotionEvent event) {
-    final int action = MotionEventCompat.getActionMasked(event);
+    boolean handled = gestureDetector.onTouchEvent(event);
+    return handled;
+  }
 
-    switch (action) {
-    case MotionEvent.ACTION_DOWN:
-      savedMatrix.set(matrix);
-      start.set(event.getX(), event.getY());
-      mode = DRAG;
-      break;
-    case MotionEvent.ACTION_POINTER_DOWN:
-      oldDist = spacing(event);
-      if (oldDist > 10f) {
-        savedMatrix.set(matrix);
-        midPoint(mid, event);
-        mode = ZOOM;
-      }
-      break;
-    case MotionEvent.ACTION_UP:
-    case MotionEvent.ACTION_POINTER_UP:
-      mode = NONE;
-      break;
-    case MotionEvent.ACTION_MOVE:
-      if (mode == DRAG) {
-        matrix.set(savedMatrix);
-        matrix.postTranslate(event.getX() - start.x, event.getY() - start.y);
-      } else if (mode == ZOOM) {
-        float newDist = spacing(event);
-        if (newDist > 10f) {
-          matrix.set(savedMatrix);
-          float scale = newDist / oldDist;
-          matrix.postScale(scale, scale, mid.x, mid.y);
-        }
-      }
-      break;
-    default:
-      return super.onTouchEvent(event);
+  @Override
+  protected void onDraw(Canvas canvas) {
+    super.onDraw(canvas);
+
+    canvas.save();
+    canvas.scale(scaleFactor, scaleFactor, scaleMidX, scaleMidY);
+    canvas.translate(posX, posY);
+    if (newMap == true) {
+      int w = getWidth();
+      int h = w * map.getHeight() / map.getWidth();
+      mapDestRect.set(0, 0, w, h);
+      canvas.drawBitmap(map, null, mapDestRect, mapPaint);
+    }
+    canvas.restore();
+  }
+
+  public void setMap(Bitmap map) {
+    this.map = map;
+    newMap = true;
+    
+    invalidate();
+  }
+
+  private class GestureListener implements
+      MyGestureDetector.MyOnGestureListener {
+
+    @Override
+    public boolean onDoubleTap(MotionEvent e) {
+      // TODO Auto-generated method stub
+      return false;
     }
 
-    setImageMatrix(matrix);
-    return true; // indicate event was handled
-  }
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent e) {
+      // TODO Auto-generated method stub
+      return false;
+    }
 
-  /** Determine the space between the first two fingers */
-  private float spacing(MotionEvent event) {
-    float x = event.getX(0) - event.getX(1);
-    float y = event.getY(0) - event.getY(1);
-    return (float) Math.sqrt(x * x + y * y);
-  }
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent e) {
+      // TODO Auto-generated method stub
+      return false;
+    }
 
-  /** Calculate the mid point of the first two fingers */
-  private void midPoint(PointF point, MotionEvent event) {
-    float x = event.getX(0) + event.getX(1);
-    float y = event.getY(0) + event.getY(1);
-    point.set(x / 2, y / 2);
+    @Override
+    public boolean onDown(MotionEvent e) {
+      lastTouchX = e.getX();
+      lastTouchY = e.getY();
+      return true;
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+        float velocityY) {
+      // TODO Auto-generated method stub
+      return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+      // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+        float distanceY) {
+      final float x2 = e2.getX();
+      final float y2 = e2.getY();
+
+      posX += x2 - lastTouchX;
+      posY += y2 - lastTouchY;
+
+      lastTouchX = x2;
+      lastTouchY = y2;
+
+      invalidate();
+      return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+      // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+      // TODO Auto-generated method stub
+      return false;
+    }
+
+    @Override
+    public boolean onScale(ScaleGestureDetector detector) {
+      scaleFactor *= detector.getScaleFactor();
+
+      invalidate();
+      return true;
+    }
+
+    @Override
+    public boolean onScaleBegin(ScaleGestureDetector detector) {
+      scaleMidX = detector.getFocusX();
+      scaleMidY = detector.getFocusY();
+      return true;
+    }
+
+    @Override
+    public void onScaleEnd(ScaleGestureDetector detector) {
+      // TODO Auto-generated method stub
+
+    }
+
   }
 }

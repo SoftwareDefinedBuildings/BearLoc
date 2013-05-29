@@ -3,11 +3,13 @@
 
     <EditTextPreference
         android:defaultValue="kaifei.info"
+        android:inputType="textUri"
         android:key="pref_server_addr"
         android:summary="@string/pref_server_addr_summ"
         android:title="@string/pref_server_addr" />
     <EditTextPreference
         android:defaultValue="10080"
+        android:inputType="numberDecimal"
         android:key="pref_server_port"
         android:summary="@string/pref_server_port_summ"
         android:title="@string/pref_server_port" />

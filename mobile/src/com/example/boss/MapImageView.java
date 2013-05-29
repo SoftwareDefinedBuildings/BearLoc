@@ -3,7 +3,6 @@ package com.example.boss;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
@@ -16,7 +15,6 @@ public class MapImageView extends ImageView {
   private Bitmap map;
   private Rect mapDestRect;
   private Paint mapPaint;
-  private boolean newMap;
 
   private float posX;
   private float posY;
@@ -45,8 +43,6 @@ public class MapImageView extends ImageView {
 
     mapDestRect = new Rect();
     mapPaint = new Paint();
-    newMap = false;
-
     mapPaint.setFilterBitmap(true);
 
     gestureDetector = new MyGestureDetector(context, new GestureListener());
@@ -64,8 +60,8 @@ public class MapImageView extends ImageView {
 
     canvas.save();
     canvas.scale(scaleFactor, scaleFactor, scaleMidX, scaleMidY);
-    canvas.translate(posX, posY);
-    if (newMap == true) {
+    canvas.translate(posX / scaleFactor, posY / scaleFactor);
+    if (map != null) {
       int w = getWidth();
       int h = w * map.getHeight() / map.getWidth();
       mapDestRect.set(0, 0, w, h);
@@ -76,8 +72,7 @@ public class MapImageView extends ImageView {
 
   public void setMap(Bitmap map) {
     this.map = map;
-    newMap = true;
-    
+
     invalidate();
   }
 

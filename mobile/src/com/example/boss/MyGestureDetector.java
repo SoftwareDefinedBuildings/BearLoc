@@ -71,7 +71,12 @@ public class MyGestureDetector {
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
         float distanceY) {
-      return listener.onScroll(e1, e2, distanceX, distanceY);
+      // Ensure the entire scroll was done by the same finger
+      if (e1.getPointerId(0) == e2.getPointerId(0)) {
+        return listener.onScroll(e1, e2, distanceX, distanceY);
+      } else {
+        return true;
+      }
     }
 
     @Override

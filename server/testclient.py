@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 # encoding: utf-8
-"""
-testclient.py
-
-Test Client.
-
-Created by Kaifei Chen on 2013-03-12.
-Copyright (c) 2013 UC Berkeley. All rights reserved.
-"""
-
 
 import httplib
 import json

@@ -118,4 +118,5 @@ local.properties
 
 # Twisted Log Files
 *.log
+*.log.*
 *.pid

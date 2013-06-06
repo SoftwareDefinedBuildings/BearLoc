@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 # encoding: utf-8
-"""
-interface.py
-
-Interface of BOSS service.
-
-Created by Kaifei Chen on 2013-04-08.
-Copyright (c) 2013 UC Berkeley. All rights reserved.
-"""
-
 
 from zope.interface import Interface
 
@@ -25,4 +16,16 @@ class IBOSSService(Interface):
   def localize(request):
     """
     Return a deferred returning a tuple.
+    """
+  
+  
+  def map(request):
+    """
+    Return a deferred returning a map.
+    """
+
+
+  def control(request):
+    """
+    Return a deferred returning a control status.
     """

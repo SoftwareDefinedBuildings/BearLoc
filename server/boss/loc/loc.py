@@ -1,37 +1,26 @@
 #!/usr/bin/env python
 # encoding: utf-8
-"""
-loc.py
 
-localization.
-
-Created by Kaifei Chen on 2013-02-23.
-Copyright (c) 2013 UC Berkeley. All rights reserved.
-"""
-
-
-from twisted.application import service
-
-from boss.loc import wifiloc
+from twisted.internet import defer
 
 
 class Loc(object):
   """Loc class"""
   
-  def __init__(self, db, content = ['wifi']):
+  def __init__(self, db):
     self._db = db
-    self._content = content
-    
-    if 'wifi' in self._content:
-      self._wifiloc = wifiloc.WifiLoc(self._db, dbupdate_interval = 3600)
   
   
   def localize(self, request):
     """Execute localization service, which fuses results of multiple 
     localization services.
   
-    Return tuple (building id, (x, y, z), confidence)"""
+    Return tuple 
+    ((country, state, city, district, street, building, 
+    floor, ((semantic, zone), ...)), confidence)"""
     # TODO use DeferredList after adding new loc service
-    wifiloc_request = request['data']['wifi']
-    d = self._wifiloc.localize(wifiloc_request)
-    return d
+    hard_loc = (('US', 'CA', 'Berkeley', 'University of California Berkeley', 
+    'Hearst Ave', 'Sutardja Dai Hall', '4th Floor', 
+    (('Room', '410'), ('HVAC', '1'), ('Light', '2'))), 0)
+    
+    return defer.succeed(hard_loc)

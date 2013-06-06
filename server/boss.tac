@@ -1,15 +1,3 @@
-"""
-run.tac
-
-Twisted Application Configuration file of BOSS Server.
-
-# Currently only run localization service. 2013-02-23. Kaifei
-
-Created by Kaifei Chen on 2013-02-23.
-Copyright (c) 2013 UC Berkeley. All rights reserved.
-"""
-
-
 from twisted.application import internet, service
 from twisted.web import resource as twisted_resource, server
 

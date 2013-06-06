@@ -3,9 +3,12 @@ package com.example.boss;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.ImageView;
@@ -13,18 +16,17 @@ import android.widget.ImageView;
 public class MapImageView extends ImageView {
 
   private Bitmap map;
-  private Rect mapDestRect;
+  private RectF mapDestRect;
   private Paint mapPaint;
 
-  private float posX;
-  private float posY;
+  // private float posX;
+  // private float posY;
+  //
+  // private float scaleFactor;
+  // private float scalePivotX;
+  // private float scalePivotY;
 
-  private float lastTouchX;
-  private float lastTouchY;
-
-  private float scaleFactor = 1.0f;
-  private float scaleMidX;
-  private float scaleMidY;
+  private Matrix matrix;
 
   private MyGestureDetector gestureDetector;
 
@@ -41,9 +43,16 @@ public class MapImageView extends ImageView {
 
     setFocusable(true);
 
-    mapDestRect = new Rect();
+    mapDestRect = new RectF();
     mapPaint = new Paint();
     mapPaint.setFilterBitmap(true);
+
+    // posX = 0;
+    // posY = 0;
+    // scaleFactor = 1;
+    // scalePivotX = 0;
+    // scalePivotY = 0;
+    matrix = new Matrix();  // identity matrix 
 
     gestureDetector = new MyGestureDetector(context, new GestureListener());
   }
@@ -56,14 +65,17 @@ public class MapImageView extends ImageView {
 
   @Override
   protected void onDraw(Canvas canvas) {
+    // Log.d("pos", posX + "," + posY + "," + scaleFactor + "," + scalePivotX
+    // + "," + scalePivotY);
     super.onDraw(canvas);
 
     canvas.save();
-    canvas.scale(scaleFactor, scaleFactor, scaleMidX, scaleMidY);
-    canvas.translate(posX / scaleFactor, posY / scaleFactor);
+    //canvas.translate(0, 0);
+    // canvas.scale(scaleFactor, scaleFactor, scalePivotX, scalePivotY);
+    canvas.setMatrix(matrix);
     if (map != null) {
-      int w = getWidth();
-      int h = w * map.getHeight() / map.getWidth();
+      final float w = getWidth();
+      final float h = w * map.getHeight() / map.getWidth();
       mapDestRect.set(0, 0, w, h);
       canvas.drawBitmap(map, null, mapDestRect, mapPaint);
     }
@@ -99,8 +111,6 @@ public class MapImageView extends ImageView {
 
     @Override
     public boolean onDown(MotionEvent e) {
-      lastTouchX = e.getX();
-      lastTouchY = e.getY();
       return true;
     }
 
@@ -120,17 +130,8 @@ public class MapImageView extends ImageView {
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
         float distanceY) {
-      final float x2 = e2.getX();
-      final float y2 = e2.getY();
-
-      posX += x2 - lastTouchX;
-      posY += y2 - lastTouchY;
-
-      lastTouchX = x2;
-      lastTouchY = y2;
-
-      invalidate();
-      return true;
+      // TODO Auto-generated method stub
+      return false;
     }
 
     @Override
@@ -147,17 +148,14 @@ public class MapImageView extends ImageView {
 
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
-      scaleFactor *= detector.getScaleFactor();
-
-      invalidate();
-      return true;
+      // TODO Auto-generated method stub
+      return false;
     }
 
     @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
-      scaleMidX = detector.getFocusX();
-      scaleMidY = detector.getFocusY();
-      return true;
+      // TODO Auto-generated method stub
+      return false;
     }
 
     @Override
@@ -166,5 +164,23 @@ public class MapImageView extends ImageView {
 
     }
 
+    @Override
+    public boolean onScroll(float tx, float ty) {
+      // posX += tx;
+      // posY += ty;
+      matrix.postTranslate(tx, ty);
+      invalidate();
+      return true;
+    }
+
+    @Override
+    public boolean onScale(float scale, float px, float py) {
+      // scaleFactor *= scale;
+      // scalePivotX = px;
+      // scalePivotY = py;
+      matrix.postScale(scale, scale, px, py);
+      invalidate();
+      return true;
+    }
   }
 }

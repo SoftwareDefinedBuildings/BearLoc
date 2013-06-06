@@ -46,7 +46,7 @@ public class BOSSLocClient implements LocClient {
     }
     mapDownloadTask = new MapDownloadTask();
     mapDownloadTask
-        .execute("http://kaifei.info/wp-content/uploads/2012/09/Figure.jpg");
+        .execute("http://wpcontent.answers.com/wikipedia/commons/0/02/US_Census_regional_map.gif");
     return true;
   }
 

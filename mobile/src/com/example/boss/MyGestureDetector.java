@@ -1,108 +1,91 @@
 package com.example.boss;
 
 import android.content.Context;
-import android.support.v4.view.GestureDetectorCompat;
+import android.graphics.PointF;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.GestureDetector;
 
+// Android inherent GestureDetectorCompat and ScaleGestureDetector have some glitches
 public class MyGestureDetector {
-  private LocalOnGestureListener localListener;
   private MyOnGestureListener listener;
 
-  private GestureDetectorCompat gestureDetector;
-  private ScaleGestureDetector scaleGestureDetector;
+  // We can be in one of these 3 states
+  private static final int NONE = 0;
+  private static final int MOVE = 1;
+  private static final int SCALE = 2;
+  private int mode = NONE;
+
+  // Remember some things for scaling
+  private PointF lastPoint = new PointF();
+  private PointF midPoint = new PointF();
+  private float oldDist = 1f;
 
   public static interface MyOnGestureListener extends
       GestureDetector.OnDoubleTapListener, GestureDetector.OnGestureListener,
       ScaleGestureDetector.OnScaleGestureListener {
+    public abstract boolean onScroll(float tx, float ty); // translate X and Y
+
+    public abstract boolean onScale(float scale, float px, float py);
   }
 
   public MyGestureDetector(Context context, MyOnGestureListener listener) {
     this.listener = listener;
-
-    localListener = new LocalOnGestureListener();
-
-    gestureDetector = new GestureDetectorCompat(context, localListener);
-    scaleGestureDetector = new ScaleGestureDetector(context, localListener);
   }
 
   public boolean onTouchEvent(MotionEvent event) {
-    boolean handled;
-    handled = gestureDetector.onTouchEvent(event);
-    handled = scaleGestureDetector.onTouchEvent(event) || handled;
-
-    return handled;
+    final int action = event.getAction();
+    switch (action & MotionEvent.ACTION_MASK) {
+    case MotionEvent.ACTION_DOWN:
+      Log.d("touch", "Down : " + "MOVE (" + event.getX() + "," + event.getY()
+          + ")");
+      lastPoint.set(event.getX(), event.getY());
+      mode = MOVE;
+      return listener.onDown(event);
+    case MotionEvent.ACTION_POINTER_DOWN:
+      Log.d("touch", "Pointer Down : " + "SCALE");
+      oldDist = spacing(event);
+      midPoint(midPoint, event);
+      mode = SCALE;
+      return true;
+    case MotionEvent.ACTION_UP:
+    case MotionEvent.ACTION_POINTER_UP:
+    case MotionEvent.ACTION_CANCEL:
+      Log.d("touch", "Cancel : " + "NONE");
+      mode = NONE;
+      return true;
+    case MotionEvent.ACTION_MOVE:
+      if (mode == MOVE) {
+        Log.d("touch", "Move : " + "MOVE");
+        final float translateX = event.getX() - lastPoint.x;
+        final float translateY = event.getY() - lastPoint.y;
+        lastPoint.set(event.getX(), event.getY());
+        return listener.onScroll(translateX, translateY);
+      } else if (mode == SCALE) {
+        Log.d("touch", "Move : " + "SCALE");
+        final float newDist = spacing(event);
+        final float scale = newDist / oldDist;
+        oldDist = newDist;
+        return listener.onScale(scale, midPoint.x, midPoint.y);
+      }
+      return true;
+    default:
+      return false;
+    }
   }
 
-  public class LocalOnGestureListener implements MyOnGestureListener {
+  /** Determine the space between the first two fingers */
+  private float spacing(MotionEvent event) {
+    float x = event.getX(0) - event.getX(1);
+    float y = event.getY(0) - event.getY(1);
+    return (float) Math.sqrt(x * x + y * y);
+  }
 
-    @Override
-    public boolean onDoubleTap(MotionEvent e) {
-      return listener.onDoubleTap(e);
-    }
-
-    @Override
-    public boolean onDoubleTapEvent(MotionEvent e) {
-      return listener.onDoubleTapEvent(e);
-    }
-
-    @Override
-    public boolean onSingleTapConfirmed(MotionEvent e) {
-      return listener.onSingleTapConfirmed(e);
-    }
-
-    @Override
-    public boolean onDown(MotionEvent e) {
-      return listener.onDown(e);
-    }
-
-    @Override
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
-        float velocityY) {
-      return listener.onFling(e1, e2, velocityX, velocityY);
-    }
-
-    @Override
-    public void onLongPress(MotionEvent e) {
-      listener.onLongPress(e);
-    }
-
-    @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
-        float distanceY) {
-      // Ensure the entire scroll was done by the same finger
-      if (e1.getPointerId(0) == e2.getPointerId(0)) {
-        return listener.onScroll(e1, e2, distanceX, distanceY);
-      } else {
-        return true;
-      }
-    }
-
-    @Override
-    public void onShowPress(MotionEvent e) {
-      listener.onShowPress(e);
-    }
-
-    @Override
-    public boolean onSingleTapUp(MotionEvent e) {
-      return listener.onSingleTapUp(e);
-    }
-
-    @Override
-    public boolean onScale(ScaleGestureDetector detector) {
-      return listener.onScale(detector);
-    }
-
-    @Override
-    public boolean onScaleBegin(ScaleGestureDetector detector) {
-      return listener.onScaleBegin(detector);
-    }
-
-    @Override
-    public void onScaleEnd(ScaleGestureDetector detector) {
-      listener.onScaleEnd(detector);
-    }
-
+  /** Calculate the mid point of the first two fingers */
+  private void midPoint(PointF point, MotionEvent event) {
+    float x = event.getX(0) + event.getX(1);
+    float y = event.getY(0) + event.getY(1);
+    point.set(x / 2, y / 2);
   }
 }

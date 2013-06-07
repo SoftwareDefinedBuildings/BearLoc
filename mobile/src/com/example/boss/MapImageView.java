@@ -5,10 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.ImageView;
@@ -18,14 +16,7 @@ public class MapImageView extends ImageView {
   private Bitmap map;
   private RectF mapDestRect;
   private Paint mapPaint;
-
-  // private float posX;
-  // private float posY;
-  //
-  // private float scaleFactor;
-  // private float scalePivotX;
-  // private float scalePivotY;
-
+  
   private Matrix matrix;
 
   private MyGestureDetector gestureDetector;
@@ -47,13 +38,6 @@ public class MapImageView extends ImageView {
     mapPaint = new Paint();
     mapPaint.setFilterBitmap(true);
 
-    // posX = 0;
-    // posY = 0;
-    // scaleFactor = 1;
-    // scalePivotX = 0;
-    // scalePivotY = 0;
-    matrix = new Matrix();  // identity matrix 
-
     gestureDetector = new MyGestureDetector(context, new GestureListener());
   }
 
@@ -63,16 +47,19 @@ public class MapImageView extends ImageView {
     return handled;
   }
 
+  // official documentation doesn't mention the deprecation
+  @SuppressWarnings("deprecation")
   @Override
   protected void onDraw(Canvas canvas) {
-    // Log.d("pos", posX + "," + posY + "," + scaleFactor + "," + scalePivotX
-    // + "," + scalePivotY);
     super.onDraw(canvas);
 
     canvas.save();
-    //canvas.translate(0, 0);
-    // canvas.scale(scaleFactor, scaleFactor, scalePivotX, scalePivotY);
-    canvas.setMatrix(matrix);
+    if (matrix == null) {
+      matrix = new Matrix(canvas.getMatrix());
+    } else {
+      canvas.setMatrix(matrix);
+    }
+
     if (map != null) {
       final float w = getWidth();
       final float h = w * map.getHeight() / map.getWidth();
@@ -166,8 +153,6 @@ public class MapImageView extends ImageView {
 
     @Override
     public boolean onScroll(float tx, float ty) {
-      // posX += tx;
-      // posY += ty;
       matrix.postTranslate(tx, ty);
       invalidate();
       return true;
@@ -175,9 +160,6 @@ public class MapImageView extends ImageView {
 
     @Override
     public boolean onScale(float scale, float px, float py) {
-      // scaleFactor *= scale;
-      // scalePivotX = px;
-      // scalePivotY = py;
       matrix.postScale(scale, scale, px, py);
       invalidate();
       return true;

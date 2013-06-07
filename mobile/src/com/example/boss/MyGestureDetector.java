@@ -2,7 +2,6 @@ package com.example.boss;
 
 import android.content.Context;
 import android.graphics.PointF;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.GestureDetector;
@@ -38,13 +37,10 @@ public class MyGestureDetector {
     final int action = event.getAction();
     switch (action & MotionEvent.ACTION_MASK) {
     case MotionEvent.ACTION_DOWN:
-      Log.d("touch", "Down : " + "MOVE (" + event.getX() + "," + event.getY()
-          + ")");
       lastPoint.set(event.getX(), event.getY());
       mode = MOVE;
       return listener.onDown(event);
     case MotionEvent.ACTION_POINTER_DOWN:
-      Log.d("touch", "Pointer Down : " + "SCALE");
       oldDist = spacing(event);
       midPoint(midPoint, event);
       mode = SCALE;
@@ -52,18 +48,15 @@ public class MyGestureDetector {
     case MotionEvent.ACTION_UP:
     case MotionEvent.ACTION_POINTER_UP:
     case MotionEvent.ACTION_CANCEL:
-      Log.d("touch", "Cancel : " + "NONE");
       mode = NONE;
       return true;
     case MotionEvent.ACTION_MOVE:
       if (mode == MOVE) {
-        Log.d("touch", "Move : " + "MOVE");
         final float translateX = event.getX() - lastPoint.x;
         final float translateY = event.getY() - lastPoint.y;
         lastPoint.set(event.getX(), event.getY());
         return listener.onScroll(translateX, translateY);
       } else if (mode == SCALE) {
-        Log.d("touch", "Move : " + "SCALE");
         final float newDist = spacing(event);
         final float scale = newDist / oldDist;
         oldDist = newDist;

@@ -9,7 +9,7 @@ from zope.interface import implements
 
 from boss.interface import IBOSSService
 from boss.loc import loc
-from boss.map import map
+from boss.metadata import metadata
 from boss.control import control
 
 
@@ -18,15 +18,14 @@ class BOSSService(service.Service):
   
   implements(IBOSSService)
   
-  def __init__(self, dbname = "boss.db", content = ['localize', 'map', 'control']):
-    self._db = adbapi.ConnectionPool('sqlite3', database = dbname, 
-                                     check_same_thread=False)
+  def __init__(self, dbname = "boss.db", content = ['localize', 'metadata', 'control']):
+    self._db = adbapi.ConnectionPool('sqlite3', database = dbname, check_same_thread=False)
     self._content = content
     
     if 'localize' in self._content:
       self._loc = loc.Loc(self._db)
-    if 'map' in self._content:
-      self._map = map.Map(self._db)
+    if 'metadata' in self._content:
+      self._metadata = metadata.Metadata(self._db)
     if 'control' in self._content:
       self._control = control.Control(self._db)
 
@@ -43,12 +42,12 @@ class BOSSService(service.Service):
       return defer.fail(NoLocalizerError())
   
   
-  def map(self, request):
-    if 'map' in self._content:
-      d = self._map.map(request)
+  def metadata(self, request):
+    if 'metadata' in self._content:
+      d = self._metadata.metadata(request)
       return d
     else:
-      return defer.fail(NoMapError())
+      return defer.fail(NoMetadataError())
 
 
   def control(self, request):
@@ -63,7 +62,7 @@ class NoLocalizerError(Exception):
   pass
 
 
-class NoMapError(Exception):
+class NoMetadataError(Exception):
   pass
 
 

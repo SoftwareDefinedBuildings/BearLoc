@@ -20,7 +20,7 @@ class ControlResource(resource.Resource):
 
 
   def getChild(self, path, request):
-    if name == '':
+    if path == '':
       return self
     else:
       return resource.Resource.getChild(self, path, request)
@@ -47,14 +47,14 @@ class ControlResource(resource.Resource):
     return server.NOT_DONE_YET
 
 
-  def _succeed(self, map):
+  def _succeed(self, map, request):
     request.setResponseCode(httplib.OK)
     request.write(map)
     request.finish()
     log.msg(request.getHost().host + " map returned")
 
 
-  def _fail(self, err):
+  def _fail(self, err, request):
     if err.check(defer.CancelledError):
       log.msg(request.getHost().host + " control canceled")
     elif err.check(boss_service.NoControlError):

@@ -20,7 +20,7 @@ class Loc(object):
     floor, ((semantic, zone), ...)), confidence)"""
     # TODO use DeferredList after adding new loc service
     hard_loc = (('US', 'CA', 'Berkeley', 'University of California Berkeley', 
-    'Hearst Ave', 'Sutardja Dai Hall', '4th Floor', 
+    'Hearst Ave', 'Sutardja Dai Hall', 'Floor 4', 
     (('Room', '410'), ('HVAC', '1'), ('Light', '2'))), 0)
     
     return defer.succeed(hard_loc)

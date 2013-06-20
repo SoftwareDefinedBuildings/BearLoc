@@ -1,0 +1,7 @@
+{
+  "countries": {
+    "US": "./US/metadata.json"
+  },
+  "name": "",
+  "dir": "/"
+}

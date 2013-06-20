@@ -20,7 +20,7 @@ class LocResource(resource.Resource):
   
   
   def getChild(self, path, request):
-    if name == '':
+    if path == '':
       return self
     else:
       return resource.Resource.getChild(self, path, request)
@@ -39,7 +39,7 @@ class LocResource(resource.Resource):
     content = json.load(request.content)
     d = self._localize(content)
     d.addCallback(self._succeed, request)
-    d.addErrback(self._fail)
+    d.addErrback(self._fail, request)
     
     # cancel localize deferred if the connection is lost before it fires
     request.notifyFinish().addErrback(self._cancel, d, request)
@@ -55,7 +55,7 @@ class LocResource(resource.Resource):
             + " with confidence " + str(confidence))
 
 
-  def _fail(self, err):
+  def _fail(self, err, request):
     if err.check(defer.CancelledError):
       log.msg(request.getHost().host + " localization canceled")
     elif err.check(boss_service.NoLocalizerError):

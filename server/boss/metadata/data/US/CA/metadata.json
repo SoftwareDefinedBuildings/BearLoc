@@ -1,0 +1,7 @@
+{
+  "cities": {
+    "Berkeley": "./Berkeley/metadata.json"
+  },
+  "name": "CA",
+  "dir": "/US/CA/"
+}

@@ -1,0 +1,9 @@
+{
+  "floors": {
+    "Floor 4": "./Floor 4/metadata.json",
+    "Floor 6": "./Floor 6/metadata.json",
+    "Floor 7": "./Floor 7/metadata.json"
+  },
+  "name": "Sutardja Dai Hall",
+  "dir": "/US/CA/Berkeley/University of California Berkeley/Hearst Ave/Sutardja Dai Hall/"
+}

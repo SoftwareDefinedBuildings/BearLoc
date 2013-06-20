@@ -19,9 +19,9 @@ class IBOSSService(Interface):
     """
   
   
-  def map(request):
+  def metadata(request):
     """
-    Return a deferred returning a map.
+    Return a deferred returning a metadata.
     """
 
 

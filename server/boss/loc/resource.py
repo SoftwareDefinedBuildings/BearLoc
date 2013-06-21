@@ -47,12 +47,12 @@ class LocResource(resource.Resource):
     return server.NOT_DONE_YET
   
   
-  def _succeed(self, (loc, confidence), request):
+  def _succeed(self, locinfo, request):
     request.setResponseCode(httplib.OK)
-    request.write(json.dumps((loc, confidence)))
+    request.write(json.dumps(locinfo))
     request.finish()
-    log.msg(request.getHost().host + " is localizaed as " + str(loc) 
-            + " with confidence " + str(confidence))
+    log.msg(request.getHost().host + " is localizaed as " + locinfo['location'] 
+            + " with confidence " + locinfo['confidence'])
 
 
   def _fail(self, err, request):

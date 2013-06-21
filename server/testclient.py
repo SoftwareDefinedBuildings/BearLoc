@@ -10,7 +10,7 @@ def _test():
   HOST = '127.0.0.1'
   PORT = 10080
   LOC_SERVICE = '/localize'
-  MAP_SERVICE = '/metadata'
+  METADATA_SERVICE = '/metadata'
   #URL = 'http://' + HOST + ':' + str(PORT) + LOC_SERVICE
   
   ts = '1354058706884971435'
@@ -20,13 +20,15 @@ def _test():
   
   conn = httplib.HTTPConnection(HOST, PORT)
   conn.request('POST', LOC_SERVICE, jsondata)
-  (loc, confidence) = json.loads(conn.getresponse().read())
+  locinfo = json.loads(conn.getresponse().read())
+  loc = locinfo['location']
+  confidence = locinfo['confidence']
   
-  print loc
+  print loc, confidence
   
-  data = {'type':'map', 'location':loc}
+  data = {'type':'metadata', 'location':loc}
   jsondata = json.dumps(data)
-  conn.request('POST', MAP_SERVICE, jsondata)
+  conn.request('POST', METADATA_SERVICE, jsondata)
   
   map = json.loads(conn.getresponse().read())
   

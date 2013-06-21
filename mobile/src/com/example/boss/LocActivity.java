@@ -1,30 +1,51 @@
 package com.example.boss;
 
+import java.util.TimerTask;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.example.boss.BOSSLocClient.LocClientListener;
+import com.example.boss.Sensor.SensorDataPack;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ProgressDialog;
+//import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
-import android.widget.Toast;
+
+//import android.widget.Toast;
 
 public class LocActivity extends Activity implements OnItemSelectedListener,
     LocClientListener {
 
+  private final int LOC_ITVL = 2000; // millisecond
+
   private Spinner semSpinner;
   private MapImageView mapImageView;
 
+  private JSONObject latestLocInfo;
+  private JSONObject latestMetadata;
   private String curSemantic;
   private BOSSLocClient locClient;
 
-  private ProgressDialog progressDialog;
-  private Toast toast;
+  // private ProgressDialog progressDialog;
+  // private Toast toast;
+
+  private final Handler handler = new Handler();
+  private final Runnable localizationTimeTask = new Runnable() {
+    public void run() {
+      final SensorDataPack sensorDataPack = Sensor.getSensorDataPack();
+      locClient.getLocation(sensorDataPack);
+    }
+  };
 
   @SuppressLint("ShowToast")
   @Override
@@ -32,15 +53,15 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
     super.onCreate(savedInstanceState);
     setContentView(R.layout.loc);
 
-    locClient = new BOSSLocClient();
+    locClient = new BOSSLocClient(this);
 
-    progressDialog = new ProgressDialog(this);
-    progressDialog.setTitle(getResources().getString(R.string.progess_title));
-    progressDialog.setMessage(getResources()
-        .getString(R.string.progess_message));
-    toast = Toast.makeText(this,
-        getResources().getString(R.string.fail_download_map),
-        Toast.LENGTH_SHORT);
+    // progressDialog = new ProgressDialog(this);
+    // progressDialog.setTitle(getResources().getString(R.string.progess_title));
+    // progressDialog.setMessage(getResources()
+    // .getString(R.string.progess_message));
+    // toast = Toast.makeText(this,
+    // getResources().getString(R.string.fail_download_map),
+    // Toast.LENGTH_SHORT);
 
     findViews();
     setAdapters();
@@ -48,11 +69,26 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
   }
 
   @Override
+  protected void onResume() {
+    super.onResume();
+
+    handler.postDelayed(localizationTimeTask, LOC_ITVL);
+  }
+
+  @Override
   protected void onPause() {
     // TODO deal with all rotation issues
     super.onPause();
-    progressDialog.dismiss();
-    toast.cancel();
+
+    // progressDialog.dismiss();
+    // toast.cancel();
+  }
+
+  class LocalizationTimeTask extends TimerTask {
+    @Override
+    public void run() {
+
+    }
   }
 
   private void findViews() {
@@ -87,39 +123,50 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
   private void onSemanticChanged(String newSemantic) {
     if ((curSemantic == null) || !(curSemantic.equals(newSemantic))) {
       curSemantic = newSemantic;
-      locClient.getMap();
-      progressDialog.show();
+      drawZones(curSemantic);
+      // progressDialog.show();
+    }
+  }
+
+  @Override
+  public void onLocationReturned(JSONObject locInfo) {
+    if (latestLocInfo == null
+        || !locInfo.toString().equals(latestLocInfo.toString())) {
+      latestLocInfo = locInfo;
+      try {
+        JSONArray loc = locInfo.getJSONArray("location");
+        locClient.getMetadata(loc);
+      } catch (JSONException e) {
+        // TODO Auto-generated catch block
+      }
+    }
+
+    handler.postDelayed(localizationTimeTask, LOC_ITVL);
+  }
+
+  @Override
+  public void onMetadataReturned(JSONObject metadata) {
+    if (latestMetadata == null
+        || !metadata.toString().equals(latestMetadata.toString())) {
+      latestMetadata = metadata;
+      locClient.getMap(metadata);
     }
   }
 
   @Override
   public void onMapReturned(Bitmap bitmap) {
-    progressDialog.dismiss();
+    // progressDialog.dismiss();
 
     if (bitmap == null) {
       curSemantic = null;
-      toast.show();
+      // toast.show();
     } else {
-      toast.cancel();
+      // toast.cancel();
       mapImageView.setMap(bitmap);
     }
   }
 
-  @Override
-  public void onLocationReturned(/* Location loc */) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void onSemanticReturned(/* Semantic sem */) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void onMetadataReturned(/* Metadata mdata */) {
-    // TODO Auto-generated method stub
+  private void drawZones(String semantic) {
 
   }
 

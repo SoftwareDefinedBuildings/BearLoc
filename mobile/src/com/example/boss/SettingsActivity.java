@@ -3,10 +3,12 @@ package com.example.boss;
 import java.util.List;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
 
 public class SettingsActivity extends PreferenceActivity {
 
@@ -45,5 +47,15 @@ public class SettingsActivity extends PreferenceActivity {
         addPreferencesFromResource(R.xml.settings_server);
       }
     }
+  }
+
+  public static String getServerAddr(Context context) {
+    return PreferenceManager.getDefaultSharedPreferences(context).getString(
+        "pref_server_addr", "kaifei.info");
+  }
+
+  public static Integer getServerPort(Context context) {
+    return Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(
+        context).getString("pref_server_port", "10080"));
   }
 }

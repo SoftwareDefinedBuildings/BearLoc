@@ -1,7 +1,15 @@
 {
-  "cities": {
-    "Berkeley": "./Berkeley/metadata.json"
-  },
   "name": "CA",
-  "dir": "/US/CA/"
+  "semantic": "state",
+  "dir": "/US/CA/",
+  "child": {
+    "city": {
+      "Berkeley": {
+        "refer": "/US/CA/Berkeley/metadata.json"
+      },
+      "San Francisco": {
+        "refer": "/US/CA/San Francisco/metadata.json"
+      }
+    }
+  }
 }

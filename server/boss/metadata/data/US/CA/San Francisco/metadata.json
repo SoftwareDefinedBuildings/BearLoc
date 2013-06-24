@@ -1,0 +1,10 @@
+{
+  "name": "San Francisco",
+  "semantic": "city",
+  "dir": "/US/CA/San Francisco/",
+  "child": {
+    "district": {
+      
+    }
+  }
+}

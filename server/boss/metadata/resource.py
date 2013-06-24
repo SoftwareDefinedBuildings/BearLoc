@@ -52,7 +52,7 @@ class MetadataResource(resource.Resource):
 
   def _succeed(self, metadata, request):
     request.setResponseCode(httplib.OK)
-    request.write(metadata)
+    request.write(json.dumps(metadata))
     request.finish()
     log.msg(request.getHost().host + " metadata returned")
 

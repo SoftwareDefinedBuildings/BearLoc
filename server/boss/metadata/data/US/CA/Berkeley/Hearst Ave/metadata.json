@@ -1,0 +1,10 @@
+{
+  "name": "Hearst Ave",
+  "semantic": "street",
+  "dir": "/US/CA/Berkeley/Hearst Ave/",
+  "child": {
+    "building": {
+      
+    }
+  }
+}

@@ -19,9 +19,25 @@ class Loc(object):
     ((country, state, city, district, street, building, 
     floor, ((semantic, zone), ...)), confidence)"""
     # TODO use DeferredList after adding new loc service
-    hard_loc = {'location': ('US', 'CA', 'Berkeley', 
-    'University of California Berkeley', 'Hearst Ave', 'Sutardja Dai Hall', 
-    'Floor 4', (('Room', '410'), ('HVAC', '1'), ('Light', '2'))), 
+    loc1 = {'location': {'country': 'US', 'state': 'CA', 'city': 'Berkeley', 
+    'district': 'University of California Berkeley', 'street': 'Hearst Ave', 
+    'building': 'Sutardja Dai Hall', 'floor': 'Floor 4', 
+    'thermostat': 'Thermostat 2', 'hvac': 'VAV 4', 'lighting': 'Light 1'}, 
     'confidence': 0}
+    loc2 = {'location': {'country': 'US', 'state': 'CA', 'city': 'Berkeley', 
+    'district': 'University of California Berkeley', 'street': 'Hearst Ave', 
+    'building': 'Sutardja Dai Hall', 'floor': 'Floor 6', 
+    'lighting': 'Light 1'}, 
+    'confidence': 0}
+    loc3 = {'location': {'country': 'US', 'state': 'CA', 'city': 'Berkeley', 
+    'district': 'University of California Berkeley', 'street': 'Hearst Ave', 
+    'building': 'Sutardja Dai Hall', 'floor': 'Floor 7', 
+    'lighting': 'Light 2'}, 
+    'confidence': 0}
+    locs = [loc1, loc2, loc3]
+    
+    from random import randint
+    hard_loc = locs[randint(0,2)]
     
     return defer.succeed(hard_loc)
+    

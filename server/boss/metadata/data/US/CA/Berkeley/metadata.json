@@ -1,7 +1,17 @@
 {
-  "districts": {
-    "University of California Berkeley": "./University of California Berkeley/metadata.json"
-  },
   "name": "Berkeley",
-  "dir": "/US/CA/Berkeley"
+  "semantic": "city",
+  "dir": "/US/CA/Berkeley/",
+  "child": {
+    "district": {
+      "University of California Berkeley": {
+        "refer": "/US/CA/Berkeley/University of California Berkeley/metadata.json"
+      }
+    },
+    "street": {
+      "Hearst Ave": {
+        "refer": "/US/CA/Berkeley/Hearst Ave/metadata.json"
+      }
+    }
+  }
 }

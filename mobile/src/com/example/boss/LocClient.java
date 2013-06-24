@@ -1,6 +1,5 @@
 package com.example.boss;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.example.boss.Sensor.SensorDataPack;
@@ -12,7 +11,7 @@ public interface LocClient {
   // street, number, building, and floor for the user
   public abstract boolean getLocation(SensorDataPack sensorDataPack);
 
-  public abstract boolean getMetadata(JSONArray loc);
+  public abstract boolean getMetadata(JSONObject loc, String targetSem);
 
   public abstract boolean getMap(JSONObject metadata);
 

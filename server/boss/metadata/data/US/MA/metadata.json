@@ -1,0 +1,10 @@
+{
+  "name": "MA",
+  "semantic": "state",
+  "dir": "/US/MA/",
+  "child": {
+    "city": {
+      
+    }
+  }
+}

@@ -51,8 +51,8 @@ class LocResource(resource.Resource):
     request.setResponseCode(httplib.OK)
     request.write(json.dumps(locinfo))
     request.finish()
-    log.msg(request.getHost().host + " is localizaed as " + locinfo['location'] 
-            + " with confidence " + locinfo['confidence'])
+    log.msg(request.getHost().host + " is localizaed as " + str(locinfo['location']) 
+            + " with confidence " + str(locinfo['confidence']))
 
 
   def _fail(self, err, request):

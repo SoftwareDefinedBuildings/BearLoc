@@ -2,7 +2,6 @@ package com.example.boss;
 
 import java.util.TimerTask;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -79,6 +78,7 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
   protected void onPause() {
     // TODO deal with all rotation issues
     super.onPause();
+    handler.removeCallbacks(localizationTimeTask);
 
     // progressDialog.dismiss();
     // toast.cancel();
@@ -130,12 +130,13 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
 
   @Override
   public void onLocationReturned(JSONObject locInfo) {
-    if (latestLocInfo == null
-        || !locInfo.toString().equals(latestLocInfo.toString())) {
+    if (locInfo != null
+        && (latestLocInfo == null || !locInfo.toString().equals(
+            latestLocInfo.toString()))) {
       latestLocInfo = locInfo;
       try {
-        JSONArray loc = locInfo.getJSONArray("location");
-        locClient.getMetadata(loc);
+        JSONObject loc = locInfo.getJSONObject("location");
+        locClient.getMetadata(loc, "floor");
       } catch (JSONException e) {
         // TODO Auto-generated catch block
       }
@@ -146,8 +147,9 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
 
   @Override
   public void onMetadataReturned(JSONObject metadata) {
-    if (latestMetadata == null
-        || !metadata.toString().equals(latestMetadata.toString())) {
+    if (metadata != null
+        && (latestMetadata == null || !metadata.toString().equals(
+            latestMetadata.toString()))) {
       latestMetadata = metadata;
       locClient.getMap(metadata);
     }

@@ -1,7 +1,15 @@
 {
-  "states": {
-    "CA": "./CA/metadata.json"
-  },
   "name": "US",
-  "dir": "/US/"
+  "semantic": "country",
+  "dir": "/US/",
+  "child": {
+    "state": {
+      "CA": {
+        "refer": "/US/CA/metadata.json"
+      },
+      "MA": {
+        "refer": "/US/MA/metadata.json"
+      }
+    }
+  }
 }

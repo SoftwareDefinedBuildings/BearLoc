@@ -1,7 +1,12 @@
 {
-  "countries": {
-    "US": "./US/metadata.json"
-  },
-  "name": "",
-  "dir": "/"
+  "name": "earth",
+  "semantic": "planet",
+  "dir": "/",
+  "child": {
+    "country": {
+      "US": {
+        "refer": "/US/metadata.json"
+      }
+    }
+  }
 }

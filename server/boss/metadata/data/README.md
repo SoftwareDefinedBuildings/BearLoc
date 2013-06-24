@@ -1,0 +1,7 @@
+- Every file is a NODE.
+- a NODE is a dictionary of (attribute name, attribute value), and represents a zone on map.
+- a SEMANTIC is a dictionary of (NODE name, NODE), and represents the meaning of zones on map. 
+- a NODE has a "semantic" attribute, whose value is the semantic of the NODE itself
+- a NODE can have a "child" attribute, whose value is a dictionary of (SEMANTIC name, SEMANTIC), which indicates the semantics of sub-NODE/zone in this NODE.
+- any NODE with "refer" attribute should be replaced by the file indicated by the value of "refer". 
+- only NODE can be referred

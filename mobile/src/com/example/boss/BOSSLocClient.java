@@ -11,7 +11,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -71,7 +70,7 @@ public class BOSSLocClient implements LocClient {
   }
 
   @Override
-  public boolean getMetadata(JSONArray loc) {
+  public boolean getMetadata(JSONObject loc, String targetSem) {
     if (metadataDownloadTask != null) {
       metadataDownloadTask.cancel(true);
     }
@@ -88,7 +87,7 @@ public class BOSSLocClient implements LocClient {
       return false;
     }
 
-    metadataDownloadTask.execute(loc, uri);
+    metadataDownloadTask.execute(loc, targetSem, uri);
     return true;
   }
 
@@ -105,7 +104,6 @@ public class BOSSLocClient implements LocClient {
     String path;
     try {
       path = "/metadata/data"
-          + metadata.getString("dir")
           + metadata.getJSONObject("views").getJSONObject("floorplan")
               .getString("image");
     } catch (JSONException e) {
@@ -190,8 +188,9 @@ public class BOSSLocClient implements LocClient {
 
     @Override
     protected JSONObject doInBackground(Object... params) {
-      final JSONArray loc = (JSONArray) params[0];
-      final URI uri = (URI) params[1];
+      final JSONObject loc = (JSONObject) params[0];
+      final String tartgetSem = (String) params[1];
+      final URI uri = (URI) params[2];
       final AndroidHttpClient client = AndroidHttpClient.newInstance("Android");
       final HttpPost postRequest = new HttpPost(uri);
 
@@ -200,6 +199,7 @@ public class BOSSLocClient implements LocClient {
         JSONObject metadataRequst = new JSONObject();
         metadataRequst.put("type", "metadata");
         metadataRequst.put("location", loc);
+        metadataRequst.put("targetsem", tartgetSem);
         se = new StringEntity(metadataRequst.toString());
 
         postRequest.setEntity(se);

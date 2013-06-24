@@ -1,7 +1,13 @@
 {
-  "streets": {
-    "Hearst Ave": "./Hearst Ave/metadata.json"
-  },
   "name": "University of California Berkeley",
-  "dir": "/US/CA/Berkeley/University of California Berkeley/"
+  "semantic": "district",
+  "dir": "/US/CA/Berkeley/University of California Berkeley/",
+  "child": {
+    "building": {
+      "Sutardja Dai Hall": {
+        "refer": "/US/CA/Berkeley/University of California Berkeley/Sutardja Dai Hall/metadata.json"
+      }
+    }
+  }
 }
+

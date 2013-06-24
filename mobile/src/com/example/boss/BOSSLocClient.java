@@ -109,7 +109,7 @@ public class BOSSLocClient implements LocClient {
     } catch (JSONException e) {
       return false;
     }
-    ;
+
     URI uri;
     try {
       uri = new URI("http", null, host, port, path, null, null);

@@ -80,8 +80,10 @@ public class MapImageView extends ImageView {
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-      // TODO Auto-generated method stub
-      return false;
+      float scale = 1.5f;
+      matrix.postScale(scale, scale, e.getX(), e.getY());
+      invalidate();
+      return true;
     }
 
     @Override

@@ -21,6 +21,8 @@ public class MyGestureDetector {
   private PointF midPoint = new PointF();
   private float oldDist = 1f;
 
+  private GestureDetector gestureDetector;
+
   public static interface MyOnGestureListener extends
       GestureDetector.OnDoubleTapListener, GestureDetector.OnGestureListener,
       ScaleGestureDetector.OnScaleGestureListener {
@@ -31,9 +33,14 @@ public class MyGestureDetector {
 
   public MyGestureDetector(Context context, MyOnGestureListener listener) {
     this.listener = listener;
+
+    gestureDetector = new GestureDetector(context, listener);
   }
 
   public boolean onTouchEvent(MotionEvent event) {
+
+    gestureDetector.onTouchEvent(event);
+
     final int action = event.getAction();
     switch (action & MotionEvent.ACTION_MASK) {
     case MotionEvent.ACTION_DOWN:

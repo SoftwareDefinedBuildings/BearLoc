@@ -6,11 +6,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.example.boss.BOSSLocClient.LocClientListener;
-import com.example.boss.Sensor.SensorDataPack;
-
-import android.annotation.SuppressLint;
 import android.app.Activity;
-//import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,49 +16,43 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
-//import android.widget.Toast;
-
 public class LocActivity extends Activity implements OnItemSelectedListener,
     LocClientListener {
 
   private final int LOC_ITVL = 2000; // millisecond
 
-  private Spinner semSpinner;
-  private MapImageView mapImageView;
+  private Spinner mSemSpinner;
+  private MapImageView mMapImageView;
 
-  private JSONObject latestLocInfo;
+  private BOSSLocClient mLocClient;
+  private SensorCache mSensorCache;
+
+  private JSONObject mLatestLocInfo;
   private JSONObject latestMetadata;
-  private String curSemantic;
-  private BOSSLocClient locClient;
+  private String mCurSemantic;
 
-  // private ProgressDialog progressDialog;
-  // private Toast toast;
+  private Handler mHandler;
+  private Runnable mLocalizationTimeTask;
 
-  private final Handler handler = new Handler();
-  private final Runnable localizationTimeTask = new Runnable() {
-    public void run() {
-      final SensorDataPack sensorDataPack = Sensor.getSensorDataPack();
-      locClient.getLocation(sensorDataPack);
-    }
-  };
-
-  @SuppressLint("ShowToast")
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.loc);
 
-    locClient = new BOSSLocClient(this);
+    mSemSpinner = (Spinner) findViewById(R.id.sem_spinner);
+    mMapImageView = (MapImageView) findViewById(R.id.map_view);
 
-    // progressDialog = new ProgressDialog(this);
-    // progressDialog.setTitle(getResources().getString(R.string.progess_title));
-    // progressDialog.setMessage(getResources()
-    // .getString(R.string.progess_message));
-    // toast = Toast.makeText(this,
-    // getResources().getString(R.string.fail_download_map),
-    // Toast.LENGTH_SHORT);
+    mLocClient = new BOSSLocClient(this);
+    mSensorCache = new SensorCache(this);
 
-    findViews();
+    mHandler = new Handler();
+    mLocalizationTimeTask = new Runnable() {
+      public void run() {
+        final JSONObject sensorDataPack = mSensorCache.getSensorData();
+        mLocClient.getLocation(sensorDataPack);
+      }
+    };
+
     setAdapters();
     setListeners();
   }
@@ -71,17 +61,17 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
   protected void onResume() {
     super.onResume();
 
-    handler.postDelayed(localizationTimeTask, LOC_ITVL);
+    mSensorCache.resume();
+    mHandler.postDelayed(mLocalizationTimeTask, LOC_ITVL);
   }
 
   @Override
   protected void onPause() {
     // TODO deal with all rotation issues
     super.onPause();
-    handler.removeCallbacks(localizationTimeTask);
 
-    // progressDialog.dismiss();
-    // toast.cancel();
+    mSensorCache.pause();
+    mHandler.removeCallbacks(mLocalizationTimeTask);
   }
 
   class LocalizationTimeTask extends TimerTask {
@@ -91,22 +81,17 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
     }
   }
 
-  private void findViews() {
-    semSpinner = (Spinner) findViewById(R.id.sem_spinner);
-    mapImageView = (MapImageView) findViewById(R.id.map_view);
-  }
-
   private void setAdapters() {
     ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
         R.array.semantics, android.R.layout.simple_spinner_item);
     adapter
         .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-    semSpinner.setAdapter(adapter);
+    mSemSpinner.setAdapter(adapter);
   }
 
   private void setListeners() {
-    semSpinner.setOnItemSelectedListener(this);
-    locClient.setOnDataReturnedListener(this);
+    mSemSpinner.setOnItemSelectedListener(this);
+    mLocClient.setOnDataReturnedListener(this);
   }
 
   @Override
@@ -121,28 +106,30 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
   }
 
   private void onSemanticChanged(String newSemantic) {
-    if ((curSemantic == null) || !(curSemantic.equals(newSemantic))) {
-      curSemantic = newSemantic;
-      drawZones(curSemantic);
-      // progressDialog.show();
+    if ((mCurSemantic == null) || !(mCurSemantic.equals(newSemantic))) {
+      mCurSemantic = newSemantic;
+      drawZones(mCurSemantic);
     }
   }
 
   @Override
   public void onLocationReturned(JSONObject locInfo) {
-    if (locInfo != null
-        && (latestLocInfo == null || !locInfo.toString().equals(
-            latestLocInfo.toString()))) {
-      latestLocInfo = locInfo;
-      try {
-        JSONObject loc = locInfo.getJSONObject("location");
-        locClient.getMetadata(loc, "floor");
-      } catch (JSONException e) {
-        // TODO Auto-generated catch block
+    if (locInfo != null) {
+      mSensorCache.clear();
+
+      if (mLatestLocInfo == null
+          || !locInfo.toString().equals(mLatestLocInfo.toString())) {
+        mLatestLocInfo = locInfo;
+        try {
+          JSONObject loc = locInfo.getJSONObject("location");
+          mLocClient.getMetadata(loc, "floor");
+        } catch (JSONException e) {
+          // TODO Auto-generated catch block
+        }
       }
     }
 
-    handler.postDelayed(localizationTimeTask, LOC_ITVL);
+    mHandler.postDelayed(mLocalizationTimeTask, LOC_ITVL);
   }
 
   @Override
@@ -151,20 +138,17 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
         && (latestMetadata == null || !metadata.toString().equals(
             latestMetadata.toString()))) {
       latestMetadata = metadata;
-      locClient.getMap(metadata);
+      mLocClient.getMap(metadata);
     }
   }
 
   @Override
   public void onMapReturned(Bitmap bitmap) {
-    // progressDialog.dismiss();
 
     if (bitmap == null) {
-      curSemantic = null;
-      // toast.show();
+      mCurSemantic = null;
     } else {
-      // toast.cancel();
-      mapImageView.setMap(bitmap);
+      mMapImageView.setMap(bitmap);
     }
   }
 

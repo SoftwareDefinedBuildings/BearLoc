@@ -14,8 +14,6 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.example.boss.Sensor.SensorDataPack;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,12 +22,12 @@ import android.os.AsyncTask;
 
 public class BOSSLocClient implements LocClient {
 
-  private Context context;
+  private Context mContext;
 
-  private LocaliztionTask localiztionTask;
-  private MetadataDownloadTask metadataDownloadTask;
-  private MapDownloadTask mapDownloadTask;
-  private WeakReference<LocClientListener> listenerRef;
+  private LocaliztionTask mLocaliztionTask;
+  private MetadataDownloadTask mMetadataDownloadTask;
+  private MapDownloadTask mMapDownloadTask;
+  private WeakReference<LocClientListener> mListenerRef;
 
   public static interface LocClientListener {
     public abstract void onLocationReturned(JSONObject loc);
@@ -40,23 +38,23 @@ public class BOSSLocClient implements LocClient {
   }
 
   public BOSSLocClient(Context context) {
-    this.context = context;
+    mContext = context;
   }
 
   public void setOnDataReturnedListener(LocClientListener listener) {
-    listenerRef = new WeakReference<LocClientListener>(listener);
+    mListenerRef = new WeakReference<LocClientListener>(listener);
   }
 
   @Override
-  public boolean getLocation(SensorDataPack sensorDataPack) {
-    if (localiztionTask != null) {
-      localiztionTask.cancel(true);
+  public boolean getLocation(JSONObject sensorData) {
+    if (mLocaliztionTask != null) {
+      mLocaliztionTask.cancel(true);
     }
-    localiztionTask = new LocaliztionTask();
+    mLocaliztionTask = new LocaliztionTask();
 
     // TODO check and remove "http://"
-    final String host = SettingsActivity.getServerAddr(context);
-    final int port = SettingsActivity.getServerPort(context);
+    final String host = SettingsActivity.getServerAddr(mContext);
+    final int port = SettingsActivity.getServerPort(mContext);
     final String service = "/localize";
     URI uri;
     try {
@@ -65,20 +63,20 @@ public class BOSSLocClient implements LocClient {
       return false;
     }
 
-    localiztionTask.execute(sensorDataPack, uri);
+    mLocaliztionTask.execute(sensorData, uri);
     return true;
   }
 
   @Override
   public boolean getMetadata(JSONObject loc, String targetSem) {
-    if (metadataDownloadTask != null) {
-      metadataDownloadTask.cancel(true);
+    if (mMetadataDownloadTask != null) {
+      mMetadataDownloadTask.cancel(true);
     }
-    metadataDownloadTask = new MetadataDownloadTask();
+    mMetadataDownloadTask = new MetadataDownloadTask();
 
     // TODO check and remove "http://"
-    final String host = SettingsActivity.getServerAddr(context);
-    final int port = SettingsActivity.getServerPort(context);
+    final String host = SettingsActivity.getServerAddr(mContext);
+    final int port = SettingsActivity.getServerPort(mContext);
     final String service = "/metadata";
     URI uri;
     try {
@@ -87,20 +85,20 @@ public class BOSSLocClient implements LocClient {
       return false;
     }
 
-    metadataDownloadTask.execute(loc, targetSem, uri);
+    mMetadataDownloadTask.execute(loc, targetSem, uri);
     return true;
   }
 
   @Override
   public boolean getMap(JSONObject metadata) {
-    if (mapDownloadTask != null) {
-      mapDownloadTask.cancel(true);
+    if (mMapDownloadTask != null) {
+      mMapDownloadTask.cancel(true);
     }
-    mapDownloadTask = new MapDownloadTask();
+    mMapDownloadTask = new MapDownloadTask();
 
     // TODO check and remove "http://"
-    final String host = SettingsActivity.getServerAddr(context);
-    final int port = SettingsActivity.getServerPort(context);
+    final String host = SettingsActivity.getServerAddr(mContext);
+    final int port = SettingsActivity.getServerPort(mContext);
     String path;
     try {
       path = "/metadata/data"
@@ -117,7 +115,7 @@ public class BOSSLocClient implements LocClient {
       return false;
     }
 
-    mapDownloadTask.execute(uri);
+    mMapDownloadTask.execute(uri);
     return true;
   }
 
@@ -125,18 +123,17 @@ public class BOSSLocClient implements LocClient {
 
     @Override
     protected JSONObject doInBackground(Object... params) {
-      // TODO use sensor data
-      @SuppressWarnings("unused")
-      final SensorDataPack sensorDataPack = (SensorDataPack) params[0];
+      final JSONObject sensorData = (JSONObject) params[0];
       final URI uri = (URI) params[1];
       final AndroidHttpClient client = AndroidHttpClient.newInstance("Android");
       final HttpPost postRequest = new HttpPost(uri);
 
       try {
-        StringEntity se;
-
-        // TODO encode all sensor data
-        se = new StringEntity("{}");
+        final JSONObject locRequst = new JSONObject();
+        locRequst.put("type", "localize");
+        locRequst.put("sensor data", sensorData);
+        
+        final StringEntity se = new StringEntity(locRequst.toString());
 
         postRequest.setEntity(se);
         postRequest.setHeader("Accept", "application/json");
@@ -171,15 +168,15 @@ public class BOSSLocClient implements LocClient {
     @Override
     protected void onPostExecute(JSONObject loc) {
       if (!isCancelled()) {
-        if (listenerRef != null) {
-          LocClientListener listener = listenerRef.get();
+        if (mListenerRef != null) {
+          LocClientListener listener = mListenerRef.get();
           if (listener != null) {
             listener.onLocationReturned(loc);
           }
         }
       }
 
-      localiztionTask = null;
+      mLocaliztionTask = null;
     }
   }
 
@@ -194,13 +191,13 @@ public class BOSSLocClient implements LocClient {
       final AndroidHttpClient client = AndroidHttpClient.newInstance("Android");
       final HttpPost postRequest = new HttpPost(uri);
 
-      StringEntity se;
       try {
-        JSONObject metadataRequst = new JSONObject();
+        final JSONObject metadataRequst = new JSONObject();
         metadataRequst.put("type", "metadata");
         metadataRequst.put("location", loc);
         metadataRequst.put("targetsem", tartgetSem);
-        se = new StringEntity(metadataRequst.toString());
+        
+        final StringEntity se = new StringEntity(metadataRequst.toString());
 
         postRequest.setEntity(se);
         postRequest.setHeader("Accept", "application/json");
@@ -235,15 +232,15 @@ public class BOSSLocClient implements LocClient {
     @Override
     protected void onPostExecute(JSONObject metadata) {
       if (!isCancelled()) {
-        if (listenerRef != null) {
-          LocClientListener listener = listenerRef.get();
+        if (mListenerRef != null) {
+          LocClientListener listener = mListenerRef.get();
           if (listener != null) {
             listener.onMetadataReturned(metadata);
           }
         }
       }
 
-      localiztionTask = null;
+      mLocaliztionTask = null;
     }
   }
 
@@ -292,15 +289,15 @@ public class BOSSLocClient implements LocClient {
     @Override
     protected void onPostExecute(Bitmap bitmap) {
       if (!isCancelled()) {
-        if (listenerRef != null) {
-          LocClientListener listener = listenerRef.get();
+        if (mListenerRef != null) {
+          LocClientListener listener = mListenerRef.get();
           if (listener != null) {
             listener.onMapReturned(bitmap);
           }
         }
       }
 
-      mapDownloadTask = null;
+      mMapDownloadTask = null;
     }
   }
 }

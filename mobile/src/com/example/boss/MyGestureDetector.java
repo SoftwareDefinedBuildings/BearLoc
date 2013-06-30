@@ -8,7 +8,7 @@ import android.view.GestureDetector;
 
 // Android inherent GestureDetectorCompat and ScaleGestureDetector have some glitches
 public class MyGestureDetector {
-  private MyOnGestureListener listener;
+  private MyOnGestureListener mListener;
 
   // We can be in one of these 3 states
   private static final int NONE = 0;
@@ -17,11 +17,11 @@ public class MyGestureDetector {
   private int mode = NONE;
 
   // Remember some things for scaling
-  private PointF lastPoint = new PointF();
-  private PointF midPoint = new PointF();
-  private float oldDist = 1f;
+  private PointF mLastPoint = new PointF();
+  private PointF mMidPoint = new PointF();
+  private float mOldDist = 1f;
 
-  private GestureDetector gestureDetector;
+  private GestureDetector mGestureDetector;
 
   public static interface MyOnGestureListener extends
       GestureDetector.OnDoubleTapListener, GestureDetector.OnGestureListener,
@@ -32,24 +32,24 @@ public class MyGestureDetector {
   }
 
   public MyGestureDetector(Context context, MyOnGestureListener listener) {
-    this.listener = listener;
+    mListener = listener;
 
-    gestureDetector = new GestureDetector(context, listener);
+    mGestureDetector = new GestureDetector(context, mListener);
   }
 
   public boolean onTouchEvent(MotionEvent event) {
 
-    gestureDetector.onTouchEvent(event);
+    mGestureDetector.onTouchEvent(event);
 
     final int action = event.getAction();
     switch (action & MotionEvent.ACTION_MASK) {
     case MotionEvent.ACTION_DOWN:
-      lastPoint.set(event.getX(), event.getY());
+      mLastPoint.set(event.getX(), event.getY());
       mode = MOVE;
-      return listener.onDown(event);
+      return mListener.onDown(event);
     case MotionEvent.ACTION_POINTER_DOWN:
-      oldDist = spacing(event);
-      midPoint(midPoint, event);
+      mOldDist = spacing(event);
+      mMidPoint(mMidPoint, event);
       mode = SCALE;
       return true;
     case MotionEvent.ACTION_UP:
@@ -59,15 +59,15 @@ public class MyGestureDetector {
       return true;
     case MotionEvent.ACTION_MOVE:
       if (mode == MOVE) {
-        final float translateX = event.getX() - lastPoint.x;
-        final float translateY = event.getY() - lastPoint.y;
-        lastPoint.set(event.getX(), event.getY());
-        return listener.onScroll(translateX, translateY);
+        final float translateX = event.getX() - mLastPoint.x;
+        final float translateY = event.getY() - mLastPoint.y;
+        mLastPoint.set(event.getX(), event.getY());
+        return mListener.onScroll(translateX, translateY);
       } else if (mode == SCALE) {
         final float newDist = spacing(event);
-        final float scale = newDist / oldDist;
-        oldDist = newDist;
-        return listener.onScale(scale, midPoint.x, midPoint.y);
+        final float scale = newDist / mOldDist;
+        mOldDist = newDist;
+        return mListener.onScale(scale, mMidPoint.x, mMidPoint.y);
       }
       return true;
     default:
@@ -83,7 +83,7 @@ public class MyGestureDetector {
   }
 
   /** Calculate the mid point of the first two fingers */
-  private void midPoint(PointF point, MotionEvent event) {
+  private void mMidPoint(PointF point, MotionEvent event) {
     float x = event.getX(0) + event.getX(1);
     float y = event.getY(0) + event.getY(1);
     point.set(x / 2, y / 2);

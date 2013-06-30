@@ -13,10 +13,10 @@ import android.widget.ImageView;
 
 public class MapImageView extends ImageView {
 
-  private Bitmap map;
-  private RectF mapDestRect;
-  private Paint mapPaint;
-  
+  private Bitmap mMap;
+  private RectF mMapDestRect;
+  private Paint mMapPaint;
+
   private Matrix matrix;
 
   private MyGestureDetector gestureDetector;
@@ -34,9 +34,9 @@ public class MapImageView extends ImageView {
 
     setFocusable(true);
 
-    mapDestRect = new RectF();
-    mapPaint = new Paint();
-    mapPaint.setFilterBitmap(true);
+    mMapDestRect = new RectF();
+    mMapPaint = new Paint();
+    mMapPaint.setFilterBitmap(true);
 
     gestureDetector = new MyGestureDetector(context, new GestureListener());
   }
@@ -60,17 +60,17 @@ public class MapImageView extends ImageView {
       canvas.setMatrix(matrix);
     }
 
-    if (map != null) {
+    if (mMap != null) {
       final float w = getWidth();
-      final float h = w * map.getHeight() / map.getWidth();
-      mapDestRect.set(0, 0, w, h);
-      canvas.drawBitmap(map, null, mapDestRect, mapPaint);
+      final float h = w * mMap.getHeight() / mMap.getWidth();
+      mMapDestRect.set(0, 0, w, h);
+      canvas.drawBitmap(mMap, null, mMapDestRect, mMapPaint);
     }
     canvas.restore();
   }
 
   public void setMap(Bitmap map) {
-    this.map = map;
+    mMap = map;
 
     invalidate();
   }

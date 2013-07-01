@@ -114,18 +114,15 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
 
   @Override
   public void onLocationReturned(JSONObject locInfo) {
-    if (locInfo != null) {
-      mSensorCache.clear();
-
-      if (mLatestLocInfo == null
-          || !locInfo.toString().equals(mLatestLocInfo.toString())) {
-        mLatestLocInfo = locInfo;
-        try {
-          JSONObject loc = locInfo.getJSONObject("location");
-          mLocClient.getMetadata(loc, "floor");
-        } catch (JSONException e) {
-          // TODO Auto-generated catch block
-        }
+    if (locInfo != null
+        && (mLatestLocInfo == null || !locInfo.toString().equals(
+            mLatestLocInfo.toString()))) {
+      mLatestLocInfo = locInfo;
+      try {
+        JSONObject loc = locInfo.getJSONObject("location");
+        mLocClient.getMetadata(loc, "floor");
+      } catch (JSONException e) {
+        // TODO Auto-generated catch block
       }
     }
 

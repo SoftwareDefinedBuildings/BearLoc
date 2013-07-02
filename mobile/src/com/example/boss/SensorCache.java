@@ -23,20 +23,25 @@ import android.util.SparseIntArray;
 
 public class SensorCache implements SensorEventListener {
 
+  private final int SENSOR_DEFAULT_HISTORY_LEN = 10000; // millisecond
+
   private final int AUDIO_SOURCE = MediaRecorder.AudioSource.CAMCORDER;
   private final int AUDIO_SAMPLE_RATE = 44100; // Hz
   private final int AUDIO_CHANNEL = AudioFormat.CHANNEL_IN_MONO;
   private final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
   private final int AUDIO_BUFFER_RATIO = 2;
+  private final int AUDIO_DEFAULT_HISTORY_LEN = 10000; // millisecond
 
   private final Context mContext;
 
   private final SensorManager mSensorManager;
   private final List<Sensor> mSensorList;
-  private final SparseIntArray mSampleRate;
+  private final SparseIntArray mSensorSampleRate;
+  private final SparseIntArray mSensorHistoryLen;
   private final HashMap<Sensor, LinkedList<SensorEvent>> mSensorEventCache;
 
   private AudioRecordThread mAudioRecordThread;
+  private final int mAudioHistoryLen;
   private final LinkedBlockingQueue<Pair<Long, ByteArrayOutputStream>> mAudioDataBlockingQueue;
 
   public SensorCache(Context context) {
@@ -46,16 +51,18 @@ public class SensorCache implements SensorEventListener {
         .getSystemService(Context.SENSOR_SERVICE);
     mSensorList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
 
-    mSampleRate = new SparseIntArray();
+    mSensorSampleRate = new SparseIntArray();
+    mSensorHistoryLen = new SparseIntArray();
     mSensorEventCache = new HashMap<Sensor, LinkedList<SensorEvent>>();
 
+    mAudioHistoryLen = AUDIO_DEFAULT_HISTORY_LEN;
     mAudioDataBlockingQueue = new LinkedBlockingQueue<Pair<Long, ByteArrayOutputStream>>();
 
   }
 
   public void resume() {
     for (Sensor sensor : mSensorList) {
-      final int rate = mSampleRate.get(sensor.getType(),
+      final int rate = mSensorSampleRate.get(sensor.getType(),
           SensorManager.SENSOR_DELAY_NORMAL);
       mSensorManager.registerListener(this, sensor, rate);
     }
@@ -177,6 +184,14 @@ public class SensorCache implements SensorEventListener {
       mSensorEventCache.put(event.sensor, eventList);
     }
     eventList.addLast(event);
+
+    final Long curTimestamp = System.currentTimeMillis();
+    if (eventList.isEmpty() == false
+        && curTimestamp - eventList.peekFirst().timestamp > mSensorHistoryLen
+            .get(event.sensor.getType(), SENSOR_DEFAULT_HISTORY_LEN)) {
+      // Remove old data
+      eventList.removeFirst();
+    }
   }
 
   private class AudioRecordThread extends Thread {
@@ -203,6 +218,13 @@ public class SensorCache implements SensorEventListener {
             timestamp, byteArrayOS);
         byteArrayOS.write(buffer, 0, streamSize);
         mAudioDataBlockingQueue.offer(event);
+
+        final Long curTimestamp = System.currentTimeMillis();
+        while (mAudioDataBlockingQueue.isEmpty() == false
+            && curTimestamp - mAudioDataBlockingQueue.peek().first > mAudioHistoryLen) {
+          // Remove old data
+          mAudioDataBlockingQueue.poll();
+        }
       }
 
       recorder.stop();

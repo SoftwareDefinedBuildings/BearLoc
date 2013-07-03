@@ -18,46 +18,88 @@ import android.hardware.SensorManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
+import android.os.Handler;
 import android.util.Pair;
+import android.util.SparseArray;
 import android.util.SparseIntArray;
 
 public class SensorCache implements SensorEventListener {
 
-  private final int SENSOR_DEFAULT_HISTORY_LEN = 10000; // millisecond
+  public static final long NANOS_PER_MILLIS = 1000000L;
+  public static final long MICROS_PER_MILLIS = 1000L;
+
+  private final long SENSOR_DEFAULT_HISTORY_LEN = 10000L; // millisecond
 
   private final int AUDIO_SOURCE = MediaRecorder.AudioSource.CAMCORDER;
-  private final int AUDIO_SAMPLE_RATE = 44100; // Hz
+  private final int AUDIO_SAMPLE_RATE = 11025; // Hz
   private final int AUDIO_CHANNEL = AudioFormat.CHANNEL_IN_MONO;
   private final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
   private final int AUDIO_BUFFER_RATIO = 2;
-  private final int AUDIO_DEFAULT_HISTORY_LEN = 10000; // millisecond
+  private final long AUDIO_HISTORY_LEN = 3000L; // millisecond
+
+  private final long WIFI_SAMPLE_ITVL = 1000L; // millisecond
+  private final long WIFI_HISTORY_LEN = 10000L; // millisecond
 
   private final Context mContext;
+  private final Handler mHandler;
 
   private final SensorManager mSensorManager;
   private final List<Sensor> mSensorList;
   private final SparseIntArray mSensorSampleRate;
-  private final SparseIntArray mSensorHistoryLen;
+  private final SparseArray<Long> mSensorHistoryLen;
   private final HashMap<Sensor, LinkedList<SensorEvent>> mSensorEventCache;
 
+  private final LinkedBlockingQueue<Pair<Long, ByteArrayOutputStream>> mAudioEventQueue;
   private AudioRecordThread mAudioRecordThread;
-  private final int mAudioHistoryLen;
-  private final LinkedBlockingQueue<Pair<Long, ByteArrayOutputStream>> mAudioDataBlockingQueue;
+
+  private final WifiManager mWifiManager;
+  private final LinkedBlockingQueue<Pair<Long, ScanResult>> mWifiEventQueue;
+  private final Runnable mWifiScanTimeTask;
 
   public SensorCache(Context context) {
     mContext = context;
+
+    mHandler = new Handler();
 
     mSensorManager = (SensorManager) mContext
         .getSystemService(Context.SENSOR_SERVICE);
     mSensorList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
 
     mSensorSampleRate = new SparseIntArray();
-    mSensorHistoryLen = new SparseIntArray();
+    mSensorHistoryLen = new SparseArray<Long>();
     mSensorEventCache = new HashMap<Sensor, LinkedList<SensorEvent>>();
 
-    mAudioHistoryLen = AUDIO_DEFAULT_HISTORY_LEN;
-    mAudioDataBlockingQueue = new LinkedBlockingQueue<Pair<Long, ByteArrayOutputStream>>();
+    mAudioEventQueue = new LinkedBlockingQueue<Pair<Long, ByteArrayOutputStream>>();
 
+    mWifiManager = (WifiManager) mContext
+        .getSystemService(Context.WIFI_SERVICE);
+    mWifiEventQueue = new LinkedBlockingQueue<Pair<Long, ScanResult>>();
+    mWifiScanTimeTask = new Runnable() {
+      public void run() {
+        final List<ScanResult> newResultList = mWifiManager.getScanResults();
+        for (ScanResult scanResult : newResultList) {
+          final Long timestamp = System.currentTimeMillis();
+          final Pair<Long, ScanResult> event = new Pair<Long, ScanResult>(
+              timestamp, scanResult);
+          mWifiEventQueue.offer(event);
+        }
+
+        final Long curTimestamp = System.currentTimeMillis();
+        while (mWifiEventQueue.isEmpty() == false) {
+          final Long eventTimestamp = mWifiEventQueue.peek().first;
+          if ((curTimestamp - eventTimestamp) > WIFI_HISTORY_LEN) {
+            // Remove old data
+            mWifiEventQueue.poll();
+          } else {
+            break;
+          }
+        }
+
+        mHandler.postDelayed(mWifiScanTimeTask, WIFI_SAMPLE_ITVL);
+      }
+    };
   }
 
   public void resume() {
@@ -69,6 +111,8 @@ public class SensorCache implements SensorEventListener {
 
     mAudioRecordThread = new AudioRecordThread();
     mAudioRecordThread.start();
+
+    mHandler.postDelayed(mWifiScanTimeTask, WIFI_SAMPLE_ITVL);
   }
 
   public void pause() {
@@ -80,6 +124,8 @@ public class SensorCache implements SensorEventListener {
     } catch (InterruptedException e) {
       // TODO Auto-generated catch block
     }
+
+    mHandler.removeCallbacks(mWifiScanTimeTask);
   }
 
   public JSONObject getSensorData() {
@@ -111,7 +157,10 @@ public class SensorCache implements SensorEventListener {
           eventJSONArray.put(eventJSONObject);
 
           eventJSONObject.put("accuracy", event.accuracy);
-          eventJSONObject.put("timestamp", event.timestamp);
+
+          final Long eventTimestamp = System.currentTimeMillis()
+              + (event.timestamp - System.nanoTime()) / NANOS_PER_MILLIS;
+          eventJSONObject.put("timestamp", eventTimestamp);
 
           final JSONArray valueJSONArray = new JSONArray();
           eventJSONObject.put("values", valueJSONArray);
@@ -121,7 +170,11 @@ public class SensorCache implements SensorEventListener {
           }
         }
       }
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+    }
 
+    try {
       // Pack cached audio data
       final JSONObject audioJSONObject = new JSONObject();
       sensorData.put("audio", audioJSONObject);
@@ -136,12 +189,11 @@ public class SensorCache implements SensorEventListener {
       final JSONArray eventJSONArray = new JSONArray();
       audioJSONObject.put("events", eventJSONArray);
 
-      for (Pair<Long, ByteArrayOutputStream> event : mAudioDataBlockingQueue) {
+      for (Pair<Long, ByteArrayOutputStream> event : mAudioEventQueue) {
         final JSONObject eventJSONObject = new JSONObject();
         eventJSONArray.put(eventJSONObject);
 
         final Long timestamp = event.first;
-
         eventJSONObject.put("timestamp", timestamp);
 
         final JSONArray valueJSONArray = new JSONArray();
@@ -153,12 +205,40 @@ public class SensorCache implements SensorEventListener {
           valueJSONArray.put(data);
         }
       }
-
-      // TODO Add WiFi data
-
     } catch (JSONException e) {
       // TODO Auto-generated catch block
     }
+
+    try {
+      // Pack cached WiFi data
+      final JSONObject wifiJSONObject = new JSONObject();
+      sensorData.put("wifi", wifiJSONObject);
+
+      wifiJSONObject.put("name", "wifi");
+      wifiJSONObject.put("type", "wifi");
+
+      final JSONArray eventJSONArray = new JSONArray();
+      wifiJSONObject.put("events", eventJSONArray);
+
+      for (Pair<Long, ScanResult> event : mWifiEventQueue) {
+        final JSONObject eventJSONObject = new JSONObject();
+        eventJSONArray.put(eventJSONObject);
+
+        final Long timestamp = event.first;
+        eventJSONObject.put("timestamp", timestamp);
+
+        final ScanResult scanResult = event.second;
+        eventJSONObject.put("BSSID", scanResult.BSSID);
+        eventJSONObject.put("SSID", scanResult.SSID);
+        eventJSONObject.put("capabilities", scanResult.capabilities);
+        eventJSONObject.put("frequency", scanResult.frequency);
+        eventJSONObject.put("level", scanResult.level);
+      }
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+    }
+
+    // TODO add GPS data
 
     clear();
 
@@ -167,7 +247,7 @@ public class SensorCache implements SensorEventListener {
 
   public void clear() {
     mSensorEventCache.clear();
-    mAudioDataBlockingQueue.clear();
+    mAudioEventQueue.clear();
   }
 
   @Override
@@ -186,11 +266,18 @@ public class SensorCache implements SensorEventListener {
     eventList.addLast(event);
 
     final Long curTimestamp = System.currentTimeMillis();
-    if (eventList.isEmpty() == false
-        && curTimestamp - eventList.peekFirst().timestamp > mSensorHistoryLen
-            .get(event.sensor.getType(), SENSOR_DEFAULT_HISTORY_LEN)) {
-      // Remove old data
-      eventList.removeFirst();
+    while (eventList.isEmpty() == false) {
+      final Long eventTimestamp = System.currentTimeMillis()
+          + (eventList.peekFirst().timestamp - System.nanoTime())
+          / NANOS_PER_MILLIS;
+      final Long sensorHistoryLen = mSensorHistoryLen.get(
+          eventList.getFirst().sensor.getType(), SENSOR_DEFAULT_HISTORY_LEN);
+      if ((curTimestamp - eventTimestamp) > sensorHistoryLen) {
+        // Remove old data
+        eventList.removeFirst();
+      } else {
+        break;
+      }
     }
   }
 
@@ -217,13 +304,18 @@ public class SensorCache implements SensorEventListener {
         final Pair<Long, ByteArrayOutputStream> event = new Pair<Long, ByteArrayOutputStream>(
             timestamp, byteArrayOS);
         byteArrayOS.write(buffer, 0, streamSize);
-        mAudioDataBlockingQueue.offer(event);
+        mAudioEventQueue.offer(event);
 
         final Long curTimestamp = System.currentTimeMillis();
-        while (mAudioDataBlockingQueue.isEmpty() == false
-            && curTimestamp - mAudioDataBlockingQueue.peek().first > mAudioHistoryLen) {
-          // Remove old data
-          mAudioDataBlockingQueue.poll();
+
+        while (mAudioEventQueue.isEmpty() == false) {
+          final Long eventTimestamp = mAudioEventQueue.peek().first;
+          if ((curTimestamp - eventTimestamp) > AUDIO_HISTORY_LEN) {
+            // Remove old data
+            mAudioEventQueue.poll();
+          } else {
+            break;
+          }
         }
       }
 

@@ -1,7 +1,5 @@
 package com.example.boss;
 
-import java.util.TimerTask;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -72,13 +70,6 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
 
     mSensorCache.pause();
     mHandler.removeCallbacks(mLocalizationTimeTask);
-  }
-
-  class LocalizationTimeTask extends TimerTask {
-    @Override
-    public void run() {
-
-    }
   }
 
   private void setAdapters() {

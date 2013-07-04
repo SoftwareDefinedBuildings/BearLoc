@@ -17,13 +17,13 @@ import android.widget.Spinner;
 public class LocActivity extends Activity implements OnItemSelectedListener,
     LocClientListener {
 
-  private final int LOC_ITVL = 2000; // millisecond
+  private static final long LOC_ITVL = 2000L; // millisecond
 
   private Spinner mSemSpinner;
   private MapImageView mMapImageView;
 
   private BOSSLocClient mLocClient;
-  private SensorCache mSensorCache;
+  private SynAmbience mSynAmbience;
 
   private JSONObject mLatestLocInfo;
   private JSONObject latestMetadata;
@@ -41,13 +41,13 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
     mMapImageView = (MapImageView) findViewById(R.id.map_view);
 
     mLocClient = new BOSSLocClient(this);
-    mSensorCache = new SensorCache(this);
+    mSynAmbience = new SynAmbience(this);
 
     mHandler = new Handler();
     mLocalizationTimeTask = new Runnable() {
       public void run() {
-        final JSONObject sensorDataPack = mSensorCache.getSensorData();
-        mLocClient.getLocation(sensorDataPack);
+        final JSONObject synAmbiencePack = mSynAmbience.get();
+        mLocClient.getLocation(synAmbiencePack);
       }
     };
 
@@ -59,7 +59,7 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
   protected void onResume() {
     super.onResume();
 
-    mSensorCache.resume();
+    mSynAmbience.resume();
     mHandler.postDelayed(mLocalizationTimeTask, LOC_ITVL);
   }
 
@@ -68,7 +68,7 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
     // TODO deal with all rotation issues
     super.onPause();
 
-    mSensorCache.pause();
+    mSynAmbience.pause();
     mHandler.removeCallbacks(mLocalizationTimeTask);
   }
 

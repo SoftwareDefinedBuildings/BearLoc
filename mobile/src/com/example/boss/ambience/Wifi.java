@@ -1,6 +1,7 @@
 package com.example.boss.ambience;
 
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.json.JSONArray;
@@ -22,7 +23,7 @@ public class Wifi implements Ambience {
   private final Handler mHandler;
 
   private final WifiManager mWifiManager;
-  private final LinkedBlockingQueue<Pair<Long, ScanResult>> mWifiEventQueue;
+  private final BlockingQueue<Pair<Long, ScanResult>> mWifiEventQueue;
   private final Runnable mWifiScanTimeTask = new Runnable() {
     public void run() {
       final List<ScanResult> newResultList = mWifiManager.getScanResults();
@@ -30,6 +31,7 @@ public class Wifi implements Ambience {
         final Long timestamp = System.currentTimeMillis();
         final Pair<Long, ScanResult> event = new Pair<Long, ScanResult>(
             timestamp, scanResult);
+        // TODO check return result
         mWifiEventQueue.offer(event);
       }
 

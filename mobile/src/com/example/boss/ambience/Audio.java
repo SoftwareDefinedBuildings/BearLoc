@@ -1,6 +1,7 @@
 package com.example.boss.ambience;
 
 import java.io.ByteArrayOutputStream;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.json.JSONArray;
@@ -21,7 +22,7 @@ public class Audio implements Ambience {
   private static final int AUDIO_BUFFER_RATIO = 2;
   private static final long AUDIO_HISTORY_LEN = 3000L; // millisecond
 
-  private final LinkedBlockingQueue<Pair<Long, ByteArrayOutputStream>> mAudioEventQueue;
+  private final BlockingQueue<Pair<Long, ByteArrayOutputStream>> mAudioEventQueue;
   private AudioRecordThread mAudioRecordThread;
 
   private class AudioRecordThread extends Thread {
@@ -47,6 +48,7 @@ public class Audio implements Ambience {
         final Pair<Long, ByteArrayOutputStream> event = new Pair<Long, ByteArrayOutputStream>(
             timestamp, byteArrayOS);
         byteArrayOS.write(buffer, 0, streamSize);
+        // TODO check return result
         mAudioEventQueue.offer(event);
 
         final Long curTimestamp = System.currentTimeMillis();

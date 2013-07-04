@@ -7,7 +7,7 @@ import org.json.JSONObject;
 
 import com.example.boss.ambience.Ambience;
 import com.example.boss.ambience.Audio;
-import com.example.boss.ambience.Location;
+import com.example.boss.ambience.Locations;
 import com.example.boss.ambience.Sensors;
 import com.example.boss.ambience.Wifi;
 
@@ -18,14 +18,14 @@ public class SynAmbience implements Ambience {
   private final Sensors mSensors;
   private final Audio mAudio;
   private final Wifi mWifi;
-  private final Location mLocation;
+  private final Locations mLocation;
 
   public SynAmbience(Context context) {
 
     mSensors = new Sensors(context);
     mAudio = new Audio();
     mWifi = new Wifi(context);
-    mLocation = new Location();
+    mLocation = new Locations(context);
   }
 
   @Override

@@ -30,7 +30,14 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
   private String mCurSemantic;
 
   private Handler mHandler;
-  private Runnable mLocalizationTimeTask;
+  private final Runnable mLocalizationTimeTask = new Runnable() {
+    public void run() {
+      final JSONObject synAmbiencePack = mSynAmbience.get();
+      mLocClient.getLocation(synAmbiencePack);
+    }
+  };
+
+  private boolean mActive;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -44,23 +51,25 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
     mSynAmbience = new SynAmbience(this);
 
     mHandler = new Handler();
-    mLocalizationTimeTask = new Runnable() {
-      public void run() {
-        final JSONObject synAmbiencePack = mSynAmbience.get();
-        mLocClient.getLocation(synAmbiencePack);
-      }
-    };
 
-    setAdapters();
-    setListeners();
+    ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+        R.array.semantics, android.R.layout.simple_spinner_item);
+    adapter
+        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+    mSemSpinner.setAdapter(adapter);
+
+    mSemSpinner.setOnItemSelectedListener(this);
+    mLocClient.setOnDataReturnedListener(this);
   }
 
   @Override
   protected void onResume() {
     super.onResume();
 
+    mActive = true;
+
     mSynAmbience.resume();
-    mHandler.postDelayed(mLocalizationTimeTask, LOC_ITVL);
+    mHandler.postDelayed(mLocalizationTimeTask, 0);
   }
 
   @Override
@@ -68,21 +77,10 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
     // TODO deal with all rotation issues
     super.onPause();
 
+    mActive = false;
+
     mSynAmbience.pause();
     mHandler.removeCallbacks(mLocalizationTimeTask);
-  }
-
-  private void setAdapters() {
-    ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-        R.array.semantics, android.R.layout.simple_spinner_item);
-    adapter
-        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-    mSemSpinner.setAdapter(adapter);
-  }
-
-  private void setListeners() {
-    mSemSpinner.setOnItemSelectedListener(this);
-    mLocClient.setOnDataReturnedListener(this);
   }
 
   @Override
@@ -105,34 +103,37 @@ public class LocActivity extends Activity implements OnItemSelectedListener,
 
   @Override
   public void onLocationReturned(JSONObject locInfo) {
-    if (locInfo != null
-        && (mLatestLocInfo == null || !locInfo.toString().equals(
-            mLatestLocInfo.toString()))) {
-      mLatestLocInfo = locInfo;
-      try {
-        JSONObject loc = locInfo.getJSONObject("location");
-        mLocClient.getMetadata(loc, "floor");
-      } catch (JSONException e) {
-        // TODO Auto-generated catch block
+    if (mActive == true) {
+      if (locInfo != null
+          && (mLatestLocInfo == null || !locInfo.toString().equals(
+              mLatestLocInfo.toString()))) {
+        mLatestLocInfo = locInfo;
+        try {
+          JSONObject loc = locInfo.getJSONObject("location");
+          mLocClient.getMetadata(loc, "floor");
+        } catch (JSONException e) {
+          // TODO Auto-generated catch block
+        }
       }
-    }
 
-    mHandler.postDelayed(mLocalizationTimeTask, LOC_ITVL);
+      mHandler.postDelayed(mLocalizationTimeTask, LOC_ITVL);
+    }
   }
 
   @Override
   public void onMetadataReturned(JSONObject metadata) {
-    if (metadata != null
-        && (latestMetadata == null || !metadata.toString().equals(
-            latestMetadata.toString()))) {
-      latestMetadata = metadata;
-      mLocClient.getMap(metadata);
+    if (mActive == true) {
+      if (metadata != null
+          && (latestMetadata == null || !metadata.toString().equals(
+              latestMetadata.toString()))) {
+        latestMetadata = metadata;
+        mLocClient.getMap(metadata);
+      }
     }
   }
 
   @Override
   public void onMapReturned(Bitmap bitmap) {
-
     if (bitmap == null) {
       mCurSemantic = null;
     } else {

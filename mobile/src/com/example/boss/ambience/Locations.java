@@ -89,30 +89,32 @@ public class Locations implements Ambience, LocationListener {
     final JSONObject locationPack = new JSONObject();
 
     try {
-      // Pack cached WiFi data
-      final JSONObject locationJSONObject = new JSONObject();
-      locationPack.put("location", locationJSONObject);
+      if (mLocationEventQueue.isEmpty() == false) {
+        // Pack cached WiFi data
+        final JSONObject locationJSONObject = new JSONObject();
+        locationPack.put("location", locationJSONObject);
 
-      locationJSONObject.put("name", "location");
-      locationJSONObject.put("type", "location");
+        locationJSONObject.put("name", "location");
+        locationJSONObject.put("type", "location");
 
-      final JSONArray eventJSONArray = new JSONArray();
-      locationJSONObject.put("events", eventJSONArray);
+        final JSONArray eventJSONArray = new JSONArray();
+        locationJSONObject.put("events", eventJSONArray);
 
-      for (Location event : mLocationEventQueue) {
-        final JSONObject eventJSONObject = new JSONObject();
-        eventJSONArray.put(eventJSONObject);
+        for (Location event : mLocationEventQueue) {
+          final JSONObject eventJSONObject = new JSONObject();
+          eventJSONArray.put(eventJSONObject);
 
-        final Long timestamp = event.getTime();
-        eventJSONObject.put("timestamp", timestamp);
+          final Long timestamp = event.getTime();
+          eventJSONObject.put("timestamp", timestamp);
 
-        eventJSONObject.put("accuracy", event.getAccuracy());
-        eventJSONObject.put("altitude", event.getAltitude());
-        eventJSONObject.put("bearing", event.getBearing());
-        eventJSONObject.put("latitude", event.getLatitude());
-        eventJSONObject.put("longtitude", event.getLongitude());
-        eventJSONObject.put("provider", event.getProvider());
-        eventJSONObject.put("speed", event.getSpeed());
+          eventJSONObject.put("accuracy", event.getAccuracy());
+          eventJSONObject.put("altitude", event.getAltitude());
+          eventJSONObject.put("bearing", event.getBearing());
+          eventJSONObject.put("latitude", event.getLatitude());
+          eventJSONObject.put("longtitude", event.getLongitude());
+          eventJSONObject.put("provider", event.getProvider());
+          eventJSONObject.put("speed", event.getSpeed());
+        }
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block

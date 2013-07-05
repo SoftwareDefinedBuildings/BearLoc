@@ -80,29 +80,31 @@ public class Wifi implements Ambience {
     final JSONObject wifiPack = new JSONObject();
 
     try {
-      // Pack cached WiFi data
-      final JSONObject wifiJSONObject = new JSONObject();
-      wifiPack.put("wifi", wifiJSONObject);
+      if (mWifiEventQueue.isEmpty() == false) {
+        // Pack cached WiFi data
+        final JSONObject wifiJSONObject = new JSONObject();
+        wifiPack.put("wifi", wifiJSONObject);
 
-      wifiJSONObject.put("name", "wifi");
-      wifiJSONObject.put("type", "wifi");
+        wifiJSONObject.put("name", "wifi");
+        wifiJSONObject.put("type", "wifi");
 
-      final JSONArray eventJSONArray = new JSONArray();
-      wifiJSONObject.put("events", eventJSONArray);
+        final JSONArray eventJSONArray = new JSONArray();
+        wifiJSONObject.put("events", eventJSONArray);
 
-      for (Pair<Long, ScanResult> event : mWifiEventQueue) {
-        final JSONObject eventJSONObject = new JSONObject();
-        eventJSONArray.put(eventJSONObject);
+        for (Pair<Long, ScanResult> event : mWifiEventQueue) {
+          final JSONObject eventJSONObject = new JSONObject();
+          eventJSONArray.put(eventJSONObject);
 
-        final Long timestamp = event.first;
-        eventJSONObject.put("timestamp", timestamp);
+          final Long timestamp = event.first;
+          eventJSONObject.put("timestamp", timestamp);
 
-        final ScanResult scanResult = event.second;
-        eventJSONObject.put("BSSID", scanResult.BSSID);
-        eventJSONObject.put("SSID", scanResult.SSID);
-        eventJSONObject.put("capabilities", scanResult.capabilities);
-        eventJSONObject.put("frequency", scanResult.frequency);
-        eventJSONObject.put("level", scanResult.level);
+          final ScanResult scanResult = event.second;
+          eventJSONObject.put("BSSID", scanResult.BSSID);
+          eventJSONObject.put("SSID", scanResult.SSID);
+          eventJSONObject.put("capabilities", scanResult.capabilities);
+          eventJSONObject.put("frequency", scanResult.frequency);
+          eventJSONObject.put("level", scanResult.level);
+        }
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block

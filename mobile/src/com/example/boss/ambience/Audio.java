@@ -103,34 +103,36 @@ public class Audio implements Ambience {
     final JSONObject audioPack = new JSONObject();
 
     try {
-      // Pack cached audio data
-      final JSONObject audioJSONObject = new JSONObject();
-      audioPack.put("audio", audioJSONObject);
+      if (mAudioEventQueue.isEmpty() == false) {
+        // Pack cached audio data
+        final JSONObject audioJSONObject = new JSONObject();
+        audioPack.put("audio", audioJSONObject);
 
-      audioJSONObject.put("name", "audio");
-      audioJSONObject.put("type", "audio");
-      audioJSONObject.put("source", AUDIO_SOURCE);
-      audioJSONObject.put("sample rate", AUDIO_SAMPLE_RATE);
-      audioJSONObject.put("channel", AUDIO_CHANNEL);
-      audioJSONObject.put("format", AUDIO_FORMAT);
+        audioJSONObject.put("name", "audio");
+        audioJSONObject.put("type", "audio");
+        audioJSONObject.put("source", AUDIO_SOURCE);
+        audioJSONObject.put("sample rate", AUDIO_SAMPLE_RATE);
+        audioJSONObject.put("channel", AUDIO_CHANNEL);
+        audioJSONObject.put("format", AUDIO_FORMAT);
 
-      final JSONArray eventJSONArray = new JSONArray();
-      audioJSONObject.put("events", eventJSONArray);
+        final JSONArray eventJSONArray = new JSONArray();
+        audioJSONObject.put("events", eventJSONArray);
 
-      for (Pair<Long, ByteArrayOutputStream> event : mAudioEventQueue) {
-        final JSONObject eventJSONObject = new JSONObject();
-        eventJSONArray.put(eventJSONObject);
+        for (Pair<Long, ByteArrayOutputStream> event : mAudioEventQueue) {
+          final JSONObject eventJSONObject = new JSONObject();
+          eventJSONArray.put(eventJSONObject);
 
-        final Long timestamp = event.first;
-        eventJSONObject.put("timestamp", timestamp);
+          final Long timestamp = event.first;
+          eventJSONObject.put("timestamp", timestamp);
 
-        final JSONArray valueJSONArray = new JSONArray();
-        eventJSONObject.put("values", valueJSONArray);
+          final JSONArray valueJSONArray = new JSONArray();
+          eventJSONObject.put("values", valueJSONArray);
 
-        final ByteArrayOutputStream byteArrayOS = event.second;
-        byte[] audioData = byteArrayOS.toByteArray();
-        for (byte data : audioData) {
-          valueJSONArray.put(data);
+          final ByteArrayOutputStream byteArrayOS = event.second;
+          byte[] audioData = byteArrayOS.toByteArray();
+          for (byte data : audioData) {
+            valueJSONArray.put(data);
+          }
         }
       }
     } catch (JSONException e) {
@@ -139,5 +141,4 @@ public class Audio implements Ambience {
 
     return audioPack;
   }
-
 }

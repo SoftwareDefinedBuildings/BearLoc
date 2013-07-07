@@ -142,8 +142,8 @@ public class InMemoryTreeStateManager<T> implements TreeStateManager<T> {
         } else {
             final int index = node.indexOf(afterChild);
             final InMemoryTreeNode<T> added = node.add(
-                    index == -1 ? node.getChildrenListSize() : index + 1, newChild,
-                    visibility);
+                    index == -1 ? node.getChildrenListSize() : index + 1,
+                    newChild, visibility);
             allNodes.put(newChild, added);
         }
         if (visibility) {

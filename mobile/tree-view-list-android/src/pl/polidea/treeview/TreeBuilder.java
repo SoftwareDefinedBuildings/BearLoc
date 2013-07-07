@@ -8,8 +8,7 @@ import android.util.Log;
  * manager if you build initial tree from some external data source.
  * <p>
  * Note, that all ids must be unique. IDs are used to find nodes in the whole
- * tree, so they cannot repeat even if they are in different 
- * sub-trees. 
+ * tree, so they cannot repeat even if they are in different sub-trees.
  * 
  * @param <T>
  */

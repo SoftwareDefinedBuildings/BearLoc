@@ -190,4 +190,11 @@ public interface TreeStateManager<T> extends Serializable {
      * Refreshes views connected to the manager.
      */
     void refresh();
+
+    /**
+     * Count all elements.
+     * 
+     * @return number of all elements.
+     */
+    int getAllNodesCount();
 }

@@ -27,4 +27,6 @@ For more information, please visit <a href="http://sdb.cs.berkeley.edu/">http://
     
     <string name="reload">Reload</string>
     <string name="loc_tree_node_report">Report</string>
+    
+    <string name="progess_message">Localizing &#8230;</string>
 </resources>

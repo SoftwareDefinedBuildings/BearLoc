@@ -377,4 +377,9 @@ public class InMemoryTreeStateManager<T> implements TreeStateManager<T> {
         internalDataSetChanged();
     }
 
+    @Override
+    public int getAllNodesCount() {
+        return allNodes.size();
+    }
+
 }

@@ -30,7 +30,7 @@ public class BOSSLocClient implements LocClient {
   private WeakReference<LocClientListener> mListenerRef;
 
   public static interface LocClientListener {
-    public abstract void onLocationReturned(JSONObject loc);
+    public abstract void onLocationReturned(JSONObject locInfo);
 
     public abstract void onMetadataReturned(JSONObject metadata);
 
@@ -166,12 +166,12 @@ public class BOSSLocClient implements LocClient {
     }
 
     @Override
-    protected void onPostExecute(JSONObject loc) {
+    protected void onPostExecute(JSONObject locInfo) {
       if (!isCancelled()) {
         if (mListenerRef != null) {
           LocClientListener listener = mListenerRef.get();
           if (listener != null) {
-            listener.onLocationReturned(loc);
+            listener.onLocationReturned(locInfo);
           }
         }
       }

@@ -25,5 +25,6 @@ For more information, please visit <a href="http://sdb.cs.berkeley.edu/">http://
     <string name="pref_server_port_summ">Port of BOSS service on server</string>
     <string name="pref_server_port">Server Port</string>
     
-    <string name="fail_download_map">Failed to download map</string>
+    <string name="reload">Reload</string>
+    <string name="loc_tree_node_report">Report</string>
 </resources>

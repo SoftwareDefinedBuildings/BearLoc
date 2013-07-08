@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:treeView="http://schemas.android.com/apk/res-auto"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:fillViewport="true"
     android:orientation="vertical" >
 
+    <!--
     <Spinner
         android:id="@+id/sem_spinner"
         android:layout_width="fill_parent"
@@ -16,5 +18,20 @@
         android:layout_height="fill_parent"
         android:contentDescription="@string/map_desc"
         android:scaleType="matrix" />
+    -->
+
+    <Button
+        android:id="@+id/reload_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/reload" />
+
+    <pl.polidea.treeview.TreeViewList
+        android:id="@+id/loc_tree_view_list"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scrollbars="vertical"
+        android:smoothScrollbar="true"
+        treeView:indicator_gravity="right|center_vertical" />
 
 </LinearLayout>

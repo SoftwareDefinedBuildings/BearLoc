@@ -20,11 +20,25 @@
         android:scaleType="matrix" />
     -->
 
-    <Button
-        android:id="@+id/reload_button"
+    <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/reload" />
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/reload_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/reload" />
+
+        <Button
+            android:id="@+id/report_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/report" />
+    </LinearLayout>
 
     <pl.polidea.treeview.TreeViewList
         android:id="@+id/loc_tree_view_list"

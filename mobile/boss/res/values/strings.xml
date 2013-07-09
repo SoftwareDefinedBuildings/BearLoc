@@ -26,7 +26,13 @@ For more information, please visit <a href="http://sdb.cs.berkeley.edu/">http://
     <string name="pref_server_port">Server Port</string>
     
     <string name="reload">Reload</string>
+    <string name="report">Report</string>
     <string name="loc_tree_node_report">Report</string>
     
-    <string name="progess_message">Localizing &#8230;</string>
+    <string name="progess_message">Loading &#8230;</string>
+    
+    <string name="context_menu_change">Report Correct Location</string>
+    <string name="context_menu_change_condensed">Report</string>
+    <string name="context_menu_map_view">View in Map</string>
+    <string name="context_menu_map_view_condensed">Map</string>
 </resources>

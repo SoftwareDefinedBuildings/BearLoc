@@ -90,6 +90,7 @@ public class Audio implements Ambience {
       mAudioRecordThread.join();
     } catch (InterruptedException e) {
       // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
 
@@ -137,6 +138,7 @@ public class Audio implements Ambience {
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
+      e.printStackTrace();
     }
 
     return audioPack;

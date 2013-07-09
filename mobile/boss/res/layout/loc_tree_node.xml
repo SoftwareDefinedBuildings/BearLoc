@@ -3,34 +3,18 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
-    android:orientation="horizontal" >
+    android:orientation="vertical"
+    android:padding="4dip" >
 
-    <LinearLayout
-        android:layout_width="0dip"
+    <TextView
+        android:id="@+id/loc_tree_node_semantic"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:gravity="center_vertical"
-        android:orientation="vertical" >
+        android:background="@android:color/darker_gray" />
 
-        <TextView
-            android:id="@+id/loc_tree_node_semantic"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/darker_gray" />
-
-        <TextView
-            android:id="@+id/loc_tree_node_zone"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-
-    <Button
-        android:id="@+id/loc_tree_node_report_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:focusable="false"
-        android:focusableInTouchMode="true"
-        android:soundEffectsEnabled="true"
-        android:text="@string/loc_tree_node_report" />
+    <TextView
+        android:id="@+id/loc_tree_node_zone"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

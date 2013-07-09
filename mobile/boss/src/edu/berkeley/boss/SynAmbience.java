@@ -65,6 +65,7 @@ public class SynAmbience implements Ambience {
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
+      e.printStackTrace();
     }
 
     try {
@@ -76,6 +77,7 @@ public class SynAmbience implements Ambience {
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
+      e.printStackTrace();
     }
 
     try {
@@ -87,6 +89,7 @@ public class SynAmbience implements Ambience {
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
+      e.printStackTrace();
     }
 
     try {
@@ -98,9 +101,9 @@ public class SynAmbience implements Ambience {
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
+      e.printStackTrace();
     }
 
-    clear();
     return synAmbiencePack;
   }
 }

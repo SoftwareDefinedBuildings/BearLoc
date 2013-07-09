@@ -103,4 +103,9 @@ class SimpleStandardAdapter extends AbstractTreeViewAdapter<Long> {
     public long getItemId(final int position) {
         return getTreeId(position);
     }
+    
+  @Override
+  public Long getItem(final int position) {
+      return getTreeId(position);
+  }
 }

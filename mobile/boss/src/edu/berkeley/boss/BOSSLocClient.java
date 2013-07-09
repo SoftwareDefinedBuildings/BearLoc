@@ -2,15 +2,23 @@ package edu.berkeley.boss;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.URI;
+import java.util.concurrent.Callable;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.ParseException;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -24,17 +32,20 @@ public class BOSSLocClient implements LocClient {
 
   private Context mContext;
 
-  private LocaliztionTask mLocaliztionTask;
-  private MetadataDownloadTask mMetadataDownloadTask;
-  private MapDownloadTask mMapDownloadTask;
-  private WeakReference<LocClientListener> mListenerRef;
+  private LocClientListener mListener;
 
   public static interface LocClientListener {
     public abstract void onLocationReturned(JSONObject locInfo);
 
+    public abstract void onReportDone(boolean error);
+
     public abstract void onMetadataReturned(JSONObject metadata);
 
     public abstract void onMapReturned(Bitmap bitmap);
+  }
+
+  private static interface OnHttpResponded {
+    void onHttpResponded(HttpResponse response);
   }
 
   public BOSSLocClient(Context context) {
@@ -42,63 +53,228 @@ public class BOSSLocClient implements LocClient {
   }
 
   public void setOnDataReturnedListener(LocClientListener listener) {
-    mListenerRef = new WeakReference<LocClientListener>(listener);
+    mListener = listener;
+  }
+
+  private class OnLocationReturned implements OnHttpResponded {
+    @Override
+    public void onHttpResponded(HttpResponse response) {
+      if (mListener != null) {
+        if (response != null) {
+          final HttpEntity entity = response.getEntity();
+          if (entity != null) {
+            try {
+              String locInfoStr = EntityUtils.toString(entity);
+              JSONObject locInfo = new JSONObject(locInfoStr);
+
+              mListener.onLocationReturned(locInfo);
+
+              entity.consumeContent();
+            } catch (ParseException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            } catch (IOException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            } catch (JSONException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            }
+          } else {
+            mListener.onLocationReturned(null);
+          }
+        } else {
+          mListener.onLocationReturned(null);
+        }
+      }
+    }
   }
 
   @Override
   public boolean getLocation(JSONObject sensorData) {
-    if (mLocaliztionTask != null) {
-      mLocaliztionTask.cancel(true);
-    }
-    mLocaliztionTask = new LocaliztionTask();
-
-    // TODO check and remove "http://"
-    final String host = SettingsActivity.getServerAddr(mContext);
-    final int port = SettingsActivity.getServerPort(mContext);
-    final String service = "/localize";
-    URI uri;
-    try {
-      uri = new URI("http", null, host, port, service, null, null);
-    } catch (Exception e) {
+    final String path = "/localize";
+    URI uri = getHttpURI(path);
+    if (uri == null) {
       return false;
     }
 
-    mLocaliztionTask.execute(sensorData, uri);
+    try {
+      final HttpPost post = new HttpPost(uri);
+
+      final JSONObject locRequst = new JSONObject();
+      locRequst.put("type", "localize");
+      locRequst.put("sensor data", sensorData);
+
+      StringEntity se = new StringEntity(locRequst.toString());
+
+      post.setEntity(se);
+      post.setHeader("Accept", "application/json");
+      post.setHeader("Content-type", "application/json");
+
+      new HttpRequestTask(new OnLocationReturned()).execute(post);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (UnsupportedEncodingException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
     return true;
   }
 
-  @Override
-  public boolean getMetadata(JSONObject loc, String targetSem) {
-    if (mMetadataDownloadTask != null) {
-      mMetadataDownloadTask.cancel(true);
+  private class OnReportDone implements OnHttpResponded {
+    @Override
+    public void onHttpResponded(HttpResponse response) {
+      if (mListener != null) {
+        if (response != null) {
+          mListener.onReportDone(true);
+        } else {
+          mListener.onReportDone(false);
+        }
+      }
     }
-    mMetadataDownloadTask = new MetadataDownloadTask();
+  }
 
-    // TODO check and remove "http://"
-    final String host = SettingsActivity.getServerAddr(mContext);
-    final int port = SettingsActivity.getServerPort(mContext);
-    final String service = "/metadata";
-    URI uri;
-    try {
-      uri = new URI("http", null, host, port, service, null, null);
-    } catch (Exception e) {
+  @Override
+  public boolean reportLocation(JSONObject sensorData, JSONObject loc) {
+    final String path = "/localize/report";
+    URI uri = getHttpURI(path);
+    if (uri == null) {
       return false;
     }
 
-    mMetadataDownloadTask.execute(loc, targetSem, uri);
+    try {
+      final HttpPost post = new HttpPost(uri);
+
+      final JSONObject reportRequst = new JSONObject();
+      reportRequst.put("type", "report");
+      reportRequst.put("sensor data", sensorData);
+      reportRequst.put("location", loc);
+
+      final StringEntity se = new StringEntity(reportRequst.toString());
+
+      post.setEntity(se);
+      post.setHeader("Accept", "application/json");
+      post.setHeader("Content-type", "application/json");
+
+      new HttpRequestTask(new OnReportDone()).execute(post);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (UnsupportedEncodingException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
     return true;
+  }
+
+  private class onMetadataReturned implements OnHttpResponded {
+    @Override
+    public void onHttpResponded(HttpResponse response) {
+      if (mListener != null) {
+        if (response != null) {
+          final HttpEntity entity = response.getEntity();
+          if (entity != null) {
+            try {
+              String metadataStr = EntityUtils.toString(entity);
+              JSONObject metadata = new JSONObject(metadataStr);
+
+              mListener.onMetadataReturned(metadata);
+
+              entity.consumeContent();
+            } catch (ParseException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            } catch (IOException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            } catch (JSONException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            }
+          } else {
+            mListener.onMetadataReturned(null);
+          }
+        } else {
+          mListener.onMetadataReturned(null);
+        }
+      }
+    }
+  }
+
+  @Override
+  public boolean getMetadata(JSONObject loc, JSONArray targetSem) {
+    final String path = "/metadata";
+    URI uri = getHttpURI(path);
+    if (uri == null) {
+      return false;
+    }
+
+    try {
+      final HttpPost post = new HttpPost(uri);
+
+      final JSONObject metadataRequst = new JSONObject();
+      metadataRequst.put("type", "metadata");
+      metadataRequst.put("location", loc);
+      metadataRequst.put("targetsem", targetSem);
+
+      final StringEntity se = new StringEntity(metadataRequst.toString());
+
+      post.setEntity(se);
+      post.setHeader("Accept", "application/json");
+      post.setHeader("Content-type", "application/json");
+
+      new HttpRequestTask(new onMetadataReturned()).execute(post);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (UnsupportedEncodingException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return true;
+  }
+
+  private class onMapReturned implements OnHttpResponded {
+    @Override
+    public void onHttpResponded(HttpResponse response) {
+      if (mListener != null) {
+        if (response != null) {
+          final HttpEntity entity = response.getEntity();
+          if (entity != null) {
+            try {
+              InputStream inputStream = entity.getContent();
+              if (inputStream != null) {
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                inputStream.close();
+                mListener.onMapReturned(bitmap);
+              } else {
+                mListener.onMapReturned(null);
+              }
+
+              entity.consumeContent();
+            } catch (ParseException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            } catch (IOException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            }
+          } else {
+            mListener.onMapReturned(null);
+          }
+        } else {
+          mListener.onMapReturned(null);
+        }
+      }
+    }
   }
 
   @Override
   public boolean getMap(JSONObject metadata) {
-    if (mMapDownloadTask != null) {
-      mMapDownloadTask.cancel(true);
-    }
-    mMapDownloadTask = new MapDownloadTask();
-
-    // TODO check and remove "http://"
-    final String host = SettingsActivity.getServerAddr(mContext);
-    final int port = SettingsActivity.getServerPort(mContext);
     String path;
     try {
       path = "/metadata/data"
@@ -108,196 +284,73 @@ public class BOSSLocClient implements LocClient {
       return false;
     }
 
+    URI uri = getHttpURI(path);
+    if (uri == null) {
+      return false;
+    }
+
+    final HttpGet get = new HttpGet(uri);
+
+    new HttpRequestTask(new onMapReturned()).execute(get);
+    return true;
+  }
+
+  private static class HttpRequestTask extends
+      AsyncTask<HttpRequestBase, Void, HttpResponse> {
+
+    private OnHttpResponded listener;
+
+    public HttpRequestTask(OnHttpResponded listener) {
+      this.listener = listener;
+    }
+
+    @Override
+    protected HttpResponse doInBackground(HttpRequestBase... params) {
+
+      final HttpRequestBase request = params[0];
+      final AndroidHttpClient client = AndroidHttpClient.newInstance("Android");
+
+      try {
+        HttpResponse response = client.execute(request);
+        final int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode != HttpStatus.SC_OK) {
+          return null;
+        }
+
+        return response;
+      } catch (IOException e) {
+        request.abort();
+      } catch (IllegalStateException e) {
+        request.abort();
+      } catch (Exception e) {
+        request.abort();
+      } finally {
+        client.close();
+      }
+
+      return null;
+    }
+
+    @Override
+    protected void onPostExecute(HttpResponse response) {
+      if (!isCancelled()) {
+        listener.onHttpResponded(response);
+      }
+    }
+  }
+
+  private URI getHttpURI(String path) {
+    // TODO check and remove "http://"
+    final String host = SettingsActivity.getServerAddr(mContext);
+    final int port = SettingsActivity.getServerPort(mContext);
+
     URI uri;
     try {
       uri = new URI("http", null, host, port, path, null, null);
     } catch (Exception e) {
-      return false;
-    }
-
-    mMapDownloadTask.execute(uri);
-    return true;
-  }
-
-  private class LocaliztionTask extends AsyncTask<Object, Void, JSONObject> {
-
-    @Override
-    protected JSONObject doInBackground(Object... params) {
-      final JSONObject sensorData = (JSONObject) params[0];
-      final URI uri = (URI) params[1];
-      final AndroidHttpClient client = AndroidHttpClient.newInstance("Android");
-      final HttpPost postRequest = new HttpPost(uri);
-
-      try {
-        final JSONObject locRequst = new JSONObject();
-        locRequst.put("type", "localize");
-        locRequst.put("sensor data", sensorData);
-        
-        final StringEntity se = new StringEntity(locRequst.toString());
-
-        postRequest.setEntity(se);
-        postRequest.setHeader("Accept", "application/json");
-        postRequest.setHeader("Content-type", "application/json");
-
-        HttpResponse response = client.execute(postRequest);
-        final int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode != HttpStatus.SC_OK) {
-          return null;
-        }
-
-        final HttpEntity entity = response.getEntity();
-        if (entity != null) {
-          String locInfoStr = EntityUtils.toString(entity);
-          JSONObject locInfo = new JSONObject(locInfoStr);
-
-          return locInfo;
-        }
-      } catch (IOException e) {
-        postRequest.abort();
-      } catch (IllegalStateException e) {
-        postRequest.abort();
-      } catch (Exception e) {
-        postRequest.abort();
-      } finally {
-        client.close();
-      }
-
       return null;
     }
 
-    @Override
-    protected void onPostExecute(JSONObject locInfo) {
-      if (!isCancelled()) {
-        if (mListenerRef != null) {
-          LocClientListener listener = mListenerRef.get();
-          if (listener != null) {
-            listener.onLocationReturned(locInfo);
-          }
-        }
-      }
-
-      mLocaliztionTask = null;
-    }
-  }
-
-  private class MetadataDownloadTask extends
-      AsyncTask<Object, Void, JSONObject> {
-
-    @Override
-    protected JSONObject doInBackground(Object... params) {
-      final JSONObject loc = (JSONObject) params[0];
-      final String tartgetSem = (String) params[1];
-      final URI uri = (URI) params[2];
-      final AndroidHttpClient client = AndroidHttpClient.newInstance("Android");
-      final HttpPost postRequest = new HttpPost(uri);
-
-      try {
-        final JSONObject metadataRequst = new JSONObject();
-        metadataRequst.put("type", "metadata");
-        metadataRequst.put("location", loc);
-        metadataRequst.put("targetsem", tartgetSem);
-        
-        final StringEntity se = new StringEntity(metadataRequst.toString());
-
-        postRequest.setEntity(se);
-        postRequest.setHeader("Accept", "application/json");
-        postRequest.setHeader("Content-type", "application/json");
-
-        HttpResponse response = client.execute(postRequest);
-        final int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode != HttpStatus.SC_OK) {
-          return null;
-        }
-
-        final HttpEntity entity = response.getEntity();
-        if (entity != null) {
-          String metadataStr = EntityUtils.toString(entity);
-          JSONObject metadata = new JSONObject(metadataStr);
-
-          return metadata;
-        }
-      } catch (IOException e) {
-        postRequest.abort();
-      } catch (IllegalStateException e) {
-        postRequest.abort();
-      } catch (Exception e) {
-        postRequest.abort();
-      } finally {
-        client.close();
-      }
-
-      return null;
-    }
-
-    @Override
-    protected void onPostExecute(JSONObject metadata) {
-      if (!isCancelled()) {
-        if (mListenerRef != null) {
-          LocClientListener listener = mListenerRef.get();
-          if (listener != null) {
-            listener.onMetadataReturned(metadata);
-          }
-        }
-      }
-
-      mLocaliztionTask = null;
-    }
-  }
-
-  private class MapDownloadTask extends AsyncTask<URI, Void, Bitmap> {
-
-    @Override
-    protected Bitmap doInBackground(URI... params) {
-      final URI uri = params[0];
-      final AndroidHttpClient client = AndroidHttpClient.newInstance("Android");
-      final HttpGet getRequest = new HttpGet(uri);
-
-      try {
-        HttpResponse response = client.execute(getRequest);
-        final int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode != HttpStatus.SC_OK) {
-          return null;
-        }
-
-        final HttpEntity entity = response.getEntity();
-        if (entity != null) {
-          InputStream inputStream = null;
-          try {
-            inputStream = entity.getContent();
-            // TODO: Bug on slow connections, fixed in future release.
-            return BitmapFactory.decodeStream(inputStream);
-          } finally {
-            if (inputStream != null) {
-              inputStream.close();
-            }
-            entity.consumeContent();
-          }
-        }
-      } catch (IOException e) {
-        getRequest.abort();
-      } catch (IllegalStateException e) {
-        getRequest.abort();
-      } catch (Exception e) {
-        getRequest.abort();
-      } finally {
-        client.close();
-      }
-
-      return null;
-    }
-
-    @Override
-    protected void onPostExecute(Bitmap bitmap) {
-      if (!isCancelled()) {
-        if (mListenerRef != null) {
-          LocClientListener listener = mListenerRef.get();
-          if (listener != null) {
-            listener.onMapReturned(bitmap);
-          }
-        }
-      }
-
-      mMapDownloadTask = null;
-    }
+    return uri;
   }
 }

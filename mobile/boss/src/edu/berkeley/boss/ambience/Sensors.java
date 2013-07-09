@@ -137,6 +137,7 @@ public class Sensors implements Ambience, SensorEventListener {
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
+      e.printStackTrace();
     }
 
     return sensorPack;

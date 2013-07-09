@@ -111,10 +111,14 @@ public abstract class AbstractTreeViewAdapter<T> extends BaseAdapter implements
         return treeStateManager.getVisibleCount();
     }
 
-    @Override
-    public Object getItem(final int position) {
-        return getItemId(position);
-    }
+    /*
+     * The Item may not be an Long variable. Leave this to be implemented in
+     * derivative class.
+     */
+    // @Override
+    // public Object getItem(final int position) {
+    // return getItemId(position);
+    // }
 
     public T getTreeId(final int position) {
         return treeStateManager.getVisibleList().get(position);

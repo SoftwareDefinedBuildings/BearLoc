@@ -118,6 +118,7 @@ public class Locations implements Ambience, LocationListener {
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
+      e.printStackTrace();
     }
 
     return locationPack;

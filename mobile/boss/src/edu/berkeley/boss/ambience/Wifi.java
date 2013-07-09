@@ -108,6 +108,7 @@ public class Wifi implements Ambience {
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
+      e.printStackTrace();
     }
 
     return wifiPack;

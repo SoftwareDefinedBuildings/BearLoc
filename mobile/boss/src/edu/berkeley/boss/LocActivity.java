@@ -1,7 +1,6 @@
 package edu.berkeley.boss;
 
 import java.util.Iterator;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,16 +13,24 @@ import pl.polidea.treeview.TreeBuilder;
 import pl.polidea.treeview.TreeStateManager;
 import pl.polidea.treeview.TreeViewList;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.Button;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
-public class LocActivity extends Activity implements OnClickListener,
-    LocClientListener {
+public class LocActivity extends Activity implements View.OnClickListener,
+    DialogInterface.OnClickListener, LocClientListener {
   private Button mReloadButton;
+  private Button mReportButton;
   private TreeViewList mTreeViewList;
   private LocTreeViewAdapter mLocTreeViewAdapter;
   private TreeStateManager<LocNode> mTreeStateManager;
@@ -34,13 +41,19 @@ public class LocActivity extends Activity implements OnClickListener,
 
   private ProgressDialog mProgressDialog;
 
-  private boolean mActive;
-  private boolean mIsLocalizing;
+  private JSONObject mCurLocInfo;
+
+  private static enum State {
+    PAUSED, IDLE, LOCALIZE, REPORT, CHANGE_LOC, MAP_VIEW
+  }
+
+  private State mState;
 
   public static class LocNode {
     int id;
     String semantic;
     String zone;
+    JSONArray semArray;
   }
 
   @Override
@@ -51,9 +64,13 @@ public class LocActivity extends Activity implements OnClickListener,
     mReloadButton = (Button) findViewById(R.id.reload_button);
     mReloadButton.setOnClickListener(this);
 
+    mReportButton = (Button) findViewById(R.id.report_button);
+    mReportButton.setOnClickListener(this);
+
     mTreeViewList = (TreeViewList) findViewById(R.id.loc_tree_view_list);
     mTreeStateManager = new InMemoryTreeStateManager<LocNode>();
     mTreeBuilder = new TreeBuilder<LocNode>(mTreeStateManager);
+    registerForContextMenu(mTreeViewList);
 
     mLocClient = new BOSSLocClient(this);
     mLocClient.setOnDataReturnedListener(this);
@@ -69,39 +86,66 @@ public class LocActivity extends Activity implements OnClickListener,
   public void onClick(View v) {
     switch (v.getId()) {
     case R.id.reload_button:
-      if (mIsLocalizing == false) {
-        mProgressDialog.show();
-        mIsLocalizing = true;
+      if (mState == State.IDLE) {
+        mState = State.LOCALIZE;
 
         final JSONObject synAmbiencePack = mSynAmbience.get();
         mLocClient.getLocation(synAmbiencePack);
+
+        mProgressDialog.show();
+      }
+      break;
+    case R.id.report_button:
+      if (mState == State.IDLE) {
+        mState = State.REPORT;
+
+        final JSONObject synAmbiencePack = mSynAmbience.get();
+        // TODO get curLocInfo from adapater
+        mLocClient.reportLocation(synAmbiencePack, mCurLocInfo);
+
+        mProgressDialog.show();
       }
       break;
     }
   }
 
   @Override
-  public void onLocationReturned(JSONObject locInfo) {
-    if (locInfo != null && mActive == true) {
-      try {
-        final JSONObject loc = locInfo.getJSONObject("location");
+  public void onClick(DialogInterface dialog, int which) {
+    // TODO Auto-generated method stub
 
-        mTreeBuilder.clear();
-        final int depth = buildTree(null, loc);
-        mLocTreeViewAdapter = new LocTreeViewAdapter(this, mTreeStateManager,
-            depth);
-        mTreeViewList.setAdapter(mLocTreeViewAdapter);
-        mTreeStateManager.refresh();
-
-      } catch (JSONException e) {
-        // TODO Auto-generated catch block
-      }
-    }
-    mIsLocalizing = false;
-    mProgressDialog.dismiss();
   }
 
-  private int buildTree(final LocNode parent, final JSONObject loc) {
+  @Override
+  public void onLocationReturned(JSONObject locInfo) {
+    if (mState == State.LOCALIZE) {
+      mProgressDialog.dismiss();
+
+      if (locInfo != null) {
+        mCurLocInfo = locInfo;
+        try {
+          final JSONObject loc = locInfo.getJSONObject("location");
+
+          mTreeBuilder.clear();
+          final int depth = buildTree(null, loc, new JSONArray());
+          mLocTreeViewAdapter = new LocTreeViewAdapter(this, mTreeStateManager,
+              depth);
+          mTreeViewList.setAdapter(mLocTreeViewAdapter);
+          mTreeStateManager.refresh();
+
+        } catch (JSONException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+      }
+
+      mState = State.IDLE;
+    } else {
+      Log.e(this.toString(), "Location returned on non-LOCALIZE state.");
+    }
+  }
+
+  private int buildTree(final LocNode parent, final JSONObject loc,
+      final JSONArray semArray) {
 
     int depth = 0;
 
@@ -118,10 +162,15 @@ public class LocActivity extends Activity implements OnClickListener,
           locNode.id = mTreeStateManager.getAllNodesCount() + 1;
           locNode.semantic = locItem.getString(0);
           locNode.zone = locItem.getString(1);
+
+          // Do not change semArray itself
+          final JSONArray curSemArray = new JSONArray(semArray.toString());
+          curSemArray.put(locItem);
+          locNode.semArray = curSemArray;
           mTreeBuilder.addRelation(parent, locNode);
 
-          JSONObject subLocInfo = loc.getJSONObject(locItemStr);
-          int tmpDepth = buildTree(locNode, subLocInfo);
+          final JSONObject subLocInfo = loc.getJSONObject(locItemStr);
+          int tmpDepth = buildTree(locNode, subLocInfo, curSemArray);
           if (tmpDepth > depth) {
             depth = tmpDepth;
           }
@@ -136,9 +185,41 @@ public class LocActivity extends Activity implements OnClickListener,
   }
 
   @Override
-  public void onMetadataReturned(JSONObject metadata) {
-    // TODO Auto-generated method stub
+  public void onReportDone(boolean error) {
+    if (mState == State.REPORT) {
+      mProgressDialog.dismiss();
 
+      // TODO implement
+
+      mState = State.IDLE;
+    } else {
+      Log.e(this.toString(), "Report done on non-REPORT state.");
+    }
+  }
+
+  @Override
+  public void onMetadataReturned(JSONObject metadata) {
+    if (mState == State.CHANGE_LOC) {
+      final JSONArray zoneJSONArray = metadata.names();
+      final int length = zoneJSONArray.length();
+      final String[] zoneList = new String[length];
+      for (int i = 0; i < length; i++) {
+        try {
+          zoneList[i] = zoneJSONArray.getString(i);
+        } catch (JSONException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+      }
+
+      AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setTitle("Choose Zone");
+      builder.setItems(zoneList, this);
+      AlertDialog alert = builder.create();
+      alert.show();
+    } else if (mState == State.MAP_VIEW) {
+      // TODO implement
+    }
   }
 
   @Override
@@ -148,11 +229,56 @@ public class LocActivity extends Activity implements OnClickListener,
   }
 
   @Override
+  public void onCreateContextMenu(final ContextMenu menu, final View v,
+      final ContextMenuInfo menuInfo) {
+    super.onCreateContextMenu(menu, v, menuInfo);
+    final MenuInflater inflater = getMenuInflater();
+    inflater.inflate(R.menu.context_menu, menu);
+  }
+
+  @Override
+  public boolean onContextItemSelected(final MenuItem item) {
+    final AdapterContextMenuInfo info = (AdapterContextMenuInfo) item
+        .getMenuInfo();
+    switch (item.getItemId()) {
+    case R.id.context_menu_change:
+      if (mState == State.IDLE) {
+        mState = State.CHANGE_LOC;
+
+        try {
+          final JSONObject loc = mCurLocInfo.getJSONObject("location");
+          final LocNode nodeInfo = mLocTreeViewAdapter.getItem(info.position);
+          mLocClient.getMetadata(loc, nodeInfo.semArray);
+        } catch (JSONException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+
+        mProgressDialog.show();
+      }
+      return true;
+    case R.id.context_menu_map_view:
+      if (mState == State.IDLE) {
+        mState = State.MAP_VIEW;
+
+        // TODO implement
+
+        mProgressDialog.show();
+
+        mProgressDialog.dismiss();
+        mState = State.IDLE;
+      }
+      return true;
+    default:
+      return super.onContextItemSelected(item);
+    }
+  }
+
+  @Override
   protected void onResume() {
     super.onResume();
 
-    mActive = true;
-    mIsLocalizing = false;
+    mState = State.IDLE;
 
     mSynAmbience.resume();
   }
@@ -162,106 +288,10 @@ public class LocActivity extends Activity implements OnClickListener,
     // TODO deal with all rotation issues
     super.onPause();
 
-    mActive = false;
+    mState = State.PAUSED;
 
     mProgressDialog.dismiss();
 
     mSynAmbience.pause();
   }
 }
-
-/*
- * import org.json.JSONException; import org.json.JSONObject;
- * 
- * import edu.berkeley.boss.R;
- * 
- * import edu.berkeley.boss.BOSSLocClient.LocClientListener; import
- * android.app.Activity; import android.graphics.Bitmap; import
- * android.os.Bundle; import android.os.Handler; import android.view.View;
- * import android.widget.AdapterView; import
- * android.widget.AdapterView.OnItemSelectedListener; import
- * android.widget.ArrayAdapter; import android.widget.Spinner;
- * 
- * public class LocActivity extends Activity implements OnItemSelectedListener,
- * LocClientListener {
- * 
- * private static final long LOC_ITVL = 2000L; // millisecond
- * 
- * private Spinner mSemSpinner; private MapImageView mMapImageView;
- * 
- * private BOSSLocClient mLocClient; private SynAmbience mSynAmbience;
- * 
- * private JSONObject mLatestLocInfo; private JSONObject latestMetadata; private
- * String mCurSemantic;
- * 
- * private Handler mHandler; private final Runnable mLocalizationTimeTask = new
- * Runnable() { public void run() { final JSONObject synAmbiencePack =
- * mSynAmbience.get(); mLocClient.getLocation(synAmbiencePack); } };
- * 
- * private boolean mActive;
- * 
- * @Override protected void onCreate(Bundle savedInstanceState) {
- * super.onCreate(savedInstanceState); setContentView(R.layout.loc);
- * 
- * mSemSpinner = (Spinner) findViewById(R.id.sem_spinner); mMapImageView =
- * (MapImageView) findViewById(R.id.map_view);
- * 
- * mLocClient = new BOSSLocClient(this); mSynAmbience = new SynAmbience(this);
- * 
- * mHandler = new Handler();
- * 
- * ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
- * R.array.semantics, android.R.layout.simple_spinner_item); adapter
- * .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
- * mSemSpinner.setAdapter(adapter);
- * 
- * mSemSpinner.setOnItemSelectedListener(this);
- * mLocClient.setOnDataReturnedListener(this); }
- * 
- * @Override protected void onResume() { super.onResume();
- * 
- * mActive = true;
- * 
- * mSynAmbience.resume(); mHandler.postDelayed(mLocalizationTimeTask, 0); }
- * 
- * @Override protected void onPause() { // TODO deal with all rotation issues
- * super.onPause();
- * 
- * mActive = false;
- * 
- * mSynAmbience.pause(); mHandler.removeCallbacks(mLocalizationTimeTask); }
- * 
- * @Override public void onItemSelected(AdapterView<?> parent, View view, int
- * pos, long id) { final String newSemantic =
- * parent.getItemAtPosition(pos).toString(); onSemanticChanged(newSemantic); }
- * 
- * @Override public void onNothingSelected(AdapterView<?> parent) { // TODO
- * Auto-generated method stub }
- * 
- * private void onSemanticChanged(String newSemantic) { if ((mCurSemantic ==
- * null) || !(mCurSemantic.equals(newSemantic))) { mCurSemantic = newSemantic;
- * drawZones(mCurSemantic); } }
- * 
- * @Override public void onLocationReturned(JSONObject locInfo) { if (mActive ==
- * true) { if (locInfo != null && (mLatestLocInfo == null ||
- * !locInfo.toString().equals( mLatestLocInfo.toString()))) { mLatestLocInfo =
- * locInfo; try { JSONObject loc = locInfo.getJSONObject("location");
- * mLocClient.getMetadata(loc, "floor"); } catch (JSONException e) { // TODO
- * Auto-generated catch block } }
- * 
- * mHandler.postDelayed(mLocalizationTimeTask, LOC_ITVL); } }
- * 
- * @Override public void onMetadataReturned(JSONObject metadata) { if (mActive
- * == true) { if (metadata != null && (latestMetadata == null ||
- * !metadata.toString().equals( latestMetadata.toString()))) { latestMetadata =
- * metadata; mLocClient.getMap(metadata); } } }
- * 
- * @Override public void onMapReturned(Bitmap bitmap) { if (bitmap == null) {
- * mCurSemantic = null; } else { mMapImageView.setMap(bitmap); } }
- * 
- * private void drawZones(String semantic) {
- * 
- * }
- * 
- * }
- */

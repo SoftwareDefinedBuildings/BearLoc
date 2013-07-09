@@ -4,8 +4,6 @@ import edu.berkeley.boss.LocActivity.LocNode;
 import edu.berkeley.boss.R;
 import android.app.Activity;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import pl.polidea.treeview.AbstractTreeViewAdapter;
@@ -13,13 +11,6 @@ import pl.polidea.treeview.TreeNodeInfo;
 import pl.polidea.treeview.TreeStateManager;
 
 public class LocTreeViewAdapter extends AbstractTreeViewAdapter<LocNode> {
-
-  private final OnClickListener mOnClickListener = new OnClickListener() {
-    @Override
-    public void onClick(View v) {
-      // TODO Inform mActivity to change to Map View
-    }
-  };
 
   public LocTreeViewAdapter(Activity activity,
       TreeStateManager<LocNode> treeStateManager, int numberOfLevels) {
@@ -29,6 +20,11 @@ public class LocTreeViewAdapter extends AbstractTreeViewAdapter<LocNode> {
   @Override
   public long getItemId(int position) {
     return getTreeId(position).id;
+  }
+  
+  @Override
+  public LocNode getItem(final int position) {
+      return getTreeId(position);
   }
 
   @Override
@@ -49,10 +45,6 @@ public class LocTreeViewAdapter extends AbstractTreeViewAdapter<LocNode> {
     final TextView zoneTextView = (TextView) viewLayout
         .findViewById(R.id.loc_tree_node_zone);
     zoneTextView.setText(treeNodeInfo.getId().zone);
-
-    final Button correctButton = (Button) viewLayout
-        .findViewById(R.id.loc_tree_node_report_button);
-    correctButton.setOnClickListener(mOnClickListener);
 
     return viewLayout;
   }

@@ -5,8 +5,7 @@ from twisted.web import resource, server
 from twisted.python import log, components
 from twisted.internet import defer
 
-from boss import interface as boss_iface
-from boss import service as boss_service
+from boss.interface import IBOSSService
 from boss.loc import resource as loc_resource
 from boss.metadata import resource as metadata_resource
 from boss.control import resource as control_resource
@@ -22,7 +21,7 @@ class BOSSResource(resource.Resource):
     resource.Resource.__init__(self)
     self._service = service
     if 'localize' in self._service.content():
-      self.putChild('localize', loc_resource.LocResource(self._service.localize))
+      self.putChild('localize', loc_resource.LocResource(self._service.loc))
     if 'metadata' in self._service.content():
       self.putChild('metadata', metadata_resource.MetadataResource(self._service.metadata))
     if 'control' in self._service.content():
@@ -41,5 +40,5 @@ class BOSSResource(resource.Resource):
     return json.dumps(self._service.content())
 
 components.registerAdapter(BOSSResource, 
-                           boss_iface.IBOSSService, 
+                           IBOSSService, 
                            resource.IResource)

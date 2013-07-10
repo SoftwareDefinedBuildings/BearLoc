@@ -3,16 +3,24 @@
 
 from twisted.internet import defer
 
+from zope.interface import implements
+
+from boss.loc.interface import ILoc
+from boss.loc.report import report
+
 from collections import defaultdict
 
 
 class Loc(object):
   """Loc class"""
   
+  implements(ILoc)
+  
   def __init__(self, db):
     self._db = db
-  
-  
+    self.report = report.Report(self._db)
+
+
   def localize(self, request):
     """Execute localization service, which fuses results of multiple 
     localization services.
@@ -44,10 +52,10 @@ class Loc(object):
     hard_loc_info = loc_infos[randint(0,2)]
     
     return defer.succeed(hard_loc_info)
-    
+
+
   def _tree(self):
     '''Autovivification of tree.
     ref http://recursive-labs.com/blog/2012/05/31/one-line-python-tree-explained/
     '''
     return defaultdict(self._tree)
-    

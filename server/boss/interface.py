@@ -11,21 +11,3 @@ class IBOSSService(Interface):
     """
     Return a list of strings.
     """
-  
-  
-  def localize(request):
-    """
-    Return a deferred returning a tuple.
-    """
-  
-  
-  def metadata(request):
-    """
-    Return a deferred returning a metadata.
-    """
-
-
-  def control(request):
-    """
-    Return a deferred returning a control status.
-    """

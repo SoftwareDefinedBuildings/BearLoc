@@ -5,11 +5,17 @@ from twisted.web import static
 from twisted.internet import defer
 from twisted.python import filepath
 
+from zope.interface import implements
+
+from boss.metadata.interface import IMetadata
+
 import json
 import os
 
 class Metadata(object):
   """Metadata class"""
+  
+  implements(IMetadata)
   
   def __init__(self, db):
     self._db = db
@@ -21,65 +27,45 @@ class Metadata(object):
     Return metadata"""
     f = open(os.path.abspath(self._root + "/metadata.json"))
     mdtree = json.loads(f.read())
-    location = request['location']
-    targetsem = request['targetsem']
+    # target format: [[Sem1, Zone1], ..., [SemN, ZoneN], TargetSem]
+    target = request['target']
     
-    mdtissue = self._metadata_tissue(mdtree, location, targetsem)
-    metadata = self._metadata_expand(mdtissue)
+    metadata = self._metadata_recursive(mdtree, target)
+    
+    print metadata
     
     return defer.succeed(metadata)
 
 
-  def _metadata_tissue(self, mdtree, loc, targetsem):
-    """Get tissue of metadata of location for specific semantic.
-       The tissue may contain elements whose content is stored in other files.
+  def _metadata_recursive(self, mdtree, target):
+    """Get metadata of location for specific semantic array, 
+       including children metadata in target semantic.
+       The metadata may contain elements whose content is stored in other files.
   
     Return dict"""
     
-    if 'child' in mdtree:
-      childsems = mdtree['child'].keys()
-    else:
-      childsems = []
+    semantic = target[0][0]
+    zone = target[0][1]
     
-    commomsems = [sem for sem in childsems if sem in loc.keys()]
-    
-    if commomsems: # commomsems is not empty
-      if targetsem in commomsems:
-        if loc[targetsem] in mdtree['child'][targetsem]:
-          mdtissue = mdtree['child'][targetsem][loc[targetsem]]
-        else:
-          mdtissue = None
+    if mdtree['semantic'] == semantic and mdtree['name'] == zone:
+      if isinstance(target[1], basestring):
+        targetsem = target[1]
+        mdtree['child'] = {targetsem: mdtree['child'][targetsem]}
+        mdchildlist = mdtree['child'][targetsem]
+        for key in mdchildlist.keys():
+          if 'refer' in mdchildlist[key].keys():
+            f = open(os.path.abspath(self._root + mdchildlist[key]['refer']))
+            mdchildlist[key] = json.loads(f.read())
+          mdchildlist[key].pop('child', None)
+        
+        return mdtree
       else:
-        mdtissue = None
-        for sem in commomsems:
-          if loc[sem] in mdtree['child'][sem]:
-            mdsubtree = mdtree['child'][sem][loc[sem]]
-          else:
-            break
-          
-          if 'refer' in mdsubtree.keys():
-            f = open(os.path.abspath(self._root + mdsubtree['refer']))
-            mdsubtree = json.loads(f.read())
-            
-          tmp_tissue = self._metadata_tissue(mdsubtree, loc, targetsem)
-          if tmp_tissue is not None:
-            mdtissue = tmp_tissue
-            break
+        childsemantic = target[1][0]
+        childzone = target[1][1]
+        childmdtree = mdtree['child'][childsemantic][childzone]
+        if 'refer' in childmdtree.keys():
+          f = open(os.path.abspath(self._root + childmdtree['refer']))
+          childmdtree = json.loads(f.read())
+        return self._metadata_recursive(childmdtree, target[1:])
     else:
-      mdtissue = None
-      
-    return mdtissue
-
-
-  def _metadata_expand(self, mdtissue):
-    """Get full content of metadata tissue.
-       The full content contains no data in other files.
-  
-    Return dict"""
-    if 'refer' in mdtissue.keys():
-      f = open(os.path.abspath(self._root + mdtissue['refer']))
-      return json.loads(f.read())
-    else:
-      for key in mdtissue.keys():
-        mdtissue[key] = self._metadata_expand(mdtissue[key])
-      return mdtissue
+      return None

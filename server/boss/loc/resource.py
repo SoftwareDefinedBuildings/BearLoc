@@ -2,10 +2,11 @@
 # encoding: utf-8
 
 from twisted.web import resource, server
-from twisted.python import log
+from twisted.python import log, components
 from twisted.internet import defer
 
-from boss import service as boss_service
+from boss.loc.interface import ILoc
+from boss.loc.report import resource as report_resource
 
 import json
 import httplib
@@ -14,9 +15,10 @@ import httplib
 class LocResource(resource.Resource):
   """BOSS Localize web-accessible resource"""
   
-  def __init__(self, localize):
+  def __init__(self, loc):
     resource.Resource.__init__(self)
-    self._localize = localize
+    self._loc = loc
+    self.putChild('report', report_resource.ReportResource(self._loc.report))
   
   
   def getChild(self, path, request):
@@ -37,7 +39,7 @@ class LocResource(resource.Resource):
     request.setHeader('Content-type', 'application/json')
     # TODO: handle bad request
     content = json.load(request.content)
-    d = self._localize(content)
+    d = self._loc.localize(content)
     d.addCallback(self._succeed, request)
     d.addErrback(self._fail, request)
     
@@ -59,11 +61,6 @@ class LocResource(resource.Resource):
   def _fail(self, err, request):
     if err.check(defer.CancelledError):
       log.msg(request.getHost().host + " localization canceled")
-    elif err.check(boss_service.NoLocalizerError):
-      request.setResponseCode(httplib.BAD_REQUEST)
-      request.write("Server error: No Localize module")
-      request.finish()
-      log.msg(request.getHost().host + " localization failed")
     else:
       pass
 
@@ -71,3 +68,7 @@ class LocResource(resource.Resource):
   def _cancel(self, err, deferred, request):
     deferred.cancel()
     log.msg(request.getHost().host + " lost connection")
+
+components.registerAdapter(LocResource, 
+                           ILoc, 
+                           resource.IResource)

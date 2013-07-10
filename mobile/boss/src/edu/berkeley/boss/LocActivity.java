@@ -28,7 +28,8 @@ import android.widget.Button;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
 public class LocActivity extends Activity implements View.OnClickListener,
-    DialogInterface.OnClickListener, LocClientListener {
+    DialogInterface.OnClickListener, DialogInterface.OnCancelListener,
+    LocClientListener {
   private Button mReloadButton;
   private Button mReportButton;
   private TreeViewList mTreeViewList;
@@ -40,6 +41,7 @@ public class LocActivity extends Activity implements View.OnClickListener,
   private SynAmbience mSynAmbience;
 
   private ProgressDialog mProgressDialog;
+  private AlertDialog.Builder mDialogBuilder;
 
   private JSONObject mCurLocInfo;
 
@@ -80,6 +82,11 @@ public class LocActivity extends Activity implements View.OnClickListener,
     mProgressDialog = new ProgressDialog(this);
     mProgressDialog.setMessage(getResources().getString(
         R.string.progess_message));
+    mProgressDialog.setOnCancelListener(this);
+
+    mDialogBuilder = new AlertDialog.Builder(this);
+    mDialogBuilder.setTitle("Choose Zone");
+    mDialogBuilder.setOnCancelListener(this);
   }
 
   @Override
@@ -88,22 +95,20 @@ public class LocActivity extends Activity implements View.OnClickListener,
     case R.id.reload_button:
       if (mState == State.IDLE) {
         mState = State.LOCALIZE;
+        mProgressDialog.show();
 
         final JSONObject synAmbiencePack = mSynAmbience.get();
         mLocClient.getLocation(synAmbiencePack);
-
-        mProgressDialog.show();
       }
       break;
     case R.id.report_button:
       if (mState == State.IDLE) {
         mState = State.REPORT;
+        mProgressDialog.show();
 
         final JSONObject synAmbiencePack = mSynAmbience.get();
-        // TODO get curLocInfo from adapater
+        // TODO get curLocInfo from adapter
         mLocClient.reportLocation(synAmbiencePack, mCurLocInfo);
-
-        mProgressDialog.show();
       }
       break;
     }
@@ -111,15 +116,35 @@ public class LocActivity extends Activity implements View.OnClickListener,
 
   @Override
   public void onClick(DialogInterface dialog, int which) {
-    // TODO Auto-generated method stub
-
+    if (mState == State.CHANGE_LOC) {
+      mState = State.IDLE;
+    } else {
+      Log.e(this.toString(), "Dialog clicked on non-CHANGE_LOC state.");
+    }
   }
 
   @Override
-  public void onLocationReturned(JSONObject locInfo) {
-    if (mState == State.LOCALIZE) {
-      mProgressDialog.dismiss();
+  public void onCancel(DialogInterface dialog) {
+    if (dialog == mProgressDialog) {
+      if (mState == State.LOCALIZE || mState == State.REPORT
+          || mState == State.CHANGE_LOC) {
+        mState = State.IDLE;
+      } else {
+        Log.e(this.toString(),
+            "Dialog canceled on non-LOCALIZE, non-REPORT, and non-CHANGE_LOC state.");
+      }
+    } else {
+      if (mState == State.CHANGE_LOC) {
+        mState = State.IDLE;
+      } else {
+        Log.e(this.toString(), "Dialog canceled on non-CHANGE_LOC state.");
+      }
+    }
+  }
 
+  @Override
+  public void onLocationReturned(final JSONObject locInfo) {
+    if (mState == State.LOCALIZE) {
       if (locInfo != null) {
         mCurLocInfo = locInfo;
         try {
@@ -138,6 +163,7 @@ public class LocActivity extends Activity implements View.OnClickListener,
         }
       }
 
+      mProgressDialog.dismiss();
       mState = State.IDLE;
     } else {
       Log.e(this.toString(), "Location returned on non-LOCALIZE state.");
@@ -167,6 +193,7 @@ public class LocActivity extends Activity implements View.OnClickListener,
           final JSONArray curSemArray = new JSONArray(semArray.toString());
           curSemArray.put(locItem);
           locNode.semArray = curSemArray;
+
           mTreeBuilder.addRelation(parent, locNode);
 
           final JSONObject subLocInfo = loc.getJSONObject(locItemStr);
@@ -185,11 +212,9 @@ public class LocActivity extends Activity implements View.OnClickListener,
   }
 
   @Override
-  public void onReportDone(boolean error) {
+  public void onReportDone(final boolean success) {
     if (mState == State.REPORT) {
       mProgressDialog.dismiss();
-
-      // TODO implement
 
       mState = State.IDLE;
     } else {
@@ -198,32 +223,38 @@ public class LocActivity extends Activity implements View.OnClickListener,
   }
 
   @Override
-  public void onMetadataReturned(JSONObject metadata) {
+  public void onMetadataReturned(final JSONObject metadata) {
     if (mState == State.CHANGE_LOC) {
-      final JSONArray zoneJSONArray = metadata.names();
-      final int length = zoneJSONArray.length();
-      final String[] zoneList = new String[length];
-      for (int i = 0; i < length; i++) {
+      if (metadata != null) {
         try {
-          zoneList[i] = zoneJSONArray.getString(i);
+          // Returned metadata should have only one semantic in child
+          final String semantic = metadata.getJSONObject("child").names()
+              .getString(0);
+          final JSONArray zoneJSONArray = metadata.getJSONObject("child")
+              .getJSONObject(semantic).names();
+          final int length = zoneJSONArray.length();
+          final String[] zoneList = new String[length];
+          for (int i = 0; i < length; i++) {
+            zoneList[i] = zoneJSONArray.getString(i);
+          }
+
+          mDialogBuilder.setItems(zoneList, this);
+          AlertDialog alert = mDialogBuilder.create();
+
+          mProgressDialog.dismiss();
+          alert.show();
         } catch (JSONException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
         }
       }
-
-      AlertDialog.Builder builder = new AlertDialog.Builder(this);
-      builder.setTitle("Choose Zone");
-      builder.setItems(zoneList, this);
-      AlertDialog alert = builder.create();
-      alert.show();
     } else if (mState == State.MAP_VIEW) {
       // TODO implement
     }
   }
 
   @Override
-  public void onMapReturned(Bitmap bitmap) {
+  public void onMapReturned(final Bitmap bitmap) {
     // TODO Auto-generated method stub
 
   }
@@ -244,26 +275,28 @@ public class LocActivity extends Activity implements View.OnClickListener,
     case R.id.context_menu_change:
       if (mState == State.IDLE) {
         mState = State.CHANGE_LOC;
+        mProgressDialog.show();
 
+        final LocNode nodeInfo = mLocTreeViewAdapter.getItem(info.position);
         try {
-          final JSONObject loc = mCurLocInfo.getJSONObject("location");
-          final LocNode nodeInfo = mLocTreeViewAdapter.getItem(info.position);
-          mLocClient.getMetadata(loc, nodeInfo.semArray);
+          // target format: [[Sem1, Zone1], ..., [SemN, ZoneN], TargetSem]
+          final JSONArray target = nodeInfo.semArray;
+          final int lastIdx = target.length() - 1;
+          String targetSem = target.getJSONArray(lastIdx).getString(0);
+          target.put(lastIdx, targetSem);
+          mLocClient.getMetadata(target);
         } catch (JSONException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
         }
-
-        mProgressDialog.show();
       }
       return true;
     case R.id.context_menu_map_view:
       if (mState == State.IDLE) {
         mState = State.MAP_VIEW;
+        mProgressDialog.show();
 
         // TODO implement
-
-        mProgressDialog.show();
 
         mProgressDialog.dismiss();
         mState = State.IDLE;

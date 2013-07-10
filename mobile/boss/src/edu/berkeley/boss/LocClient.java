@@ -12,7 +12,7 @@ public interface LocClient {
   
   public abstract boolean reportLocation(JSONObject sensorData, JSONObject loc);
 
-  public abstract boolean getMetadata(JSONObject loc, JSONArray targetSem);
+  public abstract boolean getMetadata(JSONArray target);
 
   public abstract boolean getMap(JSONObject metadata);
 

@@ -1,23 +1,16 @@
 package edu.berkeley.boss;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.ref.WeakReference;
-import java.net.URI;
-import java.util.concurrent.Callable;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.Charset;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.ParseException;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.AbstractHttpEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,7 +18,6 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 
 public class BOSSLocClient implements LocClient {
@@ -35,17 +27,17 @@ public class BOSSLocClient implements LocClient {
   private LocClientListener mListener;
 
   public static interface LocClientListener {
-    public abstract void onLocationReturned(JSONObject locInfo);
+    public abstract void onLocationReturned(final JSONObject locInfo);
 
-    public abstract void onReportDone(boolean error);
+    public abstract void onReportDone(final boolean success);
 
-    public abstract void onMetadataReturned(JSONObject metadata);
+    public abstract void onMetadataReturned(final JSONObject metadata);
 
-    public abstract void onMapReturned(Bitmap bitmap);
+    public abstract void onMapReturned(final Bitmap bitmap);
   }
 
   private static interface OnHttpResponded {
-    void onHttpResponded(HttpResponse response);
+    void onHttpResponded(String response);
   }
 
   public BOSSLocClient(Context context) {
@@ -58,30 +50,16 @@ public class BOSSLocClient implements LocClient {
 
   private class OnLocationReturned implements OnHttpResponded {
     @Override
-    public void onHttpResponded(HttpResponse response) {
+    public void onHttpResponded(String locInfoStr) {
       if (mListener != null) {
-        if (response != null) {
-          final HttpEntity entity = response.getEntity();
-          if (entity != null) {
-            try {
-              String locInfoStr = EntityUtils.toString(entity);
-              JSONObject locInfo = new JSONObject(locInfoStr);
+        if (locInfoStr != null) {
+          try {
+            JSONObject locInfo = new JSONObject(locInfoStr);
 
-              mListener.onLocationReturned(locInfo);
-
-              entity.consumeContent();
-            } catch (ParseException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
-            } catch (IOException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
-            } catch (JSONException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
-            }
-          } else {
-            mListener.onLocationReturned(null);
+            mListener.onLocationReturned(locInfo);
+          } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
           }
         } else {
           mListener.onLocationReturned(null);
@@ -93,29 +71,19 @@ public class BOSSLocClient implements LocClient {
   @Override
   public boolean getLocation(JSONObject sensorData) {
     final String path = "/localize";
-    URI uri = getHttpURI(path);
-    if (uri == null) {
+    URL url = getHttpURL(path);
+    if (url == null) {
       return false;
     }
 
     try {
-      final HttpPost post = new HttpPost(uri);
-
       final JSONObject locRequst = new JSONObject();
       locRequst.put("type", "localize");
       locRequst.put("sensor data", sensorData);
 
-      StringEntity se = new StringEntity(locRequst.toString());
-
-      post.setEntity(se);
-      post.setHeader("Accept", "application/json");
-      post.setHeader("Content-type", "application/json");
-
-      new HttpRequestTask(new OnLocationReturned()).execute(post);
+      new HttpRequestTask(new OnLocationReturned()).execute(url,
+          locRequst.toString());
     } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } catch (UnsupportedEncodingException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -125,7 +93,7 @@ public class BOSSLocClient implements LocClient {
 
   private class OnReportDone implements OnHttpResponded {
     @Override
-    public void onHttpResponded(HttpResponse response) {
+    public void onHttpResponded(String response) {
       if (mListener != null) {
         if (response != null) {
           mListener.onReportDone(true);
@@ -139,30 +107,20 @@ public class BOSSLocClient implements LocClient {
   @Override
   public boolean reportLocation(JSONObject sensorData, JSONObject loc) {
     final String path = "/localize/report";
-    URI uri = getHttpURI(path);
-    if (uri == null) {
+    URL url = getHttpURL(path);
+    if (url == null) {
       return false;
     }
 
     try {
-      final HttpPost post = new HttpPost(uri);
-
       final JSONObject reportRequst = new JSONObject();
       reportRequst.put("type", "report");
       reportRequst.put("sensor data", sensorData);
       reportRequst.put("location", loc);
 
-      final StringEntity se = new StringEntity(reportRequst.toString());
-
-      post.setEntity(se);
-      post.setHeader("Accept", "application/json");
-      post.setHeader("Content-type", "application/json");
-
-      new HttpRequestTask(new OnReportDone()).execute(post);
+      new HttpRequestTask(new OnReportDone()).execute(url,
+          reportRequst.toString());
     } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } catch (UnsupportedEncodingException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -172,30 +130,16 @@ public class BOSSLocClient implements LocClient {
 
   private class onMetadataReturned implements OnHttpResponded {
     @Override
-    public void onHttpResponded(HttpResponse response) {
+    public void onHttpResponded(String metadataStr) {
       if (mListener != null) {
-        if (response != null) {
-          final HttpEntity entity = response.getEntity();
-          if (entity != null) {
-            try {
-              String metadataStr = EntityUtils.toString(entity);
-              JSONObject metadata = new JSONObject(metadataStr);
+        if (metadataStr != null) {
+          try {
+            JSONObject metadata = new JSONObject(metadataStr);
 
-              mListener.onMetadataReturned(metadata);
-
-              entity.consumeContent();
-            } catch (ParseException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
-            } catch (IOException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
-            } catch (JSONException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
-            }
-          } else {
-            mListener.onMetadataReturned(null);
+            mListener.onMetadataReturned(metadata);
+          } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
           }
         } else {
           mListener.onMetadataReturned(null);
@@ -205,32 +149,21 @@ public class BOSSLocClient implements LocClient {
   }
 
   @Override
-  public boolean getMetadata(JSONObject loc, JSONArray targetSem) {
+  public boolean getMetadata(JSONArray target) {
     final String path = "/metadata";
-    URI uri = getHttpURI(path);
-    if (uri == null) {
+    URL url = getHttpURL(path);
+    if (url == null) {
       return false;
     }
 
     try {
-      final HttpPost post = new HttpPost(uri);
-
       final JSONObject metadataRequst = new JSONObject();
       metadataRequst.put("type", "metadata");
-      metadataRequst.put("location", loc);
-      metadataRequst.put("targetsem", targetSem);
+      metadataRequst.put("target", target);
 
-      final StringEntity se = new StringEntity(metadataRequst.toString());
-
-      post.setEntity(se);
-      post.setHeader("Accept", "application/json");
-      post.setHeader("Content-type", "application/json");
-
-      new HttpRequestTask(new onMetadataReturned()).execute(post);
+      new HttpRequestTask(new onMetadataReturned()).execute(url,
+          metadataRequst.toString());
     } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } catch (UnsupportedEncodingException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -240,32 +173,13 @@ public class BOSSLocClient implements LocClient {
 
   private class onMapReturned implements OnHttpResponded {
     @Override
-    public void onHttpResponded(HttpResponse response) {
+    public void onHttpResponded(String mapStr) {
       if (mListener != null) {
-        if (response != null) {
-          final HttpEntity entity = response.getEntity();
-          if (entity != null) {
-            try {
-              InputStream inputStream = entity.getContent();
-              if (inputStream != null) {
-                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                inputStream.close();
-                mListener.onMapReturned(bitmap);
-              } else {
-                mListener.onMapReturned(null);
-              }
-
-              entity.consumeContent();
-            } catch (ParseException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
-            } catch (IOException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
-            }
-          } else {
-            mListener.onMapReturned(null);
-          }
+        if (mapStr != null) {
+          final byte[] mapBytes = mapStr.getBytes();
+          Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0,
+              mapBytes.length);
+          mListener.onMapReturned(bitmap);
         } else {
           mListener.onMapReturned(null);
         }
@@ -284,19 +198,16 @@ public class BOSSLocClient implements LocClient {
       return false;
     }
 
-    URI uri = getHttpURI(path);
-    if (uri == null) {
+    URL url = getHttpURL(path);
+    if (url == null) {
       return false;
     }
 
-    final HttpGet get = new HttpGet(uri);
-
-    new HttpRequestTask(new onMapReturned()).execute(get);
+    new HttpRequestTask(new onMapReturned()).execute(url);
     return true;
   }
 
-  private static class HttpRequestTask extends
-      AsyncTask<HttpRequestBase, Void, HttpResponse> {
+  private static class HttpRequestTask extends AsyncTask<Object, Void, String> {
 
     private OnHttpResponded listener;
 
@@ -304,53 +215,101 @@ public class BOSSLocClient implements LocClient {
       this.listener = listener;
     }
 
+    private InputStream httpGet(final HttpURLConnection connection,
+        final URL url) throws IOException {
+      connection.setRequestMethod("GET");
+      connection.setDoInput(true);
+
+      final InputStream in = new BufferedInputStream(
+          connection.getInputStream());
+
+      return in;
+    }
+
+    private InputStream httpPost(final HttpURLConnection connection,
+        final URL url, final String entity) throws IOException {
+      final int contentLength = entity.getBytes().length;
+      connection.setRequestMethod("POST");
+      connection.setRequestProperty("Content-Type", "application/json");
+      connection.setRequestProperty("Content-Length",
+          Integer.toString(contentLength));
+      connection.setFixedLengthStreamingMode(contentLength);
+      connection.setDoInput(true);
+      connection.setDoOutput(true);
+
+      final OutputStream out = new BufferedOutputStream(
+          connection.getOutputStream());
+      out.write(entity.getBytes(Charset.forName("UTF-8")));
+      out.flush();
+      out.close();
+
+      final InputStream in = new BufferedInputStream(
+          connection.getInputStream());
+
+      return in;
+    }
+
     @Override
-    protected HttpResponse doInBackground(HttpRequestBase... params) {
+    protected String doInBackground(Object... params) {
+      final URL url = (URL) params[0];
+      String entity = null;
+      if (params.length == 2) {
+        entity = (String) params[1];
+      }
 
-      final HttpRequestBase request = params[0];
-      final AndroidHttpClient client = AndroidHttpClient.newInstance("Android");
-
+      HttpURLConnection connection = null;
       try {
-        HttpResponse response = client.execute(request);
-        final int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode != HttpStatus.SC_OK) {
-          return null;
+        connection = (HttpURLConnection) url.openConnection();
+        InputStream in;
+
+        if (entity == null) {
+          in = httpGet(connection, url);
+        } else {
+          in = httpPost(connection, url, entity);
         }
 
-        return response;
+        final BufferedReader rd = new BufferedReader(new InputStreamReader(in));
+
+        String line;
+        StringBuilder sb = new StringBuilder();
+        while ((line = rd.readLine()) != null) {
+          sb.append(line + '\n');
+        }
+        rd.close();
+
+        return sb.toString();
       } catch (IOException e) {
-        request.abort();
-      } catch (IllegalStateException e) {
-        request.abort();
-      } catch (Exception e) {
-        request.abort();
+        // TODO Auto-generated catch block
+        e.printStackTrace();
       } finally {
-        client.close();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
 
       return null;
     }
 
     @Override
-    protected void onPostExecute(HttpResponse response) {
+    protected void onPostExecute(String response) {
       if (!isCancelled()) {
         listener.onHttpResponded(response);
       }
     }
   }
 
-  private URI getHttpURI(String path) {
+  private URL getHttpURL(String path) {
     // TODO check and remove "http://"
     final String host = SettingsActivity.getServerAddr(mContext);
     final int port = SettingsActivity.getServerPort(mContext);
 
-    URI uri;
+    URL url;
     try {
-      uri = new URI("http", null, host, port, path, null, null);
+      url = new URL("http", host, port, path);
     } catch (Exception e) {
       return null;
     }
 
-    return uri;
+    return url;
   }
 }

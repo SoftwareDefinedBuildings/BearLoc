@@ -1,6 +1,10 @@
 package edu.berkeley.boss;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,6 +28,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
@@ -42,8 +47,14 @@ public class LocActivity extends Activity implements View.OnClickListener,
 
   private ProgressDialog mProgressDialog;
   private AlertDialog.Builder mDialogBuilder;
+  private AlertDialog mSelectDialog;
+  // TODO embed mSelectItems with self-defined Adpater
+  private List<String> mSelectItems;
+  private ArrayAdapter<String> mSelectAdapter;
+  private JSONArray mCurSemTarget;
 
-  private JSONObject mCurLocInfo;
+  // TODO embed mCurLoc with LocTreeViewAdpater
+  private JSONObject mCurLoc;
 
   private static enum State {
     PAUSED, IDLE, LOCALIZE, REPORT, CHANGE_LOC, MAP_VIEW
@@ -87,6 +98,12 @@ public class LocActivity extends Activity implements View.OnClickListener,
     mDialogBuilder = new AlertDialog.Builder(this);
     mDialogBuilder.setTitle("Choose Zone");
     mDialogBuilder.setOnCancelListener(this);
+
+    mSelectItems = new ArrayList<String>();
+    mSelectAdapter = new ArrayAdapter<String>(this,
+        android.R.layout.simple_list_item_1, mSelectItems);
+    mDialogBuilder.setAdapter(mSelectAdapter, this);
+
   }
 
   @Override
@@ -108,7 +125,7 @@ public class LocActivity extends Activity implements View.OnClickListener,
 
         final JSONObject synAmbiencePack = mSynAmbience.get();
         // TODO get curLocInfo from adapter
-        mLocClient.reportLocation(synAmbiencePack, mCurLocInfo);
+        mLocClient.reportLocation(synAmbiencePack, mCurLoc);
       }
       break;
     }
@@ -116,11 +133,71 @@ public class LocActivity extends Activity implements View.OnClickListener,
 
   @Override
   public void onClick(DialogInterface dialog, int which) {
-    if (mState == State.CHANGE_LOC) {
-      mState = State.IDLE;
-    } else {
-      Log.e(this.toString(), "Dialog clicked on non-CHANGE_LOC state.");
+    if (dialog == mSelectDialog) {
+      if (mState == State.CHANGE_LOC) {
+        final String newZone = mSelectItems.get(which);
+
+        changeLocation(mCurLoc, mCurSemTarget, 0, newZone);
+
+        mState = State.IDLE;
+      } else {
+        Log.e(this.toString(), "Dialog clicked on non-CHANGE_LOC state.");
+      }
     }
+  }
+
+  private void changeLocation(final JSONObject loc, final JSONArray semTarget,
+      final int semTargetIdx, final String newZone) {
+    try {
+      if (semTarget.get(semTargetIdx) instanceof String) {
+        final String semantic = semTarget.getString(semTargetIdx);
+
+        // Remove old location item
+        final Iterator<?> iter = loc.keys();
+        while (iter.hasNext()) {
+          String locItemStr = (String) iter.next();
+
+          // Every location item is a String of JSONArray formated as
+          // "(semantic, zone)"
+          JSONArray locItem = new JSONArray(locItemStr);
+          if (locItem.getString(0).equals(semantic)) {
+            loc.remove(locItemStr);
+            break;
+          }
+        }
+
+        // add new location item
+        final JSONArray newLocItem = new JSONArray();
+        newLocItem.put(semantic);
+        newLocItem.put(newZone);
+        loc.put(newLocItem.toString(), new JSONObject());
+      } else {
+
+        final String semantic = semTarget.getJSONArray(semTargetIdx).getString(
+            0);
+        final String zone = semTarget.getJSONArray(semTargetIdx).getString(1);
+
+        final Iterator<?> iter = loc.keys();
+        while (iter.hasNext()) {
+          String locItemStr = (String) iter.next();
+
+          // Every location item is a String of JSONArray formated as
+          // "(semantic, zone)"
+          JSONArray locItem = new JSONArray(locItemStr);
+          if (locItem.getString(0).equals(semantic)
+              && locItem.getString(1).equals(zone)) {
+            changeLocation(loc.getJSONObject(locItemStr), semTarget,
+                semTargetIdx + 1, newZone);
+            break;
+          }
+        }
+      }
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    onLocationChanged();
   }
 
   @Override
@@ -133,7 +210,7 @@ public class LocActivity extends Activity implements View.OnClickListener,
         Log.e(this.toString(),
             "Dialog canceled on non-LOCALIZE, non-REPORT, and non-CHANGE_LOC state.");
       }
-    } else {
+    } else if (dialog == mSelectDialog) {
       if (mState == State.CHANGE_LOC) {
         mState = State.IDLE;
       } else {
@@ -146,16 +223,11 @@ public class LocActivity extends Activity implements View.OnClickListener,
   public void onLocationReturned(final JSONObject locInfo) {
     if (mState == State.LOCALIZE) {
       if (locInfo != null) {
-        mCurLocInfo = locInfo;
         try {
-          final JSONObject loc = locInfo.getJSONObject("location");
+          mCurLoc = locInfo.getJSONObject("location");
 
-          mTreeBuilder.clear();
-          final int depth = buildTree(null, loc, new JSONArray());
-          mLocTreeViewAdapter = new LocTreeViewAdapter(this, mTreeStateManager,
-              depth);
-          mTreeViewList.setAdapter(mLocTreeViewAdapter);
-          mTreeStateManager.refresh();
+          // TODO Ideally it should be implemented in adapter?
+          onLocationChanged();
 
         } catch (JSONException e) {
           // TODO Auto-generated catch block
@@ -168,6 +240,16 @@ public class LocActivity extends Activity implements View.OnClickListener,
     } else {
       Log.e(this.toString(), "Location returned on non-LOCALIZE state.");
     }
+  }
+
+  // TODO maybe there is properer palce to hold this function, like inside an
+  // adapter
+  private void onLocationChanged() {
+    mTreeBuilder.clear();
+    final int depth = buildTree(null, mCurLoc, new JSONArray());
+    mLocTreeViewAdapter = new LocTreeViewAdapter(this, mTreeStateManager, depth);
+    mTreeViewList.setAdapter(mLocTreeViewAdapter);
+    mTreeStateManager.refresh();
   }
 
   private int buildTree(final LocNode parent, final JSONObject loc,
@@ -183,6 +265,8 @@ public class LocActivity extends Activity implements View.OnClickListener,
         while (iter.hasNext()) {
           String locItemStr = (String) iter.next();
 
+          // Every location item is a String of JSONArray formated as
+          // "(semantic, zone)"
           JSONArray locItem = new JSONArray(locItemStr);
           LocNode locNode = new LocNode();
           locNode.id = mTreeStateManager.getAllNodesCount() + 1;
@@ -227,22 +311,22 @@ public class LocActivity extends Activity implements View.OnClickListener,
     if (mState == State.CHANGE_LOC) {
       if (metadata != null) {
         try {
-          // Returned metadata should have only one semantic in child
-          final String semantic = metadata.getJSONObject("child").names()
-              .getString(0);
+          final String semantic = mCurSemTarget.getString(mCurSemTarget
+              .length() - 1);
           final JSONArray zoneJSONArray = metadata.getJSONObject("child")
               .getJSONObject(semantic).names();
           final int length = zoneJSONArray.length();
-          final String[] zoneList = new String[length];
+          mSelectItems.clear();
           for (int i = 0; i < length; i++) {
-            zoneList[i] = zoneJSONArray.getString(i);
+            mSelectItems.add(zoneJSONArray.getString(i));
           }
+          Collections.sort(mSelectItems);
 
-          mDialogBuilder.setItems(zoneList, this);
-          AlertDialog alert = mDialogBuilder.create();
+          mSelectAdapter.notifyDataSetChanged();
+          mSelectDialog = mDialogBuilder.create();
 
           mProgressDialog.dismiss();
-          alert.show();
+          mSelectDialog.show();
         } catch (JSONException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
@@ -285,6 +369,7 @@ public class LocActivity extends Activity implements View.OnClickListener,
           String targetSem = target.getJSONArray(lastIdx).getString(0);
           target.put(lastIdx, targetSem);
           mLocClient.getMetadata(target);
+          mCurSemTarget = target;
         } catch (JSONException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();

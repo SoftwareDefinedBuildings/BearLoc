@@ -32,7 +32,7 @@ class ReportResource(resource.Resource):
   
   def render_POST(self, request):
     """POST localization report"""
-    log.msg("Received localization report from " + request.getHost().host)
+    log.msg("Received location report from " + request.getHost().host)
     
     request.setHeader('Content-type', 'application/json')
     # TODO: handle bad request
@@ -49,14 +49,14 @@ class ReportResource(resource.Resource):
   
   def _succeed(self, state, request):
     request.setResponseCode(httplib.OK)
-    request.write(state)
+    request.write(str(state))
     request.finish()
     log.msg(request.getHost().host + " reported a location")
 
 
   def _fail(self, err, request):
     if err.check(defer.CancelledError):
-      log.msg(request.getHost().host + " localization report canceled")
+      log.msg(request.getHost().host + " location report canceled")
     else:
       pass
 

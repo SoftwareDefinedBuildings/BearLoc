@@ -32,7 +32,7 @@ public class BOSSActivity extends Activity implements OnClickListener {
     Intent intent;
     switch (v.getId()) {
     case R.id.loc_button:
-      intent = new Intent(this, LocActivity.class);
+      intent = new Intent(this, LocTreeActivity.class);
       startActivity(intent);
       break;
     case R.id.about_button:

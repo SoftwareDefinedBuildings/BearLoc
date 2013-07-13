@@ -1,6 +1,6 @@
 package edu.berkeley.boss;
 
-import edu.berkeley.boss.LocActivity.LocNode;
+import edu.berkeley.boss.LocTreeActivity.LocNode;
 import edu.berkeley.boss.R;
 import android.app.Activity;
 import android.view.View;

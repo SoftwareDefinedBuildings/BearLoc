@@ -32,8 +32,12 @@
             android:label="@string/about_title" >
         </activity>
         <activity
-            android:name=".LocActivity"
-            android:label="@string/loc_title" >
+            android:name=".LocTreeActivity"
+            android:label="@string/loc_tree_title" >
+        </activity>
+        <activity
+            android:name=".LocMapActivity"
+            android:label="@string/loc_map_title" >
         </activity>
         <activity
             android:name=".SettingsActivity"

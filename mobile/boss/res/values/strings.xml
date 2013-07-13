@@ -9,7 +9,8 @@
     <string name="about_label">About</string>
     <string name="exit_label">Exit</string>
     <string name="map_desc">Map</string>
-    <string name="loc_title">Localization</string>
+    <string name="loc_tree_title">Localization</string>
+    <string name="loc_map_title">Map</string>
     <string name="about_title">About BOSS</string>
     <string name="about_text">Commercial buildings are attractive targets for introducing innovative cyber-physical control systems, because they are already highly instrumented distributed systems which consume large quantities of energy. However, they are not currently programmable in a meaningful sense because each building is constructed with vertically integrated, closed subsystems and without uniform abstractions to write applications against. We develop a set of operating system services called BOSS, which supports multiple portable, fault-tolerant applications on top of the distributed physical resources present in large commercial buildings. We evaluate our system based on lessons learned from deployments of many novel applications in our test building, a four-year-old, 140,000sf building with modern digital controls, as well as partial deployments at other sites.\n <b>Public Summary: </b>\n by Richard Mortier\n
 This paper presents BOSS, a set of operating system services on which to build applications for managing large commercial buildings. Existing commercial building management systems abound—BOSS takes a systems view on the problem, proposing, implementing and evaluating an architecture for development of robust, portable applications. It is an integration paper that describes a system consisting of a set of services and APIs that abstract the hardware layer of commercial building sensors and actuators, so we can write portable building monitoring and control applications.\n
@@ -31,8 +32,8 @@ For more information, please visit <a href="http://sdb.cs.berkeley.edu/">http://
     
     <string name="progess_message">Loading &#8230;</string>
     
-    <string name="context_menu_change">Report Correct Location</string>
-    <string name="context_menu_change_condensed">Report</string>
-    <string name="context_menu_map_view">View in Map</string>
+    <string name="context_menu_change">Change and Report</string>
+    <string name="context_menu_change_condensed">Change</string>
+    <string name="context_menu_map_view">View Map</string>
     <string name="context_menu_map_view_condensed">Map</string>
 </resources>

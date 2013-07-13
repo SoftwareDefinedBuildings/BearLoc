@@ -22,5 +22,7 @@ class Report(object):
     logfile = open('reports.log', 'a')
     logfile.write(str(report));
     logfile.close()
-    return defer.succeed(True)
+    
+    response = {'result': True}
+    return defer.succeed(response)
     

@@ -47,9 +47,9 @@ class ReportResource(resource.Resource):
     return server.NOT_DONE_YET
   
   
-  def _succeed(self, state, request):
+  def _succeed(self, response, request):
     request.setResponseCode(httplib.OK)
-    request.write(str(state))
+    request.write(json.dumps(response))
     request.finish()
     log.msg(request.getHost().host + " reported a location")
 

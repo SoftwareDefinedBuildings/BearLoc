@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
@@ -32,9 +33,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
-public class LocActivity extends Activity implements View.OnClickListener,
+public class LocTreeActivity extends Activity implements View.OnClickListener,
     DialogInterface.OnClickListener, DialogInterface.OnCancelListener,
     LocClientListener {
+  public final static String LOCATION = "edu.berkeley.boss.LOCATION";
+  public final static String SEMANTIC_TARGET = "edu.berkeley.boss.SEMANTIC_TARGET";
+  public final static String METADATA = "edu.berkeley.boss.METADATA";
+
   private Button mReloadButton;
   private Button mReportButton;
   private TreeViewList mTreeViewList;
@@ -72,7 +77,7 @@ public class LocActivity extends Activity implements View.OnClickListener,
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.loc);
+    setContentView(R.layout.loc_tree);
 
     mReloadButton = (Button) findViewById(R.id.reload_button);
     mReloadButton.setOnClickListener(this);
@@ -86,7 +91,6 @@ public class LocActivity extends Activity implements View.OnClickListener,
     registerForContextMenu(mTreeViewList);
 
     mLocClient = new BOSSLocClient(this);
-    mLocClient.setOnDataReturnedListener(this);
 
     mSynAmbience = new SynAmbience(this);
 
@@ -103,7 +107,29 @@ public class LocActivity extends Activity implements View.OnClickListener,
     mSelectAdapter = new ArrayAdapter<String>(this,
         android.R.layout.simple_list_item_1, mSelectItems);
     mDialogBuilder.setAdapter(mSelectAdapter, this);
+  }
 
+  @Override
+  protected void onResume() {
+    super.onResume();
+
+    mState = State.IDLE;
+
+    mLocClient.setOnDataReturnedListener(this);
+    mSynAmbience.resume();
+  }
+
+  @Override
+  protected void onPause() {
+    // TODO deal with all rotation issues
+    super.onPause();
+
+    mState = State.PAUSED;
+
+    mProgressDialog.dismiss();
+
+    mLocClient.setOnDataReturnedListener(null);
+    mSynAmbience.pause();
   }
 
   @Override
@@ -123,12 +149,17 @@ public class LocActivity extends Activity implements View.OnClickListener,
         mState = State.REPORT;
         mProgressDialog.show();
 
-        final JSONObject synAmbiencePack = mSynAmbience.get();
-        // TODO get curLocInfo from adapter
-        mLocClient.reportLocation(synAmbiencePack, mCurLoc);
+        reportLocation();
       }
       break;
     }
+  }
+
+  private void reportLocation() {
+    final JSONObject synAmbiencePack = mSynAmbience.get();
+    mSynAmbience.clear(); // clear sensor data that will be reported to server
+    // TODO get curLocInfo from adapter
+    mLocClient.reportLocation(synAmbiencePack, mCurLoc);
   }
 
   @Override
@@ -138,14 +169,17 @@ public class LocActivity extends Activity implements View.OnClickListener,
         final String newZone = mSelectItems.get(which);
 
         changeLocation(mCurLoc, mCurSemTarget, 0, newZone);
+        onLocationChanged();
 
-        mState = State.IDLE;
+        mProgressDialog.show();
+        reportLocation();
       } else {
         Log.e(this.toString(), "Dialog clicked on non-CHANGE_LOC state.");
       }
     }
   }
 
+  /* Recursively change loc with semantic target and zone */
   private void changeLocation(final JSONObject loc, final JSONArray semTarget,
       final int semTargetIdx, final String newZone) {
     try {
@@ -172,7 +206,6 @@ public class LocActivity extends Activity implements View.OnClickListener,
         newLocItem.put(newZone);
         loc.put(newLocItem.toString(), new JSONObject());
       } else {
-
         final String semantic = semTarget.getJSONArray(semTargetIdx).getString(
             0);
         final String zone = semTarget.getJSONArray(semTargetIdx).getString(1);
@@ -196,8 +229,6 @@ public class LocActivity extends Activity implements View.OnClickListener,
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
-
-    onLocationChanged();
   }
 
   @Override
@@ -242,7 +273,7 @@ public class LocActivity extends Activity implements View.OnClickListener,
     }
   }
 
-  // TODO maybe there is properer palce to hold this function, like inside an
+  // TODO maybe there is more proper place to hold this function, like inside an
   // adapter
   private void onLocationChanged() {
     mTreeBuilder.clear();
@@ -280,8 +311,8 @@ public class LocActivity extends Activity implements View.OnClickListener,
 
           mTreeBuilder.addRelation(parent, locNode);
 
-          final JSONObject subLocInfo = loc.getJSONObject(locItemStr);
-          int tmpDepth = buildTree(locNode, subLocInfo, curSemArray);
+          final JSONObject subLoc = loc.getJSONObject(locItemStr);
+          int tmpDepth = buildTree(locNode, subLoc, curSemArray);
           if (tmpDepth > depth) {
             depth = tmpDepth;
           }
@@ -301,8 +332,14 @@ public class LocActivity extends Activity implements View.OnClickListener,
       mProgressDialog.dismiss();
 
       mState = State.IDLE;
+    }
+    if (mState == State.CHANGE_LOC) {
+      mProgressDialog.dismiss();
+
+      mState = State.IDLE;
     } else {
-      Log.e(this.toString(), "Report done on non-REPORT state.");
+      Log.e(this.toString(),
+          "Report done on non-REPORT and non-CHANGE_LOC state.");
     }
   }
 
@@ -331,9 +368,23 @@ public class LocActivity extends Activity implements View.OnClickListener,
           // TODO Auto-generated catch block
           e.printStackTrace();
         }
+      } else {
+        mProgressDialog.dismiss();
+        mState = State.IDLE;
       }
     } else if (mState == State.MAP_VIEW) {
-      // TODO implement
+      if (metadata != null) {
+        final Intent intent = new Intent(this, LocMapActivity.class);
+        intent.putExtra(LOCATION, mCurLoc.toString());
+        intent.putExtra(SEMANTIC_TARGET, mCurSemTarget.toString());
+        intent.putExtra(METADATA, metadata.toString());
+
+        mProgressDialog.dismiss();
+        mState = State.IDLE;
+
+        startActivity(intent);
+      }
+
     }
   }
 
@@ -360,56 +411,33 @@ public class LocActivity extends Activity implements View.OnClickListener,
       if (mState == State.IDLE) {
         mState = State.CHANGE_LOC;
         mProgressDialog.show();
-
-        final LocNode nodeInfo = mLocTreeViewAdapter.getItem(info.position);
-        try {
-          // target format: [[Sem1, Zone1], ..., [SemN, ZoneN], TargetSem]
-          final JSONArray target = nodeInfo.semArray;
-          final int lastIdx = target.length() - 1;
-          String targetSem = target.getJSONArray(lastIdx).getString(0);
-          target.put(lastIdx, targetSem);
-          mLocClient.getMetadata(target);
-          mCurSemTarget = target;
-        } catch (JSONException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-        }
       }
-      return true;
+      break;
     case R.id.context_menu_map_view:
       if (mState == State.IDLE) {
         mState = State.MAP_VIEW;
         mProgressDialog.show();
-
-        // TODO implement
-
-        mProgressDialog.dismiss();
-        mState = State.IDLE;
       }
-      return true;
+      break;
     default:
       return super.onContextItemSelected(item);
     }
-  }
 
-  @Override
-  protected void onResume() {
-    super.onResume();
+    final LocNode nodeInfo = mLocTreeViewAdapter.getItem(info.position);
+    try {
+      // Don't change original semArray
+      final JSONArray target = new JSONArray(nodeInfo.semArray.toString());
+      final int lastIdx = target.length() - 1;
+      String targetSem = target.getJSONArray(lastIdx).getString(0);
+      // target format: [[Sem1, Zone1], ..., [SemN, ZoneN], TargetSem]
+      target.put(lastIdx, targetSem);
+      mLocClient.getMetadata(target);
+      mCurSemTarget = target;
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
 
-    mState = State.IDLE;
-
-    mSynAmbience.resume();
-  }
-
-  @Override
-  protected void onPause() {
-    // TODO deal with all rotation issues
-    super.onPause();
-
-    mState = State.PAUSED;
-
-    mProgressDialog.dismiss();
-
-    mSynAmbience.pause();
+    return true;
   }
 }

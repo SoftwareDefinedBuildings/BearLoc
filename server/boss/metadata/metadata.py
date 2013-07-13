@@ -32,8 +32,6 @@ class Metadata(object):
     
     metadata = self._metadata_recursive(mdtree, target)
     
-    print metadata
-    
     return defer.succeed(metadata)
 
 

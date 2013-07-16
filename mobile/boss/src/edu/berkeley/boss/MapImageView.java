@@ -1,11 +1,17 @@
 package edu.berkeley.boss;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.drawable.ShapeDrawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -17,7 +23,9 @@ public class MapImageView extends ImageView {
   private RectF mMapDestRect;
   private Paint mMapPaint;
 
-  private Matrix matrix;
+  private Matrix mTransMatrix;
+
+  private ShapeDrawable mTestDrawable;
 
   private MyGestureDetector gestureDetector;
 
@@ -38,6 +46,17 @@ public class MapImageView extends ImageView {
     mMapPaint = new Paint();
     mMapPaint.setFilterBitmap(true);
 
+    mTransMatrix = new Matrix();
+
+    List<PointF> vertices = new ArrayList<PointF>();
+    vertices.add(new PointF(100, 100));
+    vertices.add(new PointF(150, 150));
+    vertices.add(new PointF(50, 150));
+    mTestDrawable = new ShapeDrawable(new PolygonShape(vertices));
+    mTestDrawable.getPaint().setColor(0xff74AC23);
+    mTestDrawable.setBounds(0, 0, mTestDrawable.getIntrinsicWidth(),
+        mTestDrawable.getIntrinsicHeight());
+
     gestureDetector = new MyGestureDetector(context, new GestureListener());
   }
 
@@ -47,25 +66,24 @@ public class MapImageView extends ImageView {
     return handled;
   }
 
-  // official documentation doesn't mention the deprecation
-  @SuppressWarnings("deprecation")
   @Override
   protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
 
     canvas.save();
-    if (matrix == null) {
-      matrix = new Matrix(canvas.getMatrix());
-    } else {
-      canvas.setMatrix(matrix);
-    }
+
+    // canvas.setMatrix has some problem with coordinate system, especially when
+    // doing scaling. canvas.concat is doing good. Tested on Android 2.3.4
+    canvas.concat(mTransMatrix);
 
     if (mMap != null) {
-      final float w = getWidth();
+      final float w = canvas.getWidth();
       final float h = w * mMap.getHeight() / mMap.getWidth();
       mMapDestRect.set(0, 0, w, h);
       canvas.drawBitmap(mMap, null, mMapDestRect, mMapPaint);
     }
+
+    mTestDrawable.draw(canvas);
     canvas.restore();
   }
 
@@ -81,7 +99,7 @@ public class MapImageView extends ImageView {
     @Override
     public boolean onDoubleTap(MotionEvent e) {
       float scale = 1.5f;
-      matrix.postScale(scale, scale, e.getX(), e.getY());
+      mTransMatrix.postScale(scale, scale, e.getX(), e.getY());
       invalidate();
       return true;
     }
@@ -112,8 +130,19 @@ public class MapImageView extends ImageView {
 
     @Override
     public void onLongPress(MotionEvent e) {
-      // TODO Auto-generated method stub
+      PolygonShape shape = (PolygonShape) mTestDrawable.getShape();
 
+      float[] point = new float[] { e.getX(), e.getY() };
+      Matrix inverseMatrix = new Matrix();
+      mTransMatrix.invert(inverseMatrix);
+      inverseMatrix.mapPoints(point);
+
+      if (shape.contains(new PointF(point[0], point[1])) == true) {
+        Random r = new Random();
+        mTestDrawable.getPaint().setColor(r.nextInt());
+      }
+
+      invalidate();
     }
 
     @Override
@@ -155,14 +184,14 @@ public class MapImageView extends ImageView {
 
     @Override
     public boolean onScroll(float tx, float ty) {
-      matrix.postTranslate(tx, ty);
+      mTransMatrix.postTranslate(tx, ty);
       invalidate();
       return true;
     }
 
     @Override
     public boolean onScale(float scale, float px, float py) {
-      matrix.postScale(scale, scale, px, py);
+      mTransMatrix.postScale(scale, scale, px, py);
       invalidate();
       return true;
     }

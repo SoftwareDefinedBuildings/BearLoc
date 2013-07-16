@@ -1,7 +1,8 @@
 package edu.berkeley.boss;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import android.content.Context;
@@ -10,7 +11,6 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
-import android.graphics.RectF;
 import android.graphics.drawable.ShapeDrawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -20,14 +20,22 @@ import android.widget.ImageView;
 public class MapImageView extends ImageView {
 
   private Bitmap mMap;
-  private RectF mMapDestRect;
   private Paint mMapPaint;
+
+  private Map<String, ShapeDrawable> mZones;
 
   private Matrix mTransMatrix;
 
-  private ShapeDrawable mTestDrawable;
-
   private MyGestureDetector gestureDetector;
+
+  private Random mRandom;
+
+  private OnZoneClickListener mListener;
+
+  public static interface OnZoneClickListener {
+    public abstract void onZoneClick(MapImageView parent, ShapeDrawable zone,
+        List<String> id);
+  }
 
   public MapImageView(Context context) {
     this(context, null, 0);
@@ -42,22 +50,20 @@ public class MapImageView extends ImageView {
 
     setFocusable(true);
 
-    mMapDestRect = new RectF();
     mMapPaint = new Paint();
     mMapPaint.setFilterBitmap(true);
 
+    mZones = new HashMap<String, ShapeDrawable>();
+
     mTransMatrix = new Matrix();
 
-    List<PointF> vertices = new ArrayList<PointF>();
-    vertices.add(new PointF(100, 100));
-    vertices.add(new PointF(150, 150));
-    vertices.add(new PointF(50, 150));
-    mTestDrawable = new ShapeDrawable(new PolygonShape(vertices));
-    mTestDrawable.getPaint().setColor(0xff74AC23);
-    mTestDrawable.setBounds(0, 0, mTestDrawable.getIntrinsicWidth(),
-        mTestDrawable.getIntrinsicHeight());
-
     gestureDetector = new MyGestureDetector(context, new GestureListener());
+
+    mRandom = new Random();
+  }
+
+  public void setOnZoneClickListener(OnZoneClickListener listener) {
+    mListener = listener;
   }
 
   @Override
@@ -73,22 +79,42 @@ public class MapImageView extends ImageView {
     canvas.save();
 
     // canvas.setMatrix has some problem with coordinate system, especially when
-    // doing scaling. canvas.concat is doing good. Tested on Android 2.3.4
+    // scaling. canvas.concat is doing good. Tested on Android 2.3.4
     canvas.concat(mTransMatrix);
 
     if (mMap != null) {
-      final float w = canvas.getWidth();
-      final float h = w * mMap.getHeight() / mMap.getWidth();
-      mMapDestRect.set(0, 0, w, h);
-      canvas.drawBitmap(mMap, null, mMapDestRect, mMapPaint);
+      canvas.drawBitmap(mMap, 0, 0, mMapPaint);
     }
 
-    mTestDrawable.draw(canvas);
+    for (Map.Entry<String, ShapeDrawable> entry : mZones.entrySet()) {
+      final ShapeDrawable zone = entry.getValue();
+      zone.draw(canvas);
+    }
+
     canvas.restore();
   }
 
-  public void setMap(Bitmap map) {
+  // TODO maybe making this view an AdapterView, and use Adapter to manager the
+  // map and zones. Both map and zone should be a view.
+  public void setMap(final Bitmap map) {
     mMap = map;
+
+    invalidate();
+  }
+
+  public void addZone(final String id, final List<PointF> vertices) {
+    final ShapeDrawable newZone = new ShapeDrawable(new PolygonShape(vertices));
+    newZone.getPaint().setColor(mRandom.nextInt(0x010000000) + 0x7f000000);
+    newZone.setBounds(0, 0, newZone.getIntrinsicWidth(),
+        newZone.getIntrinsicHeight());
+
+    mZones.put(id, newZone);
+
+    invalidate();
+  }
+
+  public void removeZone(final String id) {
+    mZones.remove(id);
 
     invalidate();
   }
@@ -130,16 +156,20 @@ public class MapImageView extends ImageView {
 
     @Override
     public void onLongPress(MotionEvent e) {
-      PolygonShape shape = (PolygonShape) mTestDrawable.getShape();
-
-      float[] point = new float[] { e.getX(), e.getY() };
-      Matrix inverseMatrix = new Matrix();
+      final float[] screenPointArr = new float[] { e.getX(), e.getY() };
+      final Matrix inverseMatrix = new Matrix();
       mTransMatrix.invert(inverseMatrix);
-      inverseMatrix.mapPoints(point);
+      inverseMatrix.mapPoints(screenPointArr);
+      final PointF originP = new PointF(screenPointArr[0], screenPointArr[1]);
 
-      if (shape.contains(new PointF(point[0], point[1])) == true) {
-        Random r = new Random();
-        mTestDrawable.getPaint().setColor(r.nextInt());
+      for (Map.Entry<String, ShapeDrawable> entry : mZones.entrySet()) {
+        final ShapeDrawable zone = entry.getValue();
+        final PolygonShape shape = (PolygonShape) zone.getShape();
+        if (shape.contains(originP) == true) {
+          zone.getPaint().setColor(mRandom.nextInt(0x010000000) + 0x7f000000);
+
+          // TODO call CallBackFunc with id
+        }
       }
 
       invalidate();

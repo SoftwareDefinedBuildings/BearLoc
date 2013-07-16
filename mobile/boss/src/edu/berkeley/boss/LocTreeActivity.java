@@ -189,11 +189,11 @@ public class LocTreeActivity extends Activity implements View.OnClickListener,
         // Remove old location item
         final Iterator<?> iter = loc.keys();
         while (iter.hasNext()) {
-          String locItemStr = (String) iter.next();
+          final String locItemStr = (String) iter.next();
 
           // Every location item is a String of JSONArray formated as
           // "(semantic, zone)"
-          JSONArray locItem = new JSONArray(locItemStr);
+          final JSONArray locItem = new JSONArray(locItemStr);
           if (locItem.getString(0).equals(semantic)) {
             loc.remove(locItemStr);
             break;
@@ -212,11 +212,11 @@ public class LocTreeActivity extends Activity implements View.OnClickListener,
 
         final Iterator<?> iter = loc.keys();
         while (iter.hasNext()) {
-          String locItemStr = (String) iter.next();
+          final String locItemStr = (String) iter.next();
 
           // Every location item is a String of JSONArray formated as
           // "(semantic, zone)"
-          JSONArray locItem = new JSONArray(locItemStr);
+          final JSONArray locItem = new JSONArray(locItemStr);
           if (locItem.getString(0).equals(semantic)
               && locItem.getString(1).equals(zone)) {
             changeLocation(loc.getJSONObject(locItemStr), semTarget,
@@ -274,7 +274,7 @@ public class LocTreeActivity extends Activity implements View.OnClickListener,
   }
 
   // TODO maybe there is more proper place to hold this function, like inside an
-  // adapter
+  // adapter, or I can put the JSON logic in a LocationUtil Class?
   private void onLocationChanged() {
     mTreeBuilder.clear();
     final int depth = buildTree(null, mCurLoc, new JSONArray());
@@ -384,7 +384,6 @@ public class LocTreeActivity extends Activity implements View.OnClickListener,
 
         startActivity(intent);
       }
-
     }
   }
 

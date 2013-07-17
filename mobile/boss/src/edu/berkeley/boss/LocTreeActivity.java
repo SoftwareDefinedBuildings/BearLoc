@@ -56,6 +56,7 @@ public class LocTreeActivity extends Activity implements View.OnClickListener,
   // TODO embed mSelectItems with self-defined Adpater
   private List<String> mSelectItems;
   private ArrayAdapter<String> mSelectAdapter;
+  
   private JSONArray mCurSemTarget;
 
   // TODO embed mCurLoc with LocTreeViewAdpater
@@ -147,7 +148,6 @@ public class LocTreeActivity extends Activity implements View.OnClickListener,
     case R.id.report_button:
       if (mState == State.IDLE) {
         mState = State.REPORT;
-        mProgressDialog.show();
 
         reportLocation();
       }
@@ -156,6 +156,8 @@ public class LocTreeActivity extends Activity implements View.OnClickListener,
   }
 
   private void reportLocation() {
+    mProgressDialog.show();
+    
     final JSONObject synAmbiencePack = mSynAmbience.get();
     mSynAmbience.clear(); // clear sensor data that will be reported to server
     // TODO get curLocInfo from adapter
@@ -171,7 +173,6 @@ public class LocTreeActivity extends Activity implements View.OnClickListener,
         changeLocation(mCurLoc, mCurSemTarget, 0, newZone);
         onLocationChanged();
 
-        mProgressDialog.show();
         reportLocation();
       } else {
         Log.e(this.toString(), "Dialog clicked on non-CHANGE_LOC state.");

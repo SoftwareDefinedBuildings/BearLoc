@@ -1,5 +1,7 @@
 package edu.berkeley.boss;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,18 +11,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
-import android.graphics.drawable.ShapeDrawable;
 import android.os.Bundle;
+import android.widget.ListView;
 import android.widget.TextView;
 
 public class LocMapActivity extends Activity implements
     DialogInterface.OnCancelListener, BOSSLocClient.LocClientListener,
-    MapImageView.OnZoneClickListener {
+    MapImageView.OnZoneClickListener, DialogInterface.OnClickListener {
 
   private TextView mTextView;
   private MapImageView mMapImageView;
@@ -31,8 +34,14 @@ public class LocMapActivity extends Activity implements
   private JSONObject mCurLoc;
   private JSONArray mCurSemTarget;
   private JSONObject mCurMetadata;
+  private String mCurZone;
 
   private ProgressDialog mProgressDialog;
+  private AlertDialog.Builder mDialogBuilder;
+  private AlertDialog mSelectDialog;
+  // TODO embed mSelectItems with self-defined Adpater
+  private List<String> mSelectItems;
+  private int mCheckedIndex;
 
   private boolean mActive;
 
@@ -54,7 +63,7 @@ public class LocMapActivity extends Activity implements
           intent.getStringExtra(LocTreeActivity.SEMANTIC_TARGET));
       mCurMetadata = new JSONObject(
           intent.getStringExtra(LocTreeActivity.METADATA));
-      
+
       onLocationChanged();
     } catch (JSONException e) {
       // TODO Auto-generated catch block
@@ -65,6 +74,26 @@ public class LocMapActivity extends Activity implements
     mProgressDialog.setMessage(getResources().getString(
         R.string.progess_message));
     mProgressDialog.setOnCancelListener(this);
+
+    mDialogBuilder = new AlertDialog.Builder(this);
+    mDialogBuilder.setTitle("Choose Zone");
+    mDialogBuilder.setOnCancelListener(this);
+
+    mSelectItems = new ArrayList<String>();
+    try {
+      final String semantic = mCurSemTarget
+          .getString(mCurSemTarget.length() - 1);
+      final JSONArray zoneJSONArray = mCurMetadata.getJSONObject("child")
+          .getJSONObject(semantic).names();
+      final int length = zoneJSONArray.length();
+      for (int i = 0; i < length; i++) {
+        mSelectItems.add(zoneJSONArray.getString(i));
+      }
+      Collections.sort(mSelectItems);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   @Override
@@ -74,6 +103,7 @@ public class LocMapActivity extends Activity implements
     mActive = true;
 
     mLocClient.setOnDataReturnedListener(this);
+    mMapImageView.setOnZoneClickListener(this);
 
     mSynAmbience.resume();
 
@@ -82,13 +112,72 @@ public class LocMapActivity extends Activity implements
     mLocClient.getMap(mCurMetadata);
   }
 
+  /* Recursively change loc with semantic target and zone */
+  private void changeLocation(final JSONObject loc, final JSONArray semTarget,
+      final int semTargetIdx, final String newZone) {
+    try {
+      if (semTarget.get(semTargetIdx) instanceof String) {
+        final String semantic = semTarget.getString(semTargetIdx);
+
+        // Remove old location item
+        final Iterator<?> iter = loc.keys();
+        while (iter.hasNext()) {
+          final String locItemStr = (String) iter.next();
+
+          // Every location item is a String of JSONArray formated as
+          // "(semantic, zone)"
+          final JSONArray locItem = new JSONArray(locItemStr);
+          if (locItem.getString(0).equals(semantic)) {
+            loc.remove(locItemStr);
+            break;
+          }
+        }
+
+        // add new location item
+        final JSONArray newLocItem = new JSONArray();
+        newLocItem.put(semantic);
+        newLocItem.put(newZone);
+        loc.put(newLocItem.toString(), new JSONObject());
+      } else {
+        final String semantic = semTarget.getJSONArray(semTargetIdx).getString(
+            0);
+        final String zone = semTarget.getJSONArray(semTargetIdx).getString(1);
+
+        final Iterator<?> iter = loc.keys();
+        while (iter.hasNext()) {
+          final String locItemStr = (String) iter.next();
+
+          // Every location item is a String of JSONArray formated as
+          // "(semantic, zone)"
+          final JSONArray locItem = new JSONArray(locItemStr);
+          if (locItem.getString(0).equals(semantic)
+              && locItem.getString(1).equals(zone)) {
+            changeLocation(loc.getJSONObject(locItemStr), semTarget,
+                semTargetIdx + 1, newZone);
+            break;
+          }
+        }
+      }
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
   private void onLocationChanged() {
     final String locStr = locationString(mCurLoc, mCurSemTarget, 0);
     mTextView.setText(locStr);
-
-    // TODO highlight different paint
   }
 
+  private void reportLocation() {
+    mProgressDialog.show();
+
+    final JSONObject synAmbiencePack = mSynAmbience.get();
+    mSynAmbience.clear(); // clear sensor data that will be reported to server
+    mLocClient.reportLocation(synAmbiencePack, mCurLoc);
+  }
+
+  // TODO duplicated codes, implement location util
   /* Recursively retrieve location string with semantic target */
   private String locationString(final JSONObject loc,
       final JSONArray semTarget, final int semTargetIdx) {
@@ -105,8 +194,10 @@ public class LocMapActivity extends Activity implements
           // "(semantic, zone)"
           final JSONArray locItem = new JSONArray(locItemStr);
           final String locItemSem = locItem.getString(0);
+          final String locItemZone = locItem.getString(1);
           if (locItemSem.equals(semantic)) {
-            return ":" + semantic;
+            mCurZone = locItemZone;
+            return ":" + locItemSem + "(" + locItemZone + ")";
           }
         }
       } else {
@@ -149,13 +240,18 @@ public class LocMapActivity extends Activity implements
     mProgressDialog.dismiss();
 
     mLocClient.setOnDataReturnedListener(null);
+    mMapImageView.setOnZoneClickListener(null);
 
     mSynAmbience.pause();
   }
 
   @Override
   public void onCancel(DialogInterface dialog) {
-    finish();
+    if (dialog == mProgressDialog) {
+      finish();
+    } else if (dialog == mSelectDialog) {
+
+    }
   }
 
   @Override
@@ -166,8 +262,7 @@ public class LocMapActivity extends Activity implements
 
   @Override
   public void onReportDone(boolean success) {
-    // TODO Auto-generated method stub
-
+    mProgressDialog.dismiss();
   }
 
   @Override
@@ -205,7 +300,11 @@ public class LocMapActivity extends Activity implements
                 (float) pointJSONArray.getDouble(1)));
           }
 
-          mMapImageView.addZone(name, vertices);
+          if (name.equals(mCurZone)) {
+            mMapImageView.addZone(name, vertices, true);
+          } else {
+            mMapImageView.addZone(name, vertices);
+          }
         }
       } catch (JSONException e) {
         // TODO Auto-generated catch block
@@ -219,9 +318,36 @@ public class LocMapActivity extends Activity implements
   }
 
   @Override
-  public void onZoneClick(MapImageView parent, ShapeDrawable zone,
-      List<String> id) {
-    // TODO Show selection dialog
+  public void onZoneClick(MapImageView parent, String id) {
+    mCheckedIndex = mSelectItems.indexOf(id);
+    CharSequence[] selectItemsArray = mSelectItems
+        .toArray(new CharSequence[mSelectItems.size()]);
+
+    mDialogBuilder.setSingleChoiceItems(selectItemsArray, mCheckedIndex, null);
+    mDialogBuilder.setPositiveButton(R.string.report, this);
+
+    mSelectDialog = mDialogBuilder.create();
+
+    mSelectDialog.show();
+  }
+
+  @Override
+  public void onClick(DialogInterface dialog, int which) {
+    // TODO retrieve selected items from mSelections, change current location,
+    // and report to server
+    switch (which) {
+    case DialogInterface.BUTTON_POSITIVE:
+      ListView listView = ((AlertDialog) dialog).getListView();
+      final String newZone = (String) listView.getAdapter().getItem(
+          listView.getCheckedItemPosition());
+      changeLocation(mCurLoc, mCurSemTarget, 0, newZone);
+      onLocationChanged();
+
+      mMapImageView.setFocusZone(newZone);
+
+      reportLocation();
+      break;
+    }
 
   }
 }

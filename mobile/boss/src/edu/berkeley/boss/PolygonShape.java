@@ -76,6 +76,10 @@ public class PolygonShape extends Shape {
 
     return shape;
   }
+  
+  public Path getPath() {
+    return mPath;
+  }
 
   /*
    * Use Ray-casting algorithm to determine whether the point is in this polygon
@@ -107,7 +111,7 @@ public class PolygonShape extends Shape {
     float segmentTan;
     float pointTan;
 
-    // Ensure segP2.y is larger than segP1
+    // Ensure segP2.y is larger than segP1.y
     if (segP1.y > segP2.y) {
       final PointF tmpP = segP1;
       segP1 = segP2;

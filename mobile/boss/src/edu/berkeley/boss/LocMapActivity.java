@@ -18,14 +18,18 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
 public class LocMapActivity extends Activity implements
     DialogInterface.OnCancelListener, BOSSLocClient.LocClientListener,
-    MapImageView.OnZoneClickListener, DialogInterface.OnClickListener {
+    MapImageView.OnZoneClickListener, DialogInterface.OnClickListener,
+    View.OnClickListener {
 
   private TextView mTextView;
+  private Button mReportButton;
   private MapImageView mMapImageView;
 
   private BOSSLocClient mLocClient;
@@ -52,6 +56,9 @@ public class LocMapActivity extends Activity implements
 
     mTextView = (TextView) findViewById(R.id.loc_text_view);
     mMapImageView = (MapImageView) findViewById(R.id.map_view);
+
+    mReportButton = (Button) findViewById(R.id.map_report_button);
+    mReportButton.setOnClickListener(this);
 
     mLocClient = new BOSSLocClient(this);
     mSynAmbience = new SynAmbience(this);
@@ -342,5 +349,10 @@ public class LocMapActivity extends Activity implements
       break;
     }
 
+  }
+
+  @Override
+  public void onClick(View v) {
+    reportLocation();
   }
 }

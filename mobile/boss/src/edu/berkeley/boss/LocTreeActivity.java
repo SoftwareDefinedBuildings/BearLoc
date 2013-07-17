@@ -83,7 +83,7 @@ public class LocTreeActivity extends Activity implements View.OnClickListener,
     mReloadButton = (Button) findViewById(R.id.reload_button);
     mReloadButton.setOnClickListener(this);
 
-    mReportButton = (Button) findViewById(R.id.report_button);
+    mReportButton = (Button) findViewById(R.id.tree_report_button);
     mReportButton.setOnClickListener(this);
 
     mTreeViewList = (TreeViewList) findViewById(R.id.loc_tree_view_list);
@@ -145,7 +145,7 @@ public class LocTreeActivity extends Activity implements View.OnClickListener,
         mLocClient.getLocation(synAmbiencePack);
       }
       break;
-    case R.id.report_button:
+    case R.id.tree_report_button:
       if (mState == State.IDLE) {
         mState = State.REPORT;
 

@@ -19,7 +19,7 @@
             android:text="@string/reload" />
 
         <Button
-            android:id="@+id/report_button"
+            android:id="@+id/tree_report_button"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"

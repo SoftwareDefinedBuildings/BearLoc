@@ -31,7 +31,7 @@ public class SynAmbience implements Ambience {
   @Override
   public void resume() {
     mSensors.resume();
-    //mAudio.resume();
+    mAudio.resume();
     mWifi.resume();
     mLocation.resume();
   }
@@ -39,7 +39,7 @@ public class SynAmbience implements Ambience {
   @Override
   public void pause() {
     mSensors.pause();
-    //mAudio.pause();
+    mAudio.pause();
     mWifi.pause();
     mLocation.pause();
   }

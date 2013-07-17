@@ -117,23 +117,16 @@ public class LocMapActivity extends Activity implements
       final int semTargetIdx, final String newZone) {
     try {
       if (semTarget.get(semTargetIdx) instanceof String) {
-        final String semantic = semTarget.getString(semTargetIdx);
 
-        // Remove old location item
-        final Iterator<?> iter = loc.keys();
-        while (iter.hasNext()) {
-          final String locItemStr = (String) iter.next();
-
-          // Every location item is a String of JSONArray formated as
-          // "(semantic, zone)"
-          final JSONArray locItem = new JSONArray(locItemStr);
-          if (locItem.getString(0).equals(semantic)) {
-            loc.remove(locItemStr);
-            break;
-          }
+        // Remove all semantic location item in this node
+        final JSONArray locItems = loc.names();
+        final int length = locItems.length();
+        for (int i = 0; i < length; i++) {
+          loc.remove(locItems.getString(i));
         }
 
         // add new location item
+        final String semantic = semTarget.getString(semTargetIdx);
         final JSONArray newLocItem = new JSONArray();
         newLocItem.put(semantic);
         newLocItem.put(newZone);

@@ -49,7 +49,7 @@ class Loc(object):
     loc_infos = [loc_info1, loc_info2, loc_info3]
     
     from random import randint
-    hard_loc_info = loc_infos[randint(0,2)]
+    hard_loc_info = loc_infos[0] #loc_infos[randint(0,2)]
     
     return defer.succeed(hard_loc_info)
 

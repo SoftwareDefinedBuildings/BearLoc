@@ -1,23 +1,28 @@
-package edu.berkeley.boss;
+package edu.berkeley.boss.loc;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.berkeley.boss.BOSSLocClient;
+import edu.berkeley.boss.R;
+import edu.berkeley.boss.ambience.SynAmbience;
+import edu.berkeley.boss.custom.MapImageView;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
@@ -48,6 +53,16 @@ public class LocMapActivity extends Activity implements
   private int mCheckedIndex;
 
   private boolean mActive;
+
+  private Handler mHandler;
+  private boolean mAutoReport;
+  private final Runnable mAutoReportTask = new Runnable() {
+    public void run() {
+      reportLocation();
+
+      mHandler.postDelayed(mAutoReportTask, 5000);
+    }
+  };
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +116,8 @@ public class LocMapActivity extends Activity implements
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
+
+    mHandler = new Handler();
   }
 
   @Override
@@ -117,6 +134,8 @@ public class LocMapActivity extends Activity implements
     mProgressDialog.show();
 
     mLocClient.getMap(mCurMetadata);
+
+    mAutoReport = false;
   }
 
   /* Recursively change loc with semantic target and zone */
@@ -158,6 +177,8 @@ public class LocMapActivity extends Activity implements
           }
         }
       }
+      
+      mCurZone = newZone;
     } catch (JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -170,14 +191,16 @@ public class LocMapActivity extends Activity implements
   }
 
   private void reportLocation() {
-    mProgressDialog.show();
+    if (mActive == true) {
+      mProgressDialog.show();
 
-    final JSONObject synAmbiencePack = mSynAmbience.get();
-    mSynAmbience.clear(); // clear sensor data that will be reported to server
-    mLocClient.reportLocation(synAmbiencePack, mCurLoc);
+      final JSONObject synAmbiencePack = mSynAmbience.get();
+      mSynAmbience.clear(); // clear sensor data that will be reported to server
+      mLocClient.reportLocation(synAmbiencePack, mCurLoc);
+    }
   }
 
-  // TODO duplicated codes, implement location util
+  // TODO duplicated codes, implement location utility
   /* Recursively retrieve location string with semantic target */
   private String locationString(final JSONObject loc,
       final JSONArray semTarget, final int semTargetIdx) {
@@ -196,6 +219,7 @@ public class LocMapActivity extends Activity implements
           final String locItemSem = locItem.getString(0);
           final String locItemZone = locItem.getString(1);
           if (locItemSem.equals(semantic)) {
+            // TODO change this pretty ugly messy implementation!
             mCurZone = locItemZone;
             return ":" + locItemSem + "(" + locItemZone + ")";
           }
@@ -243,6 +267,11 @@ public class LocMapActivity extends Activity implements
     mMapImageView.setOnZoneClickListener(null);
 
     mSynAmbience.pause();
+
+    if (mAutoReport == true) {
+      mHandler.removeCallbacks(mAutoReportTask);
+      mReportButton.setText("Report");
+    }
   }
 
   @Override
@@ -262,7 +291,9 @@ public class LocMapActivity extends Activity implements
 
   @Override
   public void onReportDone(boolean success) {
-    mProgressDialog.dismiss();
+    if (mActive == true) {
+      mProgressDialog.dismiss();
+    }
   }
 
   @Override
@@ -301,7 +332,8 @@ public class LocMapActivity extends Activity implements
           }
 
           if (name.equals(mCurZone)) {
-            mMapImageView.addZone(name, vertices, true);
+            mMapImageView.addZone(name, vertices);
+            mMapImageView.showZoneEdge(mCurZone, Color.RED);
           } else {
             mMapImageView.addZone(name, vertices);
           }
@@ -333,17 +365,18 @@ public class LocMapActivity extends Activity implements
 
   @Override
   public void onClick(DialogInterface dialog, int which) {
-    // TODO retrieve selected items from mSelections, change current location,
-    // and report to server
     switch (which) {
     case DialogInterface.BUTTON_POSITIVE:
       ListView listView = ((AlertDialog) dialog).getListView();
       final String newZone = (String) listView.getAdapter().getItem(
           listView.getCheckedItemPosition());
+      
+      mMapImageView.hideZoneEdge(mCurZone);
+      
       changeLocation(mCurLoc, mCurSemTarget, 0, newZone);
       onLocationChanged();
 
-      mMapImageView.setFocusZone(newZone);
+      mMapImageView.showZoneEdge(mCurZone, Color.RED);
 
       reportLocation();
       break;
@@ -353,6 +386,14 @@ public class LocMapActivity extends Activity implements
 
   @Override
   public void onClick(View v) {
-    reportLocation();
+    if (mAutoReport == false) {
+      mHandler.postDelayed(mAutoReportTask, 0);
+      mReportButton.setText("Cancel");
+      mAutoReport = true;
+    } else {
+      mHandler.removeCallbacks(mAutoReportTask);
+      mReportButton.setText("Report");
+      mAutoReport = false;
+    }
   }
 }

@@ -1,6 +1,7 @@
 package edu.berkeley.boss;
 
 import edu.berkeley.boss.R;
+import edu.berkeley.boss.loc.LocTreeActivity;
 
 import android.os.Bundle;
 import android.app.Activity;

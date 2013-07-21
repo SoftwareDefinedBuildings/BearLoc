@@ -32,11 +32,11 @@
             android:label="@string/about_title" >
         </activity>
         <activity
-            android:name=".LocTreeActivity"
+            android:name="edu.berkeley.boss.loc.LocTreeActivity"
             android:label="@string/loc_tree_title" >
         </activity>
         <activity
-            android:name=".LocMapActivity"
+            android:name="edu.berkeley.boss.loc.LocMapActivity"
             android:label="@string/loc_map_title" >
         </activity>
         <activity

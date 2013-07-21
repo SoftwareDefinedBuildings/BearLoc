@@ -1,4 +1,4 @@
-package edu.berkeley.boss;
+package edu.berkeley.boss.custom;
 
 import java.util.HashMap;
 import java.util.List;
@@ -8,10 +8,8 @@ import java.util.Random;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.drawable.ShapeDrawable;
 import android.util.AttributeSet;
@@ -25,9 +23,10 @@ public class MapImageView extends ImageView {
   private Paint mMapPaint;
 
   private Map<String, ShapeDrawable> mZones;
-
-  private Path mFocusZonePath;
-  private Paint mPathPaint;
+  private Map<String, Integer> mZoneFillColors;
+  private Map<String, Integer> mZoneEdgeColors;
+  private Paint mZoneFillPaint;
+  private Paint mZoneEdgePaint;
 
   private Matrix mTransMatrix;
 
@@ -60,14 +59,19 @@ public class MapImageView extends ImageView {
     mMapPaint.setFilterBitmap(true);
 
     mZones = new HashMap<String, ShapeDrawable>();
+    mZoneFillColors = new HashMap<String, Integer>();
+    mZoneEdgeColors = new HashMap<String, Integer>();
 
-    mPathPaint = new Paint();
-    mPathPaint.setFilterBitmap(true);
-    mPathPaint.setColor(Color.RED);
-    mPathPaint.setStyle(Paint.Style.STROKE);
-    mPathPaint.setDither(false);
-    mPathPaint.setStrokeWidth(3);
-    mPathPaint.setAntiAlias(true);
+    mZoneFillPaint = new Paint();
+    mZoneFillPaint.setStyle(Paint.Style.FILL);
+    mZoneFillPaint.setDither(false);
+    mZoneFillPaint.setAntiAlias(true);
+
+    mZoneEdgePaint = new Paint();
+    mZoneEdgePaint.setStyle(Paint.Style.STROKE);
+    mZoneEdgePaint.setDither(false);
+    mZoneEdgePaint.setStrokeWidth(3);
+    mZoneEdgePaint.setAntiAlias(true);
 
     mTransMatrix = new Matrix();
 
@@ -100,13 +104,27 @@ public class MapImageView extends ImageView {
       canvas.drawBitmap(mMap, 0, 0, mMapPaint);
     }
 
+    // Draw shape
     for (Map.Entry<String, ShapeDrawable> entry : mZones.entrySet()) {
+      final String id = entry.getKey();
       final ShapeDrawable zone = entry.getValue();
+
+      zone.getPaint().set(mZoneFillPaint);
+      zone.getPaint().setColor(mZoneFillColors.get(id));
       zone.draw(canvas);
+
     }
 
-    if (mFocusZonePath != null) {
-      canvas.drawPath(mFocusZonePath, mPathPaint);
+    // Draw Edge
+    for (Map.Entry<String, ShapeDrawable> entry : mZones.entrySet()) {
+      final String id = entry.getKey();
+      final ShapeDrawable zone = entry.getValue();
+
+      if (mZoneEdgeColors.get(id) != null) {
+        zone.getPaint().set(mZoneEdgePaint);
+        zone.getPaint().setColor(mZoneEdgeColors.get(id));
+        zone.draw(canvas);
+      }
     }
 
     canvas.restore();
@@ -122,7 +140,8 @@ public class MapImageView extends ImageView {
 
   public void addZone(final String id, final List<PointF> vertices) {
     final ShapeDrawable newZone = new ShapeDrawable(new PolygonShape(vertices));
-    newZone.getPaint().setColor(mRandom.nextInt(0x010000000) + 0x7f000000);
+    mZoneFillColors.put(id, mRandom.nextInt(0x010000000) + 0x7f000000);
+    mZoneEdgeColors.put(id, null);
     newZone.setBounds(0, 0, newZone.getIntrinsicWidth(),
         newZone.getIntrinsicHeight());
 
@@ -131,31 +150,45 @@ public class MapImageView extends ImageView {
     invalidate();
   }
 
-  public void addZone(final String id, final List<PointF> vertices,
-      final boolean focus) {
-    addZone(id, vertices);
-
-    if (focus == true) {
-      setFocusZone(id);
-    }
-  }
-
   public void removeZone(final String id) {
     mZones.remove(id);
 
     invalidate();
   }
 
-  public void setFocusZone(final String id) {
-    final ShapeDrawable zoneDrawable = mZones.get(id);
-    final PolygonShape zoneShape = (PolygonShape) zoneDrawable.getShape();
-    mFocusZonePath = new Path(zoneShape.getPath());
+  public void showZoneEdge(final String id, final int color) {
+    mZoneEdgeColors.put(id, color);
+
+    invalidate();
+  }
+
+  public void hideZoneEdge(final String id) {
+    mZoneEdgeColors.put(id, null);
 
     invalidate();
   }
 
   private class GestureListener implements
       MyGestureDetector.MyOnGestureListener {
+
+    private String getFocusZoneId(MotionEvent e) {
+      final float[] screenPointArr = new float[] { e.getX(), e.getY() };
+      final Matrix inverseMatrix = new Matrix();
+      mTransMatrix.invert(inverseMatrix);
+      inverseMatrix.mapPoints(screenPointArr);
+      final PointF originP = new PointF(screenPointArr[0], screenPointArr[1]);
+
+      for (Map.Entry<String, ShapeDrawable> entry : mZones.entrySet()) {
+        final String id = entry.getKey();
+        final ShapeDrawable zone = entry.getValue();
+        final PolygonShape shape = (PolygonShape) zone.getShape();
+        if (shape.contains(originP) == true) {
+          return id;
+        }
+      }
+
+      return null;
+    }
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
@@ -173,8 +206,14 @@ public class MapImageView extends ImageView {
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
-      // TODO Auto-generated method stub
-      return false;
+      if (mListener != null) {
+        final String tapZoneId = getFocusZoneId(e);
+        if (tapZoneId != null) {
+          mListener.onZoneClick(MapImageView.this, tapZoneId);
+        }
+      }
+
+      return true;
     }
 
     @Override
@@ -191,23 +230,7 @@ public class MapImageView extends ImageView {
 
     @Override
     public void onLongPress(MotionEvent e) {
-      if (mListener != null) {
-        final float[] screenPointArr = new float[] { e.getX(), e.getY() };
-        final Matrix inverseMatrix = new Matrix();
-        mTransMatrix.invert(inverseMatrix);
-        inverseMatrix.mapPoints(screenPointArr);
-        final PointF originP = new PointF(screenPointArr[0], screenPointArr[1]);
-
-        for (Map.Entry<String, ShapeDrawable> entry : mZones.entrySet()) {
-          final String id = entry.getKey();
-          final ShapeDrawable zone = entry.getValue();
-          final PolygonShape shape = (PolygonShape) zone.getShape();
-          if (shape.contains(originP) == true) {
-            mListener.onZoneClick(MapImageView.this, id);
-            break;
-          }
-        }
-      }
+      // TODO Auto-generated method stub
     }
 
     @Override

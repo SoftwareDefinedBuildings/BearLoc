@@ -1,4 +1,4 @@
-package edu.berkeley.boss;
+package edu.berkeley.boss.loc;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

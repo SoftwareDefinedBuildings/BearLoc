@@ -1,4 +1,4 @@
-package edu.berkeley.boss;
+package edu.berkeley.boss.loc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +10,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.berkeley.boss.BOSSLocClient.LocClientListener;
+import edu.berkeley.boss.ambience.SynAmbience;
+import edu.berkeley.boss.BOSSLocClient;
 import edu.berkeley.boss.R;
 
 import pl.polidea.treeview.InMemoryTreeStateManager;

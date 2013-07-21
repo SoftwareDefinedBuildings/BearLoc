@@ -1,6 +1,6 @@
-package edu.berkeley.boss;
+package edu.berkeley.boss.loc;
 
-import edu.berkeley.boss.LocTreeActivity.LocNode;
+import edu.berkeley.boss.loc.LocTreeActivity.LocNode;
 import edu.berkeley.boss.R;
 import android.app.Activity;
 import android.view.View;
@@ -21,10 +21,10 @@ public class LocTreeViewAdapter extends AbstractTreeViewAdapter<LocNode> {
   public long getItemId(int position) {
     return getTreeId(position).id;
   }
-  
+
   @Override
   public LocNode getItem(final int position) {
-      return getTreeId(position);
+    return getTreeId(position);
   }
 
   @Override

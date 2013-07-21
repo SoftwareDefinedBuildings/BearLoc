@@ -10,7 +10,7 @@ from boss.loc import resource as loc_resource
 from boss.metadata import resource as metadata_resource
 from boss.control import resource as control_resource
 
-import json
+import simplejson as json
 import httplib
 
 

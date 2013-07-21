@@ -9,7 +9,7 @@ from zope.interface import implements
 
 from boss.metadata.interface import IMetadata
 
-import json
+import simplejson as json
 import os
 
 class Metadata(object):

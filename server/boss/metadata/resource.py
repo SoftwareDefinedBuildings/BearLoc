@@ -7,7 +7,7 @@ from twisted.internet import defer
 
 from boss.metadata.interface import IMetadata
 
-import json
+import simplejson as json
 import httplib
 import os
 

@@ -8,7 +8,7 @@ from twisted.internet import defer
 from boss.loc.interface import ILoc
 from boss.loc.report import resource as report_resource
 
-import json
+import simplejson as json
 import httplib
 
 
@@ -55,7 +55,7 @@ class LocResource(resource.Resource):
     request.finish()
     log.msg(request.getHost().host + " is localizaed as " + 
            json.dumps(locinfo['location']) + " with confidence " 
-           + str(locinfo['confidence']))
+           + json.dumps(locinfo['confidence']))
 
 
   def _fail(self, err, request):

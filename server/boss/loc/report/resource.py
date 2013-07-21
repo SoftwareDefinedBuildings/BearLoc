@@ -7,7 +7,7 @@ from twisted.internet import defer
 
 from boss.loc.report.interface import IReport
 
-import json
+import simplejson as json
 import httplib
 
 

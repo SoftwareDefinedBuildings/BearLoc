@@ -7,7 +7,7 @@ from twisted.internet import defer
 
 from boss.control.interface import IControl
 
-import json
+import simplejson as json
 import httplib
 
 

@@ -20,7 +20,7 @@ public class Audio implements Ambience {
   private static final int AUDIO_CHANNEL = AudioFormat.CHANNEL_IN_MONO;
   private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
   private static final int AUDIO_BUFFER_RATIO = 2;
-  private static final long AUDIO_HISTORY_LEN = 3000L; // millisecond
+  private static final long AUDIO_HISTORY_LEN = 5000L; // millisecond
 
   private final BlockingQueue<Pair<Long, ByteArrayOutputStream>> mAudioEventQueue;
   private AudioRecordThread mAudioRecordThread;
@@ -42,6 +42,7 @@ public class Audio implements Ambience {
 
       while (mRun == true) {
         final byte[] buffer = new byte[bufferSize];
+        // blocking read, which returns when buffer.length bytes are recorded
         final int streamSize = recorder.read(buffer, 0, buffer.length); // Bytes
         final Long timestamp = System.currentTimeMillis();
         final ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();

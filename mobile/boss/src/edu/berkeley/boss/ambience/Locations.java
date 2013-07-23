@@ -92,9 +92,9 @@ public class Locations implements Ambience, LocationListener {
       if (mLocationEventQueue.isEmpty() == false) {
         // Pack cached WiFi data
         final JSONObject locationJSONObject = new JSONObject();
-        locationPack.put("location", locationJSONObject);
+        locationPack.put("google location", locationJSONObject);
 
-        locationJSONObject.put("name", "location");
+        locationJSONObject.put("name", "google location");
         locationJSONObject.put("type", "location");
 
         final JSONArray eventJSONArray = new JSONArray();

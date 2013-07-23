@@ -120,3 +120,8 @@ local.properties
 *.log
 *.log.*
 *.pid
+
+#BOSS Log Files
+boss.db
+report.log*
+audio/

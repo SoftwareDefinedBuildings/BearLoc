@@ -9,7 +9,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.berkeley.boss.BOSSLocClient;
 import edu.berkeley.boss.R;
 import edu.berkeley.boss.ambience.SynAmbience;
 import edu.berkeley.boss.custom.MapImageView;

@@ -1,4 +1,4 @@
-package edu.berkeley.boss;
+package edu.berkeley.boss.loc;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -18,7 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.berkeley.boss.loc.LocClient;
+import edu.berkeley.boss.SettingsActivity;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -75,12 +75,15 @@ public class BOSSLocClient implements LocClient {
     }
 
     try {
-      final JSONObject locRequst = new JSONObject();
-      locRequst.put("type", "localize");
-      locRequst.put("sensor data", sensorData);
+      final JSONObject locRequest = new JSONObject();
+      locRequest.put("type", "localize");
+      locRequest.put("sensor data", sensorData);
+      
+      final Long timestamp = System.currentTimeMillis();
+      locRequest.put("timestamp", timestamp);
 
       new BOSSHttpPostTask(new OnLocationReturned()).execute(url,
-          locRequst.toString());
+          locRequest.toString());
     } catch (JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -116,13 +119,16 @@ public class BOSSLocClient implements LocClient {
     }
 
     try {
-      final JSONObject reportRequst = new JSONObject();
-      reportRequst.put("type", "report");
-      reportRequst.put("sensor data", sensorData);
-      reportRequst.put("location", loc);
+      final JSONObject reportRequest = new JSONObject();
+      reportRequest.put("type", "report");
+      reportRequest.put("sensor data", sensorData);
+      reportRequest.put("location", loc);
+      
+      final Long timestamp = System.currentTimeMillis();
+      reportRequest.put("timestamp", timestamp);
 
       new BOSSHttpPostTask(new OnReportDone()).execute(url,
-          reportRequst.toString());
+          reportRequest.toString());
     } catch (JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -153,12 +159,15 @@ public class BOSSLocClient implements LocClient {
     }
 
     try {
-      final JSONObject metadataRequst = new JSONObject();
-      metadataRequst.put("type", "metadata");
-      metadataRequst.put("target", target);
+      final JSONObject metadataRequest = new JSONObject();
+      metadataRequest.put("type", "metadata");
+      metadataRequest.put("target", target);
+      
+      final Long timestamp = System.currentTimeMillis();
+      metadataRequest.put("timestamp", timestamp);
 
       new BOSSHttpPostTask(new onMetadataReturned()).execute(url,
-          metadataRequst.toString());
+          metadataRequest.toString());
     } catch (JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();

@@ -42,6 +42,7 @@ class Metadata(object):
        The metadata may contain elements whose content is stored in other files.
   
     Return dict"""
+    # TODO store metadata in appropriate databse appropriately
     
     semantic = target[0][0]
     zone = target[0][1]
@@ -68,8 +69,8 @@ class Metadata(object):
         return self._metadata_recursive(childmdtree, target[1:])
     else:
       return None
-      
-  
+
+
   def _transform_points(self, metadata, targetsem):
     inverse_mtx = self._inverse(metadata['views']['floorplan']['mtx'])
     metadata['views']['floorplan'].pop('mtx', None)

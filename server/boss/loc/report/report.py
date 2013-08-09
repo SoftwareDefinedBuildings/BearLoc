@@ -57,7 +57,7 @@ class Report(object):
     """Insert the report to database"""
     
     operation = "CREATE TABLE IF NOT EXISTS " + self._sensors_table + \
-                " (name TEXT NOT NULL PRIMARY KEY UNIQUE, \
+                " (name TEXT NOT NULL PRIMARY KEY, \
                   vendor TEXT, \
                   type TEXT, \
                   version INTEGER, \
@@ -103,7 +103,7 @@ class Report(object):
       if AndroidSensorType.contains(sensordata.get('type')):
         # create sensor events table
         operation = "CREATE TABLE IF NOT EXISTS " + table + \
-                    " (timestamp NOT NULL PRIMARY KEY, \
+                    " (timestamp INTEGER NOT NULL PRIMARY KEY, \
                       value TEXT, \
                       accuracy REAL)"
         yield self._db.runQuery(operation)
@@ -119,7 +119,7 @@ class Report(object):
       elif sensordata.get('type') == 'location':
         # create sensor events table
         operation = "CREATE TABLE IF NOT EXISTS " + table + \
-                    " (timestamp NOT NULL PRIMARY KEY, \
+                    " (timestamp INTEGER NOT NULL PRIMARY KEY, \
                       provider TEXT, \
                       bearing REAL, \
                       altitude REAL, \
@@ -145,19 +145,20 @@ class Report(object):
       elif sensordata.get('type') == 'wifi':
         # create sensor events table
         operation = "CREATE TABLE IF NOT EXISTS " + table + \
-                    " (timestamp NOT NULL PRIMARY KEY, \
+                    " (timestamp INTEGER NOT NULL, \
+                      BSSID TEXT NOT NULL, \
                       SSID TEXT, \
-                      BSSID TEXT, \
-                      level REAL, \
+                      RSSI REAL, \
                       capabilities TEXT, \
-                      frequency REAL)"
+                      frequency REAL, \
+                      PRIMARY KEY (timestamp, BSSID))"
         yield self._db.runQuery(operation)
 
         # insert event data
         for event in sensordata.get('events'):
           eventdata = (event['timestamp'],
+                       event['BSSID'],
                        event.get('SSID'),
-                       event.get('BSSID'),
                        event.get('level'),
                        event.get('capabilities'),
                        event.get('frequency'))
@@ -167,7 +168,7 @@ class Report(object):
       elif sensordata.get('type') == 'audio':
         # create sensor events table
         operation = "CREATE TABLE IF NOT EXISTS " + table + \
-                    " (timestamp NOT NULL PRIMARY KEY, \
+                    " (timestamp INTEGER NOT NULL PRIMARY KEY, \
                       path TEXT)"
         yield self._db.runQuery(operation)
 
@@ -201,7 +202,7 @@ class Report(object):
   def _insert_location(self, report):
     # create location reports table
     operation = "CREATE TABLE IF NOT EXISTS " + self._locations_table + \
-                " (timestamp NOT NULL PRIMARY KEY, \
+                " (timestamp INTEGER NOT NULL PRIMARY KEY, \
                   location TEXT)"
     yield self._db.runQuery(operation)
     

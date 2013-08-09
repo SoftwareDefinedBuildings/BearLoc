@@ -4,6 +4,8 @@ clean:
 	find . -name '*.pyo' -delete
 	rm -rf twistd.log*
 	rm -rf report.log*
+	rm -rf audio
+	rm -rf boss.db
 
 run:
 	twistd -y boss.tac

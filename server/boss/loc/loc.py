@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from zope.interface import implements
 
@@ -19,6 +19,15 @@ class Loc(object):
   def __init__(self, db):
     self._db = db
     self.report = report.Report(self._db)
+    self._estimators = self._tree()
+    reactor.callLater(0, self._train)
+    self._train_interval = 20
+    self._report_num = 0
+    
+    # TODO put the table names in settings file
+    self._sensors_table = 'sensors'
+    self._locations_table = 'locations'
+    self._mldata_table = 'mldata'
 
 
   def localize(self, request):
@@ -55,7 +64,75 @@ class Loc(object):
 
 
   def _tree(self):
-    '''Autovivification of tree.
+    """Autovivification of tree.
     ref http://recursive-labs.com/blog/2012/05/31/one-line-python-tree-explained/
-    '''
+    """
     return defaultdict(self._tree)
+
+
+  @defer.inlineCallbacks
+  def _train(self):
+    """Train a SVM model for all data."""
+    # TODO online/incremental training
+    
+    operation = "CREATE TABLE IF NOT EXISTS " + self._mldata_table + \
+                " (timestamp INTEGER NOT NULL PRIMARY KEY, \
+                  wifi_rssi TEXT, \
+                  abs TEXT, \
+                  longtitude REAL, \
+                  latitude REAL,\
+                  location TEXT)"
+    yield self._db.runQuery(operation)
+    
+    # check if locations table exists
+    operation = "SELECT * FROM sqlite_master WHERE name ='" + \
+                self._locations_table + "' and type='table'";
+    d = self._db.runQuery(operation)
+    loctable = yield d
+    
+    if len(loctable) > 0:
+      # extract attributes and store in db
+      operation = "SELECT * FROM " + self._locations_table
+      d = self._db.runQuery(operation)
+      locations = yield d
+    
+      if len(locations) > self._report_num:
+        self._report_num = len(locations)
+        for timestamp, location in locations:
+          
+          wifi_rssi = self._get_wifi_rssi(timestamp, 10000)
+    
+      # TODO retrain model if there is enough data
+      self._estimators['TODO']
+    
+      # Only schedule next training task when this one finishes
+      reactor.callLater(self._train_interval, self._train)
+
+
+  @defer.inlineCallbacks
+  def _get_wifi_rssi(self, timestamp, history_len):
+    """get wifi RSSIs """
+    # check if sensors table exists
+    operation = "SELECT * FROM sqlite_master WHERE name ='" + \
+                self._sensors_table + "' and type='table'";
+    d = self._db.runQuery(operation)
+    sensros_table = yield d
+    
+    if len(_sensors_table) > 0:
+      typename = ('wifi',)
+      operation = "SELECT name FROM " + self._sensors_table + " WHERE type=?"
+      d = self._db.runQuery(operation, typename)
+      name = yield d
+      
+      table = name.replace(" ", "_")
+      operation = "SELECT MAX(timestamp), BSSID, RSSI FROM " + table + \
+                  " WHERE " + str(timestamp) + " - timestamp > " + \
+                  str(history_len) + " ORDER by timestamp"
+      d = self._db.runQuery(operation, typename)
+      wifievents = yield d
+      
+      wifi_rssi_dict = {event[1]: event[2] for event in wifievents}
+    else:
+      defer.returnValue(None)
+    
+    

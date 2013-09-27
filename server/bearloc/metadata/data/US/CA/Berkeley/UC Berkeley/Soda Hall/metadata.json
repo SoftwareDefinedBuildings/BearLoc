@@ -1,0 +1,12 @@
+{
+  "name": "Soda Hall",
+  "semantic": "building",
+  "dir": "/US/CA/Berkeley/UC Berkeley/Soda Hall/",
+  "child": {
+    "floor": {
+      "Floor 4":{
+        "refer": "/US/CA/Berkeley/UC Berkeley/Soda Hall/Floor 4/metadata.json"
+      },
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "UC Berkeley",
+  "semantic": "district",
+  "dir": "/US/CA/Berkeley/UC Berkeley/",
+  "child": {
+    "building": {
+      "Sutardja Dai Hall": {
+        "refer": "/US/CA/Berkeley/UC Berkeley/Sutardja Dai Hall/metadata.json"
+      }
+    }
+  }
+}
+

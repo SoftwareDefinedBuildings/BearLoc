@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 from bearloc.report.interface import IReport
-from bearloc.loc.android import AndroidSensorType, AndroidAudioFormat, AndroidAudioEncoding
 
 from twisted.internet import defer, reactor
 from zope.interface import implements
@@ -15,197 +14,526 @@ import array
 
 
 class Report(object):
-  """Localization Report class"""
+  """Report class"""
   
   implements(IReport)
   
   def __init__(self, db):
     self._db = db
-    self._sensors_table = 'sensors'
-    self._locations_table = 'locations'
-    self._audio_dir = 'audio/'
-  
+    self._create_tables()
+ 
+
   def report(self, report):
     """Store reported location and corresponding data.
     """
-    
-    # cap the size of report log files
-    if os.path.exists('report.log') == True:
-      statinfo = os.stat('report.log')
-      if statinfo.st_size > 5*1024*1024:
-        filenamelist = glob.glob('report.log.*')
-        nolist = [int(filename.split(".")[2]) for filename in filenamelist]
-        nolist.sort(reverse=True)
-        for no in nolist:
-          shutil.move('report.log.' + str(no), 'report.log.' + str(no+1))
-        shutil.move('report.log', 'report.log.1')
-    
-    logfile = open('report.log', 'a')
-    logfile.write(json.dumps(report) + '\n');
-    logfile.close()
-    
     reactor.callLater(0, self._insert, report)
     
     response = {'result': True}
     return defer.succeed(response)
   
   
-  @defer.inlineCallbacks
+  def _create_tables(self):
+    """Blocking call of creating tables"""
+    # device
+    operation = "CREATE TABLE IF NOT EXISTS " + "device" + \
+                " (imei TEXT NOT NULL PRIMARY KEY, \
+                  make TEXT, \
+                  model TEXT);"
+    
+    # sensormeta
+    operation += "CREATE TABLE IF NOT EXISTS " + "sensormeta" + \
+                 " (imei TEXT NOT NULL, \
+                    sensor TEXT, \
+                    vendor TEXT, \
+                    name TEXT, \
+                    power INTEGER, \
+                    minDelay INTEGER, \
+                    maxDelay INTEGER, \
+                    version INTEGER, \
+                    resolution INTEGER, \
+                    PRIMARY KEY (imei, sensor));"
+
+    # wifi
+    operation += "CREATE TABLE IF NOT EXISTS " + "wifi" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    BSSID TEXT NOT NULL, \
+                    SSID TEST, \
+                    RSSI REAL NOT NULL, \
+                    freq REAL, \
+                    PRIMARY KEY (imei, epoch, BSSID));"
+
+    # audio
+    operation += "CREATE TABLE IF NOT EXISTS " + "audio" + \
+                 " (imei TEXT NOT NULL, \
+                   epoch INTEGER NOT NULL, \
+                   channel INTEGER, \
+                   sampwidth INTEGER, \
+                   framerate INTEGER, \
+                   nframes INTEGER, \
+                   path TEXT NOT NULL, \
+                   PRIMARY KEY (imei, epoch));"
+    
+    # geoloc
+    operation += "CREATE TABLE IF NOT EXISTS " + "geoloc" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    longtitude REAL NOT NULL, \
+                    latitude REAL NOT NULL, \
+                    altitude REAL, \
+                    bearing REAL, \
+                    speed REAL, \
+                    accuracy REAL, \
+                    provider TEXT, \
+                    PRIMARY KEY (imei, epoch));"
+
+    # linear acc 
+    operation += "CREATE TABLE IF NOT EXISTS " + "lacc" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    x REAL NOT NULL, \
+                    y REAL NOT NULL, \
+                    z REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+
+    # acc                                                                                                                       
+    operation += "CREATE TABLE IF NOT EXISTS " + "acc" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    x REAL NOT NULL, \
+                    y REAL NOT NULL, \
+                    z REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+    
+    # temp                                                                                                                      
+    operation += "CREATE TABLE IF NOT EXISTS " + "temp" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    temp REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+
+    # rotation                                                                                                                      
+    operation += "CREATE TABLE IF NOT EXISTS " + "rotation" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    x REAL NOT NULL, \
+                    y REAL NOT NULL, \
+                    z REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+
+    # gravity                                                                                                                   
+    operation += "CREATE TABLE IF NOT EXISTS " + "gravity" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    x REAL NOT NULL, \
+                    y REAL NOT NULL, \
+                    z REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+    
+    # gyro                                                                                                                      
+    operation += "CREATE TABLE IF NOT EXISTS " + "gyro" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    x REAL NOT NULL, \
+                    y REAL NOT NULL, \
+                    z REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+    
+    # light                                                                                                                     
+    operation += "CREATE TABLE IF NOT EXISTS " + "light" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    light REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+    
+    # magnetic                                                                                                                  
+    operation += "CREATE TABLE IF NOT EXISTS " + "magnetic" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    x REAL NOT NULL, \
+                    y REAL NOT NULL, \
+                    z REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+    
+    # pressure                                                                                                                  
+    operation += "CREATE TABLE IF NOT EXISTS " + "pressure" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    pressure REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+    
+    # proximity                                                                                                                 
+    operation += "CREATE TABLE IF NOT EXISTS " + "proximity" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    proximity REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+    
+    # humidity
+    operation += "CREATE TABLE IF NOT EXISTS " + "humidity" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    humidity REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (imei, epoch));"
+   
+    # semloc
+    operation += "CREATE TABLE IF NOT EXISTS " + "semloc" + \
+                 " (imei TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    semantic TEXT NOT NULL, \
+                    location TEXT NOT NULL, \
+                    PRIMARY KEY (imei, epoch));"
+  
+    cur = self._db.cursor()    
+    cur.executescript(operation)
+   
+    self._db.commit()
+
+
   def _insert(self, report):
     """Insert the report to database"""
+    self._insert_device(report)
+    self._insert_sensormeta(report) if "sensormeta" in report else None
+    self._insert_wifi(report) if "wifi" in report else None
+    self._insert_audio(report) if "audio" in report else None
+    self._insert_geoloc(report) if "audio" in report else None
+    self._insert_lacc(report) if "lacc" in report else None
+    self._insert_acc(report) if "acc" in report else None
+    self._insert_temp(report) if "temp" in report else None
+    self._insert_rotation(report) if "rotation" in report else None
+    self._insert_gravity(report) if "gravity" in report else None
+    self._insert_gyro(report) if "gyro" in report else None
+    self._insert_light(report) if "light" in report else None
+    self._insert_magnetic(report) if "magnetic" in report else None
+    self._insert_pressure(report) if "pressure" in report else None
+    self._insert_proximity(report) if "proximity" in report else None
+    self._insert_humidity(report) if "humidity" in report else None
+    self._insert_semloc(report) if "semloc" in report else None
+
+
+  def _insert_device(self, report):
+    device = report.get("device") # dict of device info
+    data = (device.get("imei"),
+            device.get("make"),
+            device.get("model"))
     
-    operation = "CREATE TABLE IF NOT EXISTS " + self._sensors_table + \
-                " (name TEXT NOT NULL PRIMARY KEY, \
-                  vendor TEXT, \
-                  type TEXT, \
-                  version INTEGER, \
-                  sampleRate REAL, \
-                  power INTEGER, \
-                  minDelay INTEGER, \
-                  maxDelay INTEGER, \
-                  resolution REAL, \
-                  format TEXT, \
-                  source TEXT, \
-                  channel TEXT)"
-    yield self._db.runQuery(operation)
+    operation = "INSERT OR REPLACE INTO " + "device" + \
+                " VALUES (?,?,?);"
+    cur = self._db.cursor()
+    cur.execute(operation, data)
+
+    self._db.commit()
+
+ 
+  def _insert_sensormeta(self, report):
+    cur = self._db.cursor()
+    sensormeta = report.get("sensormeta") # dict of sensor meta, which is also dict
+    for sensor, meta in sensormeta.iteritems():
+      data = (report.get("device").get("imei"),
+              sensor,
+              meta.get("vendor"),
+              meta.get("name"),
+              meta.get("power"),
+              meta.get("minDelay"),
+              meta.get("maxDelay"),
+              meta.get("version"),
+              meta.get("resolution"))
   
-    self._insert_sensor_data(report)
-    self._insert_location(report)
+      operation = "INSERT OR REPLACE INTO " + "sensormeta" + \
+                " VALUES (?,?,?,?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
 
 
-  @defer.inlineCallbacks
-  def _insert_sensor_data(self, report):
-    sensordatadict = report['sensor data']
-    for sensorname, sensordata in sensordatadict.iteritems():
-      # insert sensor info item in sensor table
-      sensorinfo = [sensordata['name'], 
-                    sensordata.get('vendor'), 
-                    str(sensordata.get('type')),
-                    sensordata.get('version'),
-                    sensordata.get('sample rate'),
-                    sensordata.get('power'), 
-                    sensordata.get('minimum deday'),
-                    sensordata.get('maximum deday'),
-                    sensordata.get('resolution'),
-                    sensordata.get('format'),
-                    sensordata.get('source'),
-                    sensordata.get('channel')]
-      # TODO log if it encounters conflicts
-      operation = "INSERT OR IGNORE INTO " + self._sensors_table + \
-                  " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
-      yield self._db.runQuery(operation, sensorinfo)
-      
-      
-      # insert sensor events to relted data table or files
-      table = sensordata['name'].replace(" ", "_")
-      if AndroidSensorType.contains(sensordata.get('type')):
-        # create sensor events table
-        operation = "CREATE TABLE IF NOT EXISTS " + table + \
-                    " (timestamp INTEGER NOT NULL PRIMARY KEY, \
-                      value TEXT, \
-                      accuracy REAL)"
-        yield self._db.runQuery(operation)
-        
-        # insert event data
-        for event in sensordata.get('events'):
-          eventdata = (event['timestamp'],
-                       str(event.get('values')),
-                       event.get('accuracy'))
-          operation = "INSERT OR IGNORE INTO " + table + \
-                      " VALUES (?,?,?)"
-          yield self._db.runQuery(operation, eventdata)
-      elif sensordata.get('type') == 'location':
-        # create sensor events table
-        operation = "CREATE TABLE IF NOT EXISTS " + table + \
-                    " (timestamp INTEGER NOT NULL PRIMARY KEY, \
-                      provider TEXT, \
-                      bearing REAL, \
-                      altitude REAL, \
-                      longtitude REAL, \
-                      latitude REAL, \
-                      speed REAL, \
-                      accuracy REAL)"
-        yield self._db.runQuery(operation)
+  def _insert_wifi(self, report):
+    cur = self._db.cursor()
+    events = report.get("wifi") # list of wifi events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("BSSID"),
+              event.get("SSID"),
+              event.get("RSSI"),
+              event.get("freq"))
+  
+      operation = "INSERT OR REPLACE INTO " + "wifi" + \
+                " VALUES (?,?,?,?,?,?);"
+      cur.execute(operation, data)
 
-        # insert event data
-        for event in sensordata.get('events'):
-          eventdata = (event['timestamp'],
-                       event.get('provider'),
-                       event.get('bearing'),
-                       event.get('altitude'),
-                       event.get('longtitude'),
-                       event.get('latitude'),
-                       event.get('speed'),
-                       event.get('accuracy'))
-          operation = "INSERT OR IGNORE INTO " + table + \
-                      " VALUES (?,?,?,?,?,?,?,?)"
-          yield self._db.runQuery(operation, eventdata)
-      elif sensordata.get('type') == 'wifi':
-        # create sensor events table
-        operation = "CREATE TABLE IF NOT EXISTS " + table + \
-                    " (timestamp INTEGER NOT NULL, \
-                      BSSID TEXT NOT NULL, \
-                      SSID TEXT, \
-                      RSSI REAL, \
-                      capabilities TEXT, \
-                      frequency REAL, \
-                      PRIMARY KEY (timestamp, BSSID))"
-        yield self._db.runQuery(operation)
-
-        # insert event data
-        for event in sensordata.get('events'):
-          eventdata = (event['timestamp'],
-                       event['BSSID'],
-                       event.get('SSID'),
-                       event.get('level'),
-                       event.get('capabilities'),
-                       event.get('frequency'))
-          operation = "INSERT OR IGNORE INTO " + table + \
-                      " VALUES (?,?,?,?,?,?)"
-          yield self._db.runQuery(operation, eventdata)
-      elif sensordata.get('type') == 'audio':
-        # create sensor events table
-        operation = "CREATE TABLE IF NOT EXISTS " + table + \
-                    " (timestamp INTEGER NOT NULL PRIMARY KEY, \
-                      path TEXT)"
-        yield self._db.runQuery(operation)
-
-        # generate .wav audio file
-        eventdict = {event['timestamp']: event.get('values', []) for event in sensordata.get('events', [])}
-        data = [byte for timestamp in sorted(eventdict.iterkeys()) for byte in eventdict[timestamp]]
-        
-        if not os.path.exists(self._audio_dir):
-          os.makedirs(self._audio_dir)
-        wavfpath = self._audio_dir + str(event['timestamp']) + '.wav'
-        wavf = wave.open(wavfpath, 'wb')
-        channel_num = AndroidAudioFormat.channel_num(sensordata.get('channel'))
-        wavf.setnchannels(channel_num)
-        sample_width = AndroidAudioEncoding.sample_width(sensordata.get('format'))
-        wavf.setsampwidth(sample_width)
-        wavf.setframerate(sensordata.get('sample rate'))
-        wavf.setnframes(len(data)/sample_width)
-        
-        bindatastr = array.array('b', data).tostring()
-        wavf.writeframesraw(bindatastr)
-        
-        # insert .wav audio file info
-        eventdata = (sorted(eventdict.iterkeys())[-1],
-                     wavfpath)
-        operation = "INSERT OR IGNORE INTO " + table + \
-                    " VALUES (?,?)"
-        yield self._db.runQuery(operation, eventdata)
-
-
-  @defer.inlineCallbacks
-  def _insert_location(self, report):
-    # create location reports table
-    operation = "CREATE TABLE IF NOT EXISTS " + self._locations_table + \
-                " (timestamp INTEGER NOT NULL PRIMARY KEY, \
-                  location TEXT)"
-    yield self._db.runQuery(operation)
+    self._db.commit()
     
-    locdata = (report['timestamp'],
-               str(report.get('location')))
-    operation = "INSERT OR IGNORE INTO " + self._locations_table + \
-                " VALUES (?,?)"
-    yield self._db.runQuery(operation, locdata)
+
+  def _insert_audio(self, report):
+    audiodir = "audio/"
+    if not os.path.exists(audiodir):
+      os.makedirs(audiodir)
+    
+    cur = self._db.cursor()
+    events = report.get("audio") # list of audio events
+    for event in events:
+      epoch = event.get("epoch")
+      channel = event.get("channel")
+      sampwidth = event.get("sampwidth")
+      framerate = event.get("framerate")
+      nframes = event.get("nframes")
+      raw = array.array('b', event.get("raw")).tostring()
+   
+      # generate .wav audio file
+      wavfpath = audiodir + str(epoch) + '.wav'
+      with wave.open(wavfpath, 'wb') as wavef:
+        wavf.setnchannels(channel)
+        wavf.setsampwidth(sampwidth)
+        wavf.setframerate(framerate)
+        wavf.setnframes(nframes)
+        wavf.writeframesraw(raw)
+        
+      # insert auido file info to db
+      data = (report.get("device").get("imei"),
+              epoch,
+              channel,
+              sampwidth,
+              framerate,
+              nframes,
+              wavpath)
+  
+      operation = "INSERT OR REPLACE INTO " + "audio" + \
+                  " VALUES (?,?,?,?,?,?,?);" 
+      cur.execute(operation, data)
+
+    self._db.commit()
+  
+
+  def _insert_geoloc(self, report):
+    cur = self._db.cursor()
+    events = report.get("geoloc") # list of geoloc events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("longtitude"),
+              event.get("latitude"),
+              event.get("altitude"),
+              event.get("bearing"),
+              event.get("speed"),
+              event.get("accuracy"),
+              event.get("provider"))
+  
+      operation = "INSERT OR REPLACE INTO " + "geoloc" + \
+                  " VALUES (?,?,?,?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+  
+  def _insert_lacc(self, report):
+    cur = self._db.cursor()
+    events = report.get("lacc") # list of linear acc events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("values")[1],
+              event.get("values")[2],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "lacc" + \
+                " VALUES (?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+
+  def _insert_acc(self, report):
+    cur = self._db.cursor()
+    events = report.get("acc") # list of acc events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("values")[1],
+              event.get("values")[2],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "acc" + \
+                " VALUES (?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_temp(self, report):
+    cur = self._db.cursor()
+    events = report.get("temp") # list of temp events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "temp" + \
+                " VALUES (?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+
+  def _insert_rotation(self, report):
+    cur = self._db.cursor()
+    events = report.get("rotation") # list of rotation events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("values")[1],
+              event.get("values")[2],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "rotation" + \
+                " VALUES (?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_gravity(self, report):
+    cur = self._db.cursor()
+    events = report.get("gravity") # list of gravity events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("values")[1],
+              event.get("values")[2],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "gravity" + \
+                " VALUES (?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_gyro(self, report):
+    cur = self._db.cursor()
+    events = report.get("gyro") # list of gyro events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("values")[1],
+              event.get("values")[2],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "gyro" + \
+                " VALUES (?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_light(self, report):
+    cur = self._db.cursor()
+    events = report.get("light") # list of light events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "light" + \
+                " VALUES (?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_magnetic(self, magnetic):
+    cur = self._db.cursor()
+    events = report.get("magnetic") # list of magnetic events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("values")[1],
+              event.get("values")[2],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "magnetic" + \
+                " VALUES (?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_pressure(self, pressure):
+    cur = self._db.cursor()
+    events = report.get("pressure") # list of pressure events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "pressure" + \
+                " VALUES (?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_proximity(self, proximity):
+    cur = self._db.cursor()
+    events = report.get("proximity") # list of proximity events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "proximity" + \
+                " VALUES (?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_humidity(self, humidity):
+    cur = self._db.cursor()
+    events = report.get("humidity") # list of humidity events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("values")[0],
+              event.get("accuracy"))
+  
+      operation = "INSERT OR REPLACE INTO " + "humidity" + \
+                " VALUES (?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+
+  def _insert_semloc(self, semloc):
+    cur = self._db.cursor()
+    events = report.get("semloc") # list of semloc events
+    for event in events:
+      data = (report.get("device").get("imei"),
+              event.get("epoch"),
+              event.get("semantic"),
+              event.get("location"))
+  
+      operation = "INSERT OR REPLACE INTO " + "semloc" + \
+                " VALUES (?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()

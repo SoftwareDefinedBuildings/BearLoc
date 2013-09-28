@@ -34,13 +34,17 @@ class ReportResource(resource.Resource):
     log.msg("Received location report from " + request.getHost().host)
     
     request.setHeader('Content-type', 'application/json')
-    # TODO: handle bad request
-    content = json.load(request.content)
+    try:
+      content = json.load(request.content)
+    except:
+      # TODO: handle bad request
+      return ""
+
     d = self._report.report(content)
     d.addCallback(self._succeed, request)
     d.addErrback(self._fail, request)
     
-    # cancel localize deferred if the connection is lost before it fires
+    # cancel report deferred if the connection is lost before it fires
     request.notifyFinish().addErrback(self._cancel, d, request)
     
     return server.NOT_DONE_YET
@@ -63,6 +67,7 @@ class ReportResource(resource.Resource):
   def _cancel(self, err, deferred, request):
     deferred.cancel()
     log.msg(request.getHost().host + " lost connection")
+
 
 components.registerAdapter(ReportResource, 
                            IReport, 

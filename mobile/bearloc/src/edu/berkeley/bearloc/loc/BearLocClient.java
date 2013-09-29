@@ -48,11 +48,7 @@ public class BearLocClient implements LocClient {
     @Override
     public void onHttpResponded(JSONObject locInfo) {
       if (mListener != null) {
-        if (locInfo != null) {
-          mListener.onLocationReturned(locInfo);
-        } else {
-          mListener.onLocationReturned(null);
-        }
+        mListener.onLocationReturned(locInfo);
       }
     }
   }
@@ -93,11 +89,11 @@ public class BearLocClient implements LocClient {
     }
 
     final JSONObject request = new JSONObject();
-    
+
     // TODO add data
 
-    new BearLocHttpPostTask(new OnReportDone()).execute(url,
-        request.toString());
+    new BearLocHttpPostTask(new OnReportDone())
+        .execute(url, request.toString());
 
     return true;
   }

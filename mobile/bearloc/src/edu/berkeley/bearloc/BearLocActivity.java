@@ -1,6 +1,5 @@
 package edu.berkeley.bearloc;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -14,21 +13,29 @@ import edu.berkeley.bearloc.loc.BearLocClient.LocClientListener;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
 public class BearLocActivity extends Activity implements LocClientListener,
-    OnClickListener {
+    OnClickListener, OnItemClickListener, DialogInterface.OnClickListener {
 
   private String targetsem = "room";
+
+  private AlertDialog.Builder mDialogBuilder;
+  private AlertDialog mSelectDialog;
+  private String mSelectedLoc;
 
   private ListView mListView;
   private ArrayAdapter<String> mArrayAdapter;
@@ -36,6 +43,8 @@ public class BearLocActivity extends Activity implements LocClientListener,
   private TextView mTextView;
 
   private BearLocClient mLocClient;
+
+  private JSONObject mCurLocInfo;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -45,14 +54,19 @@ public class BearLocActivity extends Activity implements LocClientListener,
     mLocClient = new BearLocClient(this);
     mLocClient.setOnDataReturnedListener(this);
 
+    mDialogBuilder = new AlertDialog.Builder(this);
+
     mListView = (ListView) findViewById(R.id.list);
     mArrayAdapter = new ArrayAdapter<String>(this,
         android.R.layout.simple_list_item_1);
     mListView.setAdapter(mArrayAdapter);
+    mListView.setOnItemClickListener(this);
 
     mTextView = (TextView) findViewById(R.id.loc);
+
     Button refreshButton = (Button) findViewById(R.id.refresh);
     refreshButton.setOnClickListener(this);
+
   }
 
   @Override
@@ -65,26 +79,71 @@ public class BearLocActivity extends Activity implements LocClientListener,
   }
 
   @Override
+  public void onItemClick(AdapterView<?> parent, View view, int position,
+      long id) {
+    mSelectedLoc = mArrayAdapter.getItem(position);
+
+    mDialogBuilder.setMessage("Change " + targetsem + " to " + mSelectedLoc
+        + "?");
+    mDialogBuilder.setCancelable(true);
+    mDialogBuilder.setPositiveButton(R.string.ok, this);
+    mDialogBuilder.setNegativeButton(R.string.cancel, this);
+    mSelectDialog = mDialogBuilder.create();
+    mSelectDialog.show();
+  }
+
+  @Override
+  public void onClick(DialogInterface dialog, int which) {
+    switch (which) {
+    case DialogInterface.BUTTON_POSITIVE:
+      try {
+        JSONObject loc = mCurLocInfo.getJSONObject("loc");
+        loc.put(targetsem, mSelectedLoc);
+        onLocChanged();
+
+        mLocClient.report(loc);
+      } catch (JSONException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+      break;
+    case DialogInterface.BUTTON_NEGATIVE:
+      break;
+    default:
+      break;
+    }
+  }
+
+  @Override
   public void onLocationReturned(JSONObject locInfo) {
-    if (locInfo == null) {
+    mCurLocInfo = locInfo;
+    onLocChanged();
+  }
+
+  @Override
+  public void onReportDone(JSONObject response) {
+    // TODO Auto-generated method stub
+
+  }
+
+  private void onLocChanged() {
+    if (mCurLocInfo == null) {
       return;
     }
 
     try {
-      JSONObject loc = locInfo.getJSONObject("loc");
-      JSONObject semtree = locInfo.getJSONObject("sem");
-      mTextView.setText(BearLocActivity.getLocStr(loc, semtree, "room"));
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+      JSONObject loc = mCurLocInfo.getJSONObject("loc");
+      JSONObject semtree = mCurLocInfo.getJSONObject("sem");
+      mTextView.setText(BearLocActivity.getLocStr(loc, semtree, targetsem));
 
-    try {
-      JSONArray locArray = locInfo.getJSONArray("meta");
+      JSONArray locArray = mCurLocInfo.getJSONArray("meta");
       String[] stringArray = new String[locArray.length()];
 
       for (int i = 0; i < locArray.length(); ++i) {
         stringArray[i] = locArray.getString(i);
+        if (loc.getString(targetsem).equals(stringArray[i])) {
+          stringArray[i] += "*";
+        }
       }
       Arrays.sort(stringArray);
 
@@ -96,41 +155,6 @@ public class BearLocActivity extends Activity implements LocClientListener,
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
-  }
-
-  private static String getLocStr(JSONObject loc, JSONObject semtree,
-      String endsem) {
-    String locStr = null;
-
-    try {
-      final Iterator<?> dataIter = semtree.keys();
-      while (dataIter.hasNext()) {
-        String sem = (String) dataIter.next();
-        if (sem.equals(endsem)) {
-          locStr = loc.getString(sem);
-          
-          break;
-        }
-
-        String subLocStr = BearLocActivity.getLocStr(loc,
-            semtree.getJSONObject(sem), endsem);
-        if (subLocStr != null) {
-          locStr = loc.getString(sem) + "/" + subLocStr;
-          break;
-        }
-      }
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-
-    return locStr;
-  }
-
-  @Override
-  public void onReportDone(JSONObject response) {
-    // TODO Auto-generated method stub
-
   }
 
   @Override
@@ -151,4 +175,34 @@ public class BearLocActivity extends Activity implements LocClientListener,
       return super.onOptionsItemSelected(item);
     }
   }
+
+  private static String getLocStr(final JSONObject loc,
+      final JSONObject semtree, final String endsem) {
+    String locStr = null;
+
+    try {
+      final Iterator<?> dataIter = semtree.keys();
+      while (dataIter.hasNext()) {
+        String sem = (String) dataIter.next();
+        if (sem.equals(endsem)) {
+          locStr = loc.getString(sem);
+
+          break;
+        }
+
+        String subLocStr = BearLocActivity.getLocStr(loc,
+            semtree.getJSONObject(sem), endsem);
+        if (subLocStr != null) {
+          locStr = loc.getString(sem) + "/" + subLocStr;
+          break;
+        }
+      }
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return locStr;
+  }
+
 }

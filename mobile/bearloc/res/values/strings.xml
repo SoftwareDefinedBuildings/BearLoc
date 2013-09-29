@@ -14,5 +14,8 @@
     <string name="pref_server_port_summ">Port of BearLoc service on server</string>
     <string name="pref_server_port">Server Port</string>
     
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    
     <string name="progess_message">Loading &#8230;</string>
 </resources>

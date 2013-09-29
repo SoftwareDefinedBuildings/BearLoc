@@ -27,9 +27,9 @@ public class BearLocClient implements LocClient {
   private LocClientListener mListener;
 
   public static interface LocClientListener {
-    public abstract void onLocationReturned(final JSONObject locInfo);
+    public abstract void onLocationReturned(JSONObject locInfo);
 
-    public abstract void onReportDone(final JSONObject response);
+    public abstract void onReportDone(JSONObject response);
   }
 
   private static interface OnBearLocHttpPostResponded {
@@ -81,7 +81,11 @@ public class BearLocClient implements LocClient {
   }
 
   @Override
-  public boolean report(JSONObject loc) {
+  public boolean report(final JSONObject loc) {
+    return report("semloc", loc);
+  }
+
+  private boolean report(final String type, final JSONObject data) {
     final String path = "/report";
     URL url = getHttpURL(path);
     if (url == null) {
@@ -90,7 +94,7 @@ public class BearLocClient implements LocClient {
 
     final JSONObject request = new JSONObject();
 
-    // TODO add data
+    // TODO add "device" and data
 
     new BearLocHttpPostTask(new OnReportDone())
         .execute(url, request.toString());

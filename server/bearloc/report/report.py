@@ -203,7 +203,7 @@ class Report(object):
 
   def _insert(self, report):
     """Insert the report to database"""
-    self._insert_device(report)
+    self._insert_device(report) if "device" in report else None
     self._insert_sensormeta(report) if "sensormeta" in report else None
     self._insert_wifi(report) if "wifi" in report else None
     self._insert_audio(report) if "audio" in report else None

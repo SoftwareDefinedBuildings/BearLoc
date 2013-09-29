@@ -39,14 +39,15 @@ class Loc(object):
 
 
   def _predict_wifi(self, request):
-    events = request.get('wifi') # list of wifi events
-    events = sorted(events, key=lambda x: x['timestamp'])
-    sig = {event['BSSID']:event['level'] for event in events}
-    data = np.array([sig.get(bssid, -150) for bssid in self._wifi_bssids])
+    if "wifi" in request:
+      events = request.get('wifi') # list of wifi events
+      events = sorted(events, key=lambda x: x['timestamp'])
+      sig = {event['BSSID']:event['level'] for event in events}
+      data = np.array([sig.get(bssid, -150) for bssid in self._wifi_bssids])
    
     # hardcoded
     loc = {'country':'US', 'state':'CA', 'city':'Berkeley', 'district':'UC Berkeley', 'building':'Soda Hall', 'floor':'Floor 4'}
-    room = self._wifi_clf['room'].predict(data) if self._wifi_clf['room'] else None
+    room = self._wifi_clf['room'].predict(data) if "room" in self._wifi_clf else None
     loc['room'] = room
     
     sem = self._tree()

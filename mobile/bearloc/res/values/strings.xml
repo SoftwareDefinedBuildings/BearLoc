@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">BearLoc</string>
+    <string name="menu_settings">Settings</string>
+    <string name="main_title">BearLoc</string>
+    <string name="settings_title">Settings</string>
+    <string name="refresh">Refresh</string>
+
+    <string name="pref_server_category_summ">Server settings</string>
+    <string name="pref_server_category">Server</string>
+    <string name="pref_server_addr_summ">Domain name or IP address of server</string>
+    <string name="pref_server_addr">Server Address</string>
+    <string name="pref_server_port_summ">Port of BearLoc service on server</string>
+    <string name="pref_server_port">Server Port</string>
+    
+    <string name="progess_message">Loading &#8230;</string>
+</resources>

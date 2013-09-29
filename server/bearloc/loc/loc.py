@@ -61,7 +61,7 @@ class Loc(object):
         "465B", "465D", "465F", "RADLab Kitchen", "465K", "405", "492", "494", "493", "495", "413", "415", "417", "419", \
         "421", "Wozniak Lounge", "Wozniak Lounge Kitchen", "420", "410", "420A", "442", "440", "449", "447", "445", "443", "441"]
 
-    locinfo = {'loc': loc, 'metadata': metadata, 'confidence': confidence, 'meta': meta}
+    locinfo = {'loc': loc, 'sem': sem, 'confidence': confidence, 'meta': meta}
 
     return locinfo
 

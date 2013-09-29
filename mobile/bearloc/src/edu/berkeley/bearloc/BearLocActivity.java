@@ -1,7 +1,10 @@
 package edu.berkeley.bearloc;
 
+import org.json.JSONObject;
+
 import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.loc.BearLocClient;
+import edu.berkeley.bearloc.loc.BearLocClient.LocClientListener;
 
 import android.os.Bundle;
 import android.app.Activity;
@@ -12,7 +15,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 
-public class BearLocActivity extends Activity implements OnClickListener {
+public class BearLocActivity extends Activity implements LocClientListener,
+    OnClickListener {
 
   private BearLocClient mLocClient;
 
@@ -20,12 +24,12 @@ public class BearLocActivity extends Activity implements OnClickListener {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
-    
-    mLocClient = new BearLocClient(this);
 
-    // Set up click listeners for all the buttons
-    View locButton = findViewById(R.id.refresh);
-    locButton.setOnClickListener(this);
+    mLocClient = new BearLocClient(this);
+    mLocClient.setOnDataReturnedListener(this);
+
+    View refreshButton = findViewById(R.id.refresh);
+    refreshButton.setOnClickListener(this);
   }
 
   @Override
@@ -35,6 +39,18 @@ public class BearLocActivity extends Activity implements OnClickListener {
       mLocClient.localize();
       break;
     }
+  }
+
+  @Override
+  public void onLocationReturned(JSONObject locInfo) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public void onReportDone(JSONObject response) {
+    // TODO Auto-generated method stub
+
   }
 
   @Override

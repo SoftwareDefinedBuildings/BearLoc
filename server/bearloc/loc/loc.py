@@ -40,28 +40,36 @@ class Loc(object):
 
   def _predict_wifi(self, request):
     if "wifi" in request:
-      events = request.get('wifi') # list of wifi events
-      events = sorted(events, key=lambda x: x['timestamp'])
-      sig = {event['BSSID']:event['level'] for event in events}
+      events = request.get("wifi") # list of wifi events
+      events = sorted(events, key=lambda x: x["epoch"])
+      sig = {event["BSSID"]:event["level"] for event in events}
       data = np.array([sig.get(bssid, -150) for bssid in self._wifi_bssids])
    
     # hardcoded
-    loc = {'country':'US', 'state':'CA', 'city':'Berkeley', 'district':'UC Berkeley', 'building':'Soda Hall', 'floor':'Floor 4'}
-    room = self._wifi_clf['room'].predict(data) if "room" in self._wifi_clf else None
-    loc['room'] = room
+    loc = {"country":"US", "state":"CA", "city":"Berkeley", "street":"Leroy Ave", "district":"UC Berkeley", "building":"Soda Hall", "floor":"Floor 4"}
+    room = self._wifi_clf["room"].predict(data) if "room" in self._wifi_clf else None
+    loc["room"] = room
     
     sem = self._tree()
-    sem['country']['state']['city']['district']['building']['floor']['room']
-    sem['country']['state']['city']['street']
+    sem["country"]["state"]["city"]["district"]["building"]["floor"]["room"]
+    sem["country"]["state"]["city"]["street"]
 
     confidence = 1
     
     # hardcoded
-    meta = ["489", "487", "485", "483", "481", "479", "477", "475", "465H", "465HA", "465G", "465E", "465C", "465A", \
+    country = ["US"]
+    state = ["CA", "WA", "MA"]
+    city = ["Berkeley", "San Francisco"]
+    street = ["Hearst Ave", "Leroy Ave", "Channing Way"]
+    district = ["UC Berkeley"]
+    building = ["Soda Hall", "Cory Hall"]
+    floor = ["Floor 1", "Floor 2", "Floor 3", "Floor 4", "Floor 5", "Floor 6", "Floor 7"]
+    room = ["489", "487", "485", "483", "481", "479", "477", "475", "465H", "465HA", "465G", "465E", "465C", "465A", \
         "465B", "465D", "465F", "RADLab Kitchen", "465K", "405", "492", "494", "493", "495", "413", "415", "417", "419", \
         "421", "Wozniak Lounge", "Wozniak Lounge Kitchen", "420", "410", "420A", "442", "440", "449", "447", "445", "443", "441"]
+    meta = {"country":country, "state":state, "city":city, "street":street, "district":district, "building":building, "floor":floor, "room":room}
 
-    locinfo = {'loc': loc, 'sem': sem, 'confidence': confidence, 'meta': meta}
+    locinfo = {"loc": loc, "sem": sem, "confidence": confidence, "meta": meta}
 
     return locinfo
 
@@ -118,6 +126,6 @@ class Loc(object):
     
     # TODO only update when there are enough new data
     if len(data) > 0 and len(rooms) > 0:
-      self._wifi_clf['room'] = tree.DecisionTreeClassifier().fit(data, rooms)
+      self._wifi_clf["room"] = tree.DecisionTreeClassifier().fit(data, rooms)
     
       self._wifi_bssids = bssids

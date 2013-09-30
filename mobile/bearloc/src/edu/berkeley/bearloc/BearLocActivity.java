@@ -134,7 +134,7 @@ public class BearLocActivity extends Activity implements LocClientListener,
     try {
       JSONObject loc = mCurLocInfo.getJSONObject("loc");
       JSONObject semtree = mCurLocInfo.getJSONObject("sem");
-      mTextView.setText(BearLocActivity.getLocStr(loc, semtree, targetsem));
+      mTextView.setText(getLocStr(loc, semtree, targetsem));
 
       JSONArray locArray = mCurLocInfo.getJSONArray("meta");
       String[] stringArray = new String[locArray.length()];
@@ -190,7 +190,7 @@ public class BearLocActivity extends Activity implements LocClientListener,
           break;
         }
 
-        String subLocStr = BearLocActivity.getLocStr(loc,
+        String subLocStr = getLocStr(loc,
             semtree.getJSONObject(sem), endsem);
         if (subLocStr != null) {
           locStr = loc.getString(sem) + "/" + subLocStr;

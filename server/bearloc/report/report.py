@@ -36,13 +36,13 @@ class Report(object):
     """Blocking call of creating tables"""
     # device
     operation = "CREATE TABLE IF NOT EXISTS " + "device" + \
-                " (imei TEXT NOT NULL PRIMARY KEY, \
+                " (uuid TEXT NOT NULL PRIMARY KEY, \
                   make TEXT, \
                   model TEXT);"
     
     # sensormeta
     operation += "CREATE TABLE IF NOT EXISTS " + "sensormeta" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     sensor TEXT, \
                     vendor TEXT, \
                     name TEXT, \
@@ -51,32 +51,32 @@ class Report(object):
                     maxDelay INTEGER, \
                     version INTEGER, \
                     resolution INTEGER, \
-                    PRIMARY KEY (imei, sensor));"
+                    PRIMARY KEY (uuid, sensor));"
 
     # wifi
     operation += "CREATE TABLE IF NOT EXISTS " + "wifi" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     BSSID TEXT NOT NULL, \
                     SSID TEST, \
                     RSSI REAL NOT NULL, \
                     freq REAL, \
-                    PRIMARY KEY (imei, epoch, BSSID));"
+                    PRIMARY KEY (uuid, epoch, BSSID));"
 
     # audio
     operation += "CREATE TABLE IF NOT EXISTS " + "audio" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                    epoch INTEGER NOT NULL, \
                    channel INTEGER, \
                    sampwidth INTEGER, \
                    framerate INTEGER, \
                    nframes INTEGER, \
                    path TEXT NOT NULL, \
-                   PRIMARY KEY (imei, epoch));"
+                   PRIMARY KEY (uuid, epoch));"
     
     # geoloc
     operation += "CREATE TABLE IF NOT EXISTS " + "geoloc" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     longtitude REAL NOT NULL, \
                     latitude REAL NOT NULL, \
@@ -85,115 +85,115 @@ class Report(object):
                     speed REAL, \
                     accuracy REAL, \
                     provider TEXT, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
 
     # linear acc 
     operation += "CREATE TABLE IF NOT EXISTS " + "lacc" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     x REAL NOT NULL, \
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
 
     # acc                                                                                                                       
     operation += "CREATE TABLE IF NOT EXISTS " + "acc" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     x REAL NOT NULL, \
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
     
     # temp                                                                                                                      
     operation += "CREATE TABLE IF NOT EXISTS " + "temp" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     temp REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
 
     # rotation                                                                                                                      
     operation += "CREATE TABLE IF NOT EXISTS " + "rotation" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     x REAL NOT NULL, \
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
 
     # gravity                                                                                                                   
     operation += "CREATE TABLE IF NOT EXISTS " + "gravity" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     x REAL NOT NULL, \
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
     
     # gyro                                                                                                                      
     operation += "CREATE TABLE IF NOT EXISTS " + "gyro" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     x REAL NOT NULL, \
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
     
     # light                                                                                                                     
     operation += "CREATE TABLE IF NOT EXISTS " + "light" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     light REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
     
     # magnetic                                                                                                                  
     operation += "CREATE TABLE IF NOT EXISTS " + "magnetic" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     x REAL NOT NULL, \
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
     
     # pressure                                                                                                                  
     operation += "CREATE TABLE IF NOT EXISTS " + "pressure" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     pressure REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
     
     # proximity                                                                                                                 
     operation += "CREATE TABLE IF NOT EXISTS " + "proximity" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     proximity REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
     
     # humidity
     operation += "CREATE TABLE IF NOT EXISTS " + "humidity" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     humidity REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch));"
    
     # semloc
     operation += "CREATE TABLE IF NOT EXISTS " + "semloc" + \
-                 " (imei TEXT NOT NULL, \
+                 " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
                     semantic TEXT NOT NULL, \
                     location TEXT NOT NULL, \
-                    PRIMARY KEY (imei, epoch));"
+                    PRIMARY KEY (uuid, epoch, semantic));"
   
     cur = self._db.cursor()    
     cur.executescript(operation)
@@ -224,7 +224,7 @@ class Report(object):
 
   def _insert_device(self, report):
     device = report.get("device") # dict of device info
-    data = (device.get("imei"),
+    data = (device.get("uuid"),
             device.get("make"),
             device.get("model"))
     
@@ -240,7 +240,7 @@ class Report(object):
     cur = self._db.cursor()
     sensormeta = report.get("sensormeta") # dict of sensor meta, which is also dict
     for sensor, meta in sensormeta.iteritems():
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               sensor,
               meta.get("vendor"),
               meta.get("name"),
@@ -261,7 +261,7 @@ class Report(object):
     cur = self._db.cursor()
     events = report.get("wifi") # list of wifi events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("BSSID"),
               event.get("SSID"),
@@ -300,7 +300,7 @@ class Report(object):
         wavf.writeframesraw(raw)
         
       # insert auido file info to db
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               epoch,
               channel,
               sampwidth,
@@ -319,7 +319,7 @@ class Report(object):
     cur = self._db.cursor()
     events = report.get("geoloc") # list of geoloc events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("longtitude"),
               event.get("latitude"),
@@ -339,7 +339,7 @@ class Report(object):
     cur = self._db.cursor()
     events = report.get("lacc") # list of linear acc events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("values")[1],
@@ -357,7 +357,7 @@ class Report(object):
     cur = self._db.cursor()
     events = report.get("acc") # list of acc events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("values")[1],
@@ -375,7 +375,7 @@ class Report(object):
     cur = self._db.cursor()
     events = report.get("temp") # list of temp events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("accuracy"))
@@ -391,7 +391,7 @@ class Report(object):
     cur = self._db.cursor()
     events = report.get("rotation") # list of rotation events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("values")[1],
@@ -409,7 +409,7 @@ class Report(object):
     cur = self._db.cursor()
     events = report.get("gravity") # list of gravity events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("values")[1],
@@ -427,7 +427,7 @@ class Report(object):
     cur = self._db.cursor()
     events = report.get("gyro") # list of gyro events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("values")[1],
@@ -445,7 +445,7 @@ class Report(object):
     cur = self._db.cursor()
     events = report.get("light") # list of light events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("accuracy"))
@@ -457,11 +457,11 @@ class Report(object):
     self._db.commit()
 
   
-  def _insert_magnetic(self, magnetic):
+  def _insert_magnetic(self, report):
     cur = self._db.cursor()
     events = report.get("magnetic") # list of magnetic events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("values")[1],
@@ -475,11 +475,11 @@ class Report(object):
     self._db.commit()
 
   
-  def _insert_pressure(self, pressure):
+  def _insert_pressure(self, report):
     cur = self._db.cursor()
     events = report.get("pressure") # list of pressure events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("accuracy"))
@@ -491,11 +491,11 @@ class Report(object):
     self._db.commit()
 
   
-  def _insert_proximity(self, proximity):
+  def _insert_proximity(self, report):
     cur = self._db.cursor()
     events = report.get("proximity") # list of proximity events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("accuracy"))
@@ -507,11 +507,11 @@ class Report(object):
     self._db.commit()
 
   
-  def _insert_humidity(self, humidity):
+  def _insert_humidity(self, report):
     cur = self._db.cursor()
     events = report.get("humidity") # list of humidity events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
               event.get("accuracy"))
@@ -523,11 +523,11 @@ class Report(object):
     self._db.commit()
 
 
-  def _insert_semloc(self, semloc):
+  def _insert_semloc(self, report):
     cur = self._db.cursor()
     events = report.get("semloc") # list of semloc events
     for event in events:
-      data = (report.get("device").get("imei"),
+      data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("semantic"),
               event.get("location"))

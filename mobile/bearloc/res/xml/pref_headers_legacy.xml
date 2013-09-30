@@ -2,6 +2,14 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <Preference
+        android:summary="@string/pref_device_category_summ"
+        android:title="@string/pref_device_category" >
+        <intent
+            android:action="edu.berkeley.bearloc.PREF_DEVICE"
+            android:targetClass="edu.berkeley.bearloc.SettingsActivity"
+            android:targetPackage="edu.berkeley.bearloc" />
+    </Preference>
+    <Preference
         android:summary="@string/pref_server_category_summ"
         android:title="@string/pref_server_category" >
         <intent

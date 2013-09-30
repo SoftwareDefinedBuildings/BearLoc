@@ -43,12 +43,12 @@ class Report(object):
     # sensormeta
     operation += "CREATE TABLE IF NOT EXISTS " + "sensormeta" + \
                  " (uuid TEXT NOT NULL, \
-                    sensor TEXT, \
+                    sensor TEXT NOT NULL, \
                     vendor TEXT, \
                     name TEXT, \
                     power INTEGER, \
                     minDelay INTEGER, \
-                    maxDelay INTEGER, \
+                    maxRange INTEGER, \
                     version INTEGER, \
                     resolution INTEGER, \
                     PRIMARY KEY (uuid, sensor));"
@@ -67,10 +67,10 @@ class Report(object):
     operation += "CREATE TABLE IF NOT EXISTS " + "audio" + \
                  " (uuid TEXT NOT NULL, \
                    epoch INTEGER NOT NULL, \
-                   channel INTEGER, \
-                   sampwidth INTEGER, \
-                   framerate INTEGER, \
-                   nframes INTEGER, \
+                   channel INTEGER NOT NULL, \
+                   sampwidth INTEGER NOT NULL, \
+                   framerate INTEGER NOT NULL, \
+                   nframes INTEGER NOT NULL, \
                    path TEXT NOT NULL, \
                    PRIMARY KEY (uuid, epoch));"
     
@@ -207,7 +207,8 @@ class Report(object):
     self._insert_sensormeta(report) if "sensormeta" in report else None
     self._insert_wifi(report) if "wifi" in report else None
     self._insert_audio(report) if "audio" in report else None
-    self._insert_geoloc(report) if "audio" in report else None
+    self._insert_bluetooth(report) if "bluetooth" in report else None
+    self._insert_geoloc(report) if "geoloc" in report else None
     self._insert_lacc(report) if "lacc" in report else None
     self._insert_acc(report) if "acc" in report else None
     self._insert_temp(report) if "temp" in report else None
@@ -225,8 +226,8 @@ class Report(object):
   def _insert_device(self, report):
     device = report.get("device") # dict of device info
     data = (device.get("uuid"),
-            device.get("make"),
-            device.get("model"))
+            device.get("make", None),
+            device.get("model", None))
     
     operation = "INSERT OR REPLACE INTO " + "device" + \
                 " VALUES (?,?,?);"
@@ -239,16 +240,16 @@ class Report(object):
   def _insert_sensormeta(self, report):
     cur = self._db.cursor()
     sensormeta = report.get("sensormeta") # dict of sensor meta, which is also dict
-    for sensor, meta in sensormeta.iteritems():
+    for sensortype, meta in sensormeta.iteritems():
       data = (report.get("device").get("uuid"),
-              sensor,
-              meta.get("vendor"),
-              meta.get("name"),
-              meta.get("power"),
-              meta.get("minDelay"),
-              meta.get("maxDelay"),
-              meta.get("version"),
-              meta.get("resolution"))
+              sensortype,
+              meta.get("vendor", None),
+              meta.get("name", None),
+              meta.get("power", None),
+              meta.get("minDelay", None),
+              meta.get("maxRange",None ),
+              meta.get("version", None),
+              meta.get("resolution", None))
   
       operation = "INSERT OR REPLACE INTO " + "sensormeta" + \
                 " VALUES (?,?,?,?,?,?,?,?,?);"
@@ -264,9 +265,9 @@ class Report(object):
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("BSSID"),
-              event.get("SSID"),
+              event.get("SSID", None),
               event.get("RSSI"),
-              event.get("freq"))
+              event.get("freq", None))
   
       operation = "INSERT OR REPLACE INTO " + "wifi" + \
                 " VALUES (?,?,?,?,?,?);"
@@ -316,6 +317,9 @@ class Report(object):
   
 
   def _insert_geoloc(self, report):
+    pass
+
+  def _insert_geoloc(self, report):
     cur = self._db.cursor()
     events = report.get("geoloc") # list of geoloc events
     for event in events:
@@ -323,11 +327,11 @@ class Report(object):
               event.get("epoch"),
               event.get("longtitude"),
               event.get("latitude"),
-              event.get("altitude"),
-              event.get("bearing"),
-              event.get("speed"),
-              event.get("accuracy"),
-              event.get("provider"))
+              event.get("altitude", None),
+              event.get("bearing", None),
+              event.get("speed", None),
+              event.get("accuracy", None),
+              event.get("provider", None))
   
       operation = "INSERT OR REPLACE INTO " + "geoloc" + \
                   " VALUES (?,?,?,?,?,?,?,?,?);"
@@ -344,7 +348,7 @@ class Report(object):
               event.get("values")[0],
               event.get("values")[1],
               event.get("values")[2],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "lacc" + \
                 " VALUES (?,?,?,?,?,?);"
@@ -362,7 +366,7 @@ class Report(object):
               event.get("values")[0],
               event.get("values")[1],
               event.get("values")[2],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "acc" + \
                 " VALUES (?,?,?,?,?,?);"
@@ -378,7 +382,7 @@ class Report(object):
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "temp" + \
                 " VALUES (?,?,?,?);"
@@ -396,7 +400,7 @@ class Report(object):
               event.get("values")[0],
               event.get("values")[1],
               event.get("values")[2],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "rotation" + \
                 " VALUES (?,?,?,?,?,?);"
@@ -414,7 +418,7 @@ class Report(object):
               event.get("values")[0],
               event.get("values")[1],
               event.get("values")[2],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "gravity" + \
                 " VALUES (?,?,?,?,?,?);"
@@ -432,7 +436,7 @@ class Report(object):
               event.get("values")[0],
               event.get("values")[1],
               event.get("values")[2],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "gyro" + \
                 " VALUES (?,?,?,?,?,?);"
@@ -448,7 +452,7 @@ class Report(object):
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "light" + \
                 " VALUES (?,?,?,?);"
@@ -466,7 +470,7 @@ class Report(object):
               event.get("values")[0],
               event.get("values")[1],
               event.get("values")[2],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "magnetic" + \
                 " VALUES (?,?,?,?,?,?);"
@@ -482,7 +486,7 @@ class Report(object):
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "pressure" + \
                 " VALUES (?,?,?,?);"
@@ -498,7 +502,7 @@ class Report(object):
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "proximity" + \
                 " VALUES (?,?,?,?);"
@@ -514,7 +518,7 @@ class Report(object):
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
               event.get("values")[0],
-              event.get("accuracy"))
+              event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "humidity" + \
                 " VALUES (?,?,?,?);"

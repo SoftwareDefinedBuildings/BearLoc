@@ -12,22 +12,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.berkeley.bearloc.BearLocActivity;
 import edu.berkeley.bearloc.SettingsActivity;
-import edu.berkeley.bearloc.util.DeviceUUIDFactory;
-
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Build;
 
 public class BearLocClient implements LocClient {
 
@@ -35,7 +25,7 @@ public class BearLocClient implements LocClient {
 
   private LocClientListener mListener;
 
-  private DeviceUUIDFactory mDeviceUUID;
+  private BearLocCache mCache;
 
   public static interface LocClientListener {
     public abstract void onLocationReturned(JSONObject locInfo);
@@ -50,7 +40,7 @@ public class BearLocClient implements LocClient {
   public BearLocClient(Context context) {
     mContext = context;
 
-    mDeviceUUID = new DeviceUUIDFactory(mContext);
+    mCache = new BearLocCache(mContext);
   }
 
   public void setOnDataReturnedListener(LocClientListener listener) {
@@ -94,77 +84,23 @@ public class BearLocClient implements LocClient {
   }
 
   @Override
-  public boolean report(final JSONObject semloc) {
-    JSONArray semlocEvents = getSemLocEventList(semloc);
-    Map<String, JSONArray> datamap = new HashMap<String, JSONArray>();
-    datamap.put("semloc", semlocEvents);
-    return report(datamap);
+  public void report(final JSONObject semloc) {
+    // get semloc Event List
+    mCache.add("semloc", semloc);
+    report();
   }
 
-  private boolean report(final Map<String, JSONArray> datamap) {
+  private void report() {
     final String path = "/report";
     URL url = getHttpURL(path);
     if (url == null) {
-      return false;
+      return;
     }
 
-    final JSONObject request = new JSONObject();
+    final JSONObject report = mCache.getAll();
+    mCache.clear();
 
-    // add "device" and data
-    try {
-      final JSONObject device = new JSONObject();
-      device.put("uuid", mDeviceUUID.getDeviceUUID().toString());
-
-      String make = Build.MANUFACTURER;
-      String model = Build.MODEL;
-      device.put("make", make);
-      device.put("model", model);
-
-      request.put("device", device);
-
-      // TODO add sensor meta
-
-      Iterator<Entry<String, JSONArray>> it = datamap.entrySet().iterator();
-      while (it.hasNext()) {
-        Map.Entry<String, JSONArray> entry = (Map.Entry<String, JSONArray>) it
-            .next();
-        String type = entry.getKey();
-        JSONArray data = entry.getValue();
-        request.put(type, data);
-      }
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-
-    new BearLocHttpPostTask(new OnReportDone())
-        .execute(url, request.toString());
-
-    return true;
-  }
-
-  private static JSONArray getSemLocEventList(final JSONObject loc) {
-    final JSONArray events = new JSONArray();
-    final Long epoch = System.currentTimeMillis();
-
-    try {
-      final Iterator<?> dataIter = loc.keys();
-      while (dataIter.hasNext()) {
-        final JSONObject event = new JSONObject();
-        final String sem = (String) dataIter.next();
-
-        event.put("epoch", epoch);
-        event.put("semantic", sem);
-        event.put("location", loc.getString(sem));
-
-        events.put(event);
-      }
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-
-    return events;
+    new BearLocHttpPostTask(new OnReportDone()).execute(url, report.toString());
   }
 
   private URL getHttpURL(String path) {

@@ -40,8 +40,8 @@ class Report(object):
                   make TEXT, \
                   model TEXT);"
     
-    # sensormeta
-    operation += "CREATE TABLE IF NOT EXISTS " + "sensormeta" + \
+    # meta
+    operation += "CREATE TABLE IF NOT EXISTS " + "meta" + \
                  " (uuid TEXT NOT NULL, \
                     sensor TEXT NOT NULL, \
                     vendor TEXT, \
@@ -60,6 +60,7 @@ class Report(object):
                     BSSID TEXT NOT NULL, \
                     SSID TEST, \
                     RSSI REAL NOT NULL, \
+                    capability TEXT, \
                     freq REAL, \
                     PRIMARY KEY (uuid, epoch, BSSID));"
 
@@ -204,7 +205,7 @@ class Report(object):
   def _insert(self, report):
     """Insert the report to database"""
     self._insert_device(report) if "device" in report else None
-    self._insert_sensormeta(report) if "sensormeta" in report else None
+    self._insert_meta(report) if "meta" in report else None
     self._insert_wifi(report) if "wifi" in report else None
     self._insert_audio(report) if "audio" in report else None
     self._insert_bluetooth(report) if "bluetooth" in report else None
@@ -237,10 +238,10 @@ class Report(object):
     self._db.commit()
 
  
-  def _insert_sensormeta(self, report):
+  def _insert_meta(self, report):
     cur = self._db.cursor()
-    sensormeta = report.get("sensormeta") # dict of sensor meta, which is also dict
-    for sensortype, meta in sensormeta.iteritems():
+    meta = report.get("meta") # dict of meta, which is also dict
+    for sensortype, sensormeta in meta.iteritems():
       data = (report.get("device").get("uuid"),
               sensortype,
               meta.get("vendor", None),
@@ -251,7 +252,7 @@ class Report(object):
               meta.get("version", None),
               meta.get("resolution", None))
   
-      operation = "INSERT OR REPLACE INTO " + "sensormeta" + \
+      operation = "INSERT OR REPLACE INTO " + "meta" + \
                 " VALUES (?,?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
@@ -267,10 +268,11 @@ class Report(object):
               event.get("BSSID"),
               event.get("SSID", None),
               event.get("RSSI"),
+              event.get("capability", None),
               event.get("freq", None))
   
       operation = "INSERT OR REPLACE INTO " + "wifi" + \
-                " VALUES (?,?,?,?,?,?);"
+                " VALUES (?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()

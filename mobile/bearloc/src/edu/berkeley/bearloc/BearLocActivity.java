@@ -9,7 +9,7 @@ import org.json.JSONObject;
 
 import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.loc.BearLocClient;
-import edu.berkeley.bearloc.loc.BearLocClient.LocClientListener;
+import edu.berkeley.bearloc.loc.LocClientListener;
 
 import android.os.Bundle;
 import android.app.Activity;
@@ -51,8 +51,7 @@ public class BearLocActivity extends Activity implements LocClientListener,
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
 
-    mLocClient = new BearLocClient(this);
-    mLocClient.setOnDataReturnedListener(this);
+    mLocClient = new BearLocClient(this, this);
 
     mDialogBuilder = new AlertDialog.Builder(this);
 
@@ -66,7 +65,6 @@ public class BearLocActivity extends Activity implements LocClientListener,
 
     Button refreshButton = (Button) findViewById(R.id.refresh);
     refreshButton.setOnClickListener(this);
-
   }
 
   @Override
@@ -101,7 +99,7 @@ public class BearLocActivity extends Activity implements LocClientListener,
         loc.put(targetsem, mSelectedLoc);
         onLocChanged();
 
-        mLocClient.report(loc);
+        mLocClient.reportSemLoc(loc);
       } catch (JSONException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();

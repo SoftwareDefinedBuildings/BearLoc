@@ -5,6 +5,6 @@ import org.json.JSONObject;
 public interface LocClient {
   public abstract boolean localize();
 
-  public abstract void report(final JSONObject semloc);
+  public abstract void reportSemLoc(final JSONObject semloc);
 
 }

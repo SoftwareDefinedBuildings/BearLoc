@@ -12,54 +12,39 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Iterator;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.berkeley.bearloc.SettingsActivity;
+import edu.berkeley.bearloc.loc.BearLocSampleAggregator.OnSampleDoneListener;
 import android.content.Context;
 import android.os.AsyncTask;
 
-public class BearLocClient implements LocClient {
+public class BearLocClient implements LocClient, OnSampleDoneListener {
 
   private Context mContext;
-
   private LocClientListener mListener;
 
+  private BearLocSampleAggregator mAggr;
   private BearLocCache mCache;
 
-  public static interface LocClientListener {
-    public abstract void onLocationReturned(JSONObject locInfo);
-
-    public abstract void onReportDone(JSONObject response);
+  private static interface onHttpPostRespondedListener {
+    void onHttpPostResponded(JSONObject response);
   }
 
-  private static interface OnBearLocHttpPostResponded {
-    void onHttpResponded(JSONObject response);
-  }
-
-  public BearLocClient(Context context) {
+  public BearLocClient(Context context, LocClientListener listener) {
     mContext = context;
-
-    mCache = new BearLocCache(mContext);
-  }
-
-  public void setOnDataReturnedListener(LocClientListener listener) {
     mListener = listener;
-  }
-
-  private class OnLocationReturned implements OnBearLocHttpPostResponded {
-    @Override
-    public void onHttpResponded(JSONObject locInfo) {
-      if (mListener != null) {
-        mListener.onLocationReturned(locInfo);
-      }
-    }
+    mCache = new BearLocCache(mContext);
+    mAggr = new BearLocSampleAggregator(mContext, this, mCache);
   }
 
   @Override
   public boolean localize() {
     final String path = "/localize";
-    URL url = getHttpURL(path);
+    URL url = getHttpURL(mContext, path);
     if (url == null) {
       return false;
     }
@@ -68,45 +53,64 @@ public class BearLocClient implements LocClient {
 
     // TODO get sensor data and send httppost
 
-    new BearLocHttpPostTask(new OnLocationReturned()).execute(url,
-        request.toString());
+    new BearLocHttpPostTask(new onHttpPostRespondedListener() {
+      @Override
+      public void onHttpPostResponded(JSONObject response) {
+        if (mListener != null) {
+          mListener.onLocationReturned(response);
+        }
+      }
+    }).execute(url, request.toString());
 
     return true;
   }
 
-  private class OnReportDone implements OnBearLocHttpPostResponded {
-    @Override
-    public void onHttpResponded(JSONObject response) {
-      if (mListener != null) {
-        mListener.onReportDone(response);
-      }
+  @Override
+  public void reportSemLoc(final JSONObject semloc) {
+    final String type = "semloc";
+    final Long epoch = System.currentTimeMillis();
+    final Iterator<?> dataIter = semloc.keys();
+    while (dataIter.hasNext()) {
+      final String sem = (String) dataIter.next();
+      final JSONObject event = BearLocFormat.convert(type, semloc, epoch, sem);
+      mCache.add(type, event);
     }
+
+    report(new onHttpPostRespondedListener() {
+      @Override
+      public void onHttpPostResponded(JSONObject response) {
+        if (mListener != null) {
+          mListener.onReportDone(response);
+        }
+      }
+    });
+
+    mAggr.sample();
   }
 
   @Override
-  public void report(final JSONObject semloc) {
-    // get semloc Event List
-    mCache.add("semloc", semloc);
-    report();
+  public void onSampleDone() {
+    report(null);
   }
 
-  private void report() {
+  // async
+  private void report(final onHttpPostRespondedListener listener) {
     final String path = "/report";
-    URL url = getHttpURL(path);
+    URL url = getHttpURL(mContext, path);
     if (url == null) {
       return;
     }
 
-    final JSONObject report = mCache.getAll();
+    final JSONObject report = mCache.get();
     mCache.clear();
 
-    new BearLocHttpPostTask(new OnReportDone()).execute(url, report.toString());
+    new BearLocHttpPostTask(listener).execute(url, report.toString());
   }
 
-  private URL getHttpURL(String path) {
+  private static URL getHttpURL(Context context, String path) {
     // TODO check and remove "http://"
-    final String host = SettingsActivity.getServerAddr(mContext);
-    final int port = SettingsActivity.getServerPort(mContext);
+    final String host = SettingsActivity.getServerAddr(context);
+    final int port = SettingsActivity.getServerPort(context);
 
     URL url = null;
     try {
@@ -127,9 +131,9 @@ public class BearLocClient implements LocClient {
   private static class BearLocHttpPostTask extends
       AsyncTask<Object, Void, JSONObject> {
 
-    private OnBearLocHttpPostResponded listener;
+    private onHttpPostRespondedListener listener;
 
-    public BearLocHttpPostTask(OnBearLocHttpPostResponded listener) {
+    public BearLocHttpPostTask(onHttpPostRespondedListener listener) {
       this.listener = listener;
     }
 
@@ -194,9 +198,10 @@ public class BearLocClient implements LocClient {
 
     @Override
     protected void onPostExecute(JSONObject response) {
-      if (!isCancelled()) {
-        listener.onHttpResponded(response);
+      if (!isCancelled() && listener != null) {
+        listener.onHttpPostResponded(response);
       }
     }
   }
+
 }

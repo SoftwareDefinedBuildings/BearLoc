@@ -46,11 +46,11 @@ class Report(object):
                     sensor TEXT NOT NULL, \
                     vendor TEXT, \
                     name TEXT, \
-                    power INTEGER, \
+                    power REAL, \
                     minDelay INTEGER, \
-                    maxRange INTEGER, \
+                    maxRange REAL, \
                     version INTEGER, \
-                    resolution INTEGER, \
+                    resolution REAL, \
                     PRIMARY KEY (uuid, sensor));"
 
     # wifi
@@ -244,13 +244,13 @@ class Report(object):
     for sensortype, sensormeta in meta.iteritems():
       data = (report.get("device").get("uuid"),
               sensortype,
-              meta.get("vendor", None),
-              meta.get("name", None),
-              meta.get("power", None),
-              meta.get("minDelay", None),
-              meta.get("maxRange",None ),
-              meta.get("version", None),
-              meta.get("resolution", None))
+              sensormeta.get("vendor", None),
+              sensormeta.get("name", None),
+              sensormeta.get("power", None),
+              sensormeta.get("minDelay", None),
+              sensormeta.get("maxRange",None ),
+              sensormeta.get("version", None),
+              sensormeta.get("resolution", None))
   
       operation = "INSERT OR REPLACE INTO " + "meta" + \
                 " VALUES (?,?,?,?,?,?,?,?,?);"

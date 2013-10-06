@@ -2,7 +2,11 @@ package edu.berkeley.bearloc.loc;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.BlockingQueue;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,10 +18,57 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.net.wifi.ScanResult;
 import android.os.Build;
+import android.util.Pair;
 
 public class BearLocFormat {
 
-  public static JSONObject getDeviceInfo(Context context) {
+  private final JSONObject mDeviceInfo;
+  private final JSONObject mSensorInfo;
+
+  public BearLocFormat(Context context) {
+    mDeviceInfo = getDeviceInfo(context);
+    mSensorInfo = getSensorInfo(context);
+  }
+
+  public JSONObject dump(
+      final Map<String, BlockingQueue<Pair<Long, Object>>> dataMap) {
+    final JSONObject dumpObj = new JSONObject();
+    // add "device" and data
+    try {
+      dumpObj.put("device", mDeviceInfo);
+      dumpObj.put("meta", mSensorInfo);
+
+      Iterator<Entry<String, BlockingQueue<Pair<Long, Object>>>> it = dataMap
+          .entrySet().iterator();
+      while (it.hasNext()) {
+        final Map.Entry<String, BlockingQueue<Pair<Long, Object>>> entry = it
+            .next();
+        final String type = entry.getKey();
+        final BlockingQueue<Pair<Long, Object>> queue = entry.getValue();
+
+        final JSONArray eventArr = new JSONArray();
+        for (Pair<Long, Object> event : queue) {
+          final Long epoch = event.first;
+          final Object data = event.second;
+          final JSONArray formated = format(type, data, epoch);
+          for (int i = 0; i < formated.length(); i++) {
+            eventArr.put(formated.get(i));
+          }
+        }
+
+        if (eventArr.length() > 0) {
+          dumpObj.put(type, eventArr);
+        }
+      }
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return dumpObj;
+  }
+
+  private static JSONObject getDeviceInfo(Context context) {
     final JSONObject deviceInfo = new JSONObject();
     try {
       // Device Info
@@ -35,7 +86,7 @@ public class BearLocFormat {
 
   // Only call getMinDelay() before Gingerbread
   @SuppressLint("NewApi")
-  public static JSONObject getSensorInfo(Context context) {
+  private static JSONObject getSensorInfo(Context context) {
     final JSONObject sensorInfo = new JSONObject();
     try {
       // Sensor Info
@@ -110,28 +161,33 @@ public class BearLocFormat {
     return sensorInfo;
   }
 
-  public static JSONObject convert(final String type, final Object data,
-      final Long epoch, final String... opt) {
-
+  private static JSONArray format(final String type, final Object data,
+      final Long epoch) {
     if ("semloc".equals(type)) {
-      return convertSemLoc(data, epoch, opt[0]);
+      return formatSemLoc(data, epoch);
     } else if ("wifi".equals(type)) {
-      return convertWifi(data, epoch);
+      return formatWifi(data, epoch);
     } else if ("audio".equals(type)) {
-      return convertAudio(data, epoch);
+      return formatAudio(data, epoch);
     }
 
     return null;
   }
 
-  private static JSONObject convertSemLoc(final Object data, final Long epoch,
-      final String sem) {
+  private static JSONArray formatSemLoc(final Object data, final Long epoch) {
+    final JSONArray to = new JSONArray();
     final JSONObject from = (JSONObject) data;
-    final JSONObject to = new JSONObject();
     try {
-      to.put("epoch", epoch);
-      to.put("semantic", sem);
-      to.put("location", from.getString(sem));
+      final Iterator<?> it = from.keys();
+      while (it.hasNext()) {
+        final JSONObject event = new JSONObject();
+        final String sem = (String) it.next();
+        event.put("epoch", epoch);
+        event.put("semantic", sem);
+        event.put("location", from.getString(sem));
+
+        to.put(event);
+      }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -140,16 +196,20 @@ public class BearLocFormat {
     return to;
   }
 
-  private static JSONObject convertWifi(final Object data, final Long epoch) {
+  private static JSONArray formatWifi(final Object data, final Long epoch) {
+    final JSONArray to = new JSONArray();
     final ScanResult from = (ScanResult) data;
-    final JSONObject to = new JSONObject();
+
     try {
-      to.put("epoch", epoch);
-      to.put("BSSID", from.BSSID);
-      to.put("SSID", from.SSID);
-      to.put("capability", from.capabilities);
-      to.put("frequency", from.frequency);
-      to.put("RSSI", from.level);
+      final JSONObject event = new JSONObject();
+      event.put("epoch", epoch);
+      event.put("BSSID", from.BSSID);
+      event.put("SSID", from.SSID);
+      event.put("capability", from.capabilities);
+      event.put("frequency", from.frequency);
+      event.put("RSSI", from.level);
+
+      to.put(event);
     } catch (JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -158,7 +218,9 @@ public class BearLocFormat {
     return to;
   }
 
-  private static JSONObject convertAudio(final Object data, final Long epoch) {
-    return null;
+  private static JSONArray formatAudio(final Object data, final Long epoch) {
+    final JSONArray to = new JSONArray();
+
+    return to;
   }
 }

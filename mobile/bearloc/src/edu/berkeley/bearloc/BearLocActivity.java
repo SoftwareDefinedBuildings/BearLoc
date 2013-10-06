@@ -80,6 +80,10 @@ public class BearLocActivity extends Activity implements LocClientListener,
   public void onItemClick(AdapterView<?> parent, View view, int position,
       long id) {
     mSelectedLoc = mArrayAdapter.getItem(position);
+    if (mSelectedLoc.endsWith("*")) {
+      // location cannot end with *, * is used to label current location
+      mSelectedLoc = mSelectedLoc.substring(0, mSelectedLoc.length() - 1);
+    }
 
     mDialogBuilder.setMessage("Change " + targetsem + " to " + mSelectedLoc
         + "?");
@@ -99,7 +103,7 @@ public class BearLocActivity extends Activity implements LocClientListener,
         loc.put(targetsem, mSelectedLoc);
         onLocChanged();
 
-        mLocClient.reportSemLoc(loc);
+        mLocClient.report(loc);
       } catch (JSONException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
@@ -120,12 +124,6 @@ public class BearLocActivity extends Activity implements LocClientListener,
     }
   }
 
-  @Override
-  public void onReportDone(JSONObject response) {
-    // TODO Auto-generated method stub
-
-  }
-
   private void onLocChanged() {
     try {
       JSONObject loc = mCurLocInfo.getJSONObject("loc");
@@ -136,7 +134,7 @@ public class BearLocActivity extends Activity implements LocClientListener,
           targetsem);
       String[] stringArray = new String[locArray.length()];
 
-      for (int i = 0; i < locArray.length(); ++i) {
+      for (int i = 0; i < locArray.length(); i++) {
         stringArray[i] = locArray.getString(i);
         if (loc.getString(targetsem).equals(stringArray[i])) {
           stringArray[i] += "*";
@@ -178,9 +176,9 @@ public class BearLocActivity extends Activity implements LocClientListener,
     String locStr = null;
 
     try {
-      final Iterator<?> dataIter = semtree.keys();
-      while (dataIter.hasNext()) {
-        String sem = (String) dataIter.next();
+      final Iterator<?> it = semtree.keys();
+      while (it.hasNext()) {
+        String sem = (String) it.next();
         if (sem.equals(endsem)) {
           locStr = loc.getString(sem);
 

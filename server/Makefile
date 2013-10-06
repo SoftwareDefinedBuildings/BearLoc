@@ -8,7 +8,6 @@ clean:
 	rm -rf twistd.log*
 	rm -rf report.log*
 	rm -rf audio
-	rm -rf bearloc.db
 
 stop:
 	if [ -a twistd.pid ] ; \

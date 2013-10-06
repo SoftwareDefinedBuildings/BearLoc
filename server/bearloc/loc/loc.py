@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from __future__ import division
+
 from bearloc.loc.interface import ILoc
 
 from twisted.internet import defer, reactor
+from twisted.python import log
 from zope.interface import implements
 from collections import defaultdict
 import numpy as np
 from sklearn import tree
+from collections import Counter
 
 
 class Loc(object):
@@ -17,7 +21,7 @@ class Loc(object):
   
   def __init__(self, db):
     self._db = db
-    self._train_interval = 43201
+    self._train_interval = 60
     reactor.callLater(0, self._train)
     
     # TODO put the table names in settings file
@@ -32,29 +36,66 @@ class Loc(object):
     Return {loc:{label: loc} dict, sem: tree of semantic, confidence: value of confidence, meta: list of candidates of deapest semantic} 
     """
     # TODO handle the case there is trained model
+    dl = self._predict(request)
+    dl.addCallback(self._aggr)
 
-    locinfo = self._predict_wifi(request)
+    return dl
+
+  
+  def _predict(self, request):
+    d1 = defer.Deferred()
+    reactor.callLater(1, self._predict_wifi, request, d1)
+
+    dl = defer.DeferredList([d1])
+    return dl
+
+
+  def _predict_wifi(self, request, d):
+    if 'room' not in self._wifi_clf:
+      d.callback((None, 1))
+      return
+
+    locepoch = request['epoch']
+    thld = 500 # ms
+
+    cur = self._db.cursor()
+    # extract attributes and store in db
+    operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
+                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld)
+    cur.execute(operation)
+    wifi = cur.fetchall()
+ 
+    if len(wifi) == 0:
+      d.callback((None, 1))
+      return 
+
+    epochs = list(set(map(lambda x: x[0], wifi)))
+    # sigs: {BSSID: RSSI}
+    sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
+    bssids = self._wifi_bssids 
+    data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
+    data = np.array(data)
     
-    return defer.succeed(locinfo)
+    if len(data) == 0:
+      d.callback((None, 1))
+      return
+
+    rooms = self._wifi_clf["room"].predict(data)
+    count = Counter(rooms)
+    d.callback((count.most_common(1)[0][0], count.most_common(1)[0][1]/len(rooms)))
 
 
-  def _predict_wifi(self, request):
-    if "wifi" in request:
-      events = request.get("wifi") # list of wifi events
-      events = sorted(events, key=lambda x: x["epoch"])
-      sig = {event["BSSID"]:event["level"] for event in events}
-      data = np.array([sig.get(bssid, -150) for bssid in self._wifi_bssids])
+  def _aggr(self, results):
+    # wifi only now, hard code to get reuslt
+    room = results[0][1][0]
+    confidence = results[0][1][1]
    
-    # hardcoded
     loc = {"country":"US", "state":"CA", "city":"Berkeley", "street":"Leroy Ave", "district":"UC Berkeley", "building":"Soda Hall", "floor":"Floor 4"}
-    room = self._wifi_clf["room"].predict(data) if "room" in self._wifi_clf else None
     loc["room"] = room
     
     sem = self._tree()
     sem["country"]["state"]["city"]["district"]["building"]["floor"]["room"]
     sem["country"]["state"]["city"]["street"]
-
-    confidence = 1
     
     # hardcoded
     country = ["US"]
@@ -84,18 +125,19 @@ class Loc(object):
   def _train(self):
     """Train model for all data."""
     # TODO online/incremental training
+    log.msg("Started Loc training")
 
     self._train_wifi()
 
     # Only schedule next training task when this one finishes
     reactor.callLater(self._train_interval, self._train)
+    
+    log.msg("Stopped Loc training")
   
 
   def _train_wifi(self):
     """Train model for wifi data."""
     cur = self._db.cursor()
-
-    # TODO handle the case there is no data to train
 
     # extract attributes and store in db
     operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi"
@@ -107,13 +149,16 @@ class Loc(object):
                 " WHERE semantic=" + "'room'"
     cur.execute(operation)
     roomloc = cur.fetchall()
-   
+
+    if len(wifi) == 0 or len(roomloc) == 0:
+      return 
+      
     # filter epochs that do not have semloc logged
     epochs = list(set(map(lambda x: x[0], wifi)))
-    thld = 3000 # ms
-    timediff = [min(roomloc, key=lambda x: abs(x[0] - epoch))[0] for epoch in epochs]
-    epochs = [epochs[i] for i in range(0, len(timediff)) if timediff[i] < thld]
-    
+    thld = 500 # ms
+    timediffs = [abs(epoch - min(roomloc, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
+    epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
+   
     # sigs: {BSSID: RSSI}
     sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
     bssids = tuple(set(map(lambda x: x[1], wifi)))
@@ -123,9 +168,10 @@ class Loc(object):
 
     data = np.array(data)
     rooms = np.array(rooms)
-    
+
     # TODO only update when there are enough new data
-    if len(data) > 0 and len(rooms) > 0:
-      self._wifi_clf["room"] = tree.DecisionTreeClassifier().fit(data, rooms)
+    if len(data) == 0 or len(rooms)== 0:
+      return
     
-      self._wifi_bssids = bssids
+    self._wifi_clf["room"] = tree.DecisionTreeClassifier().fit(data, rooms)
+    self._wifi_bssids = bssids

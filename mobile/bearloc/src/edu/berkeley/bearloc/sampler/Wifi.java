@@ -11,6 +11,8 @@ public class Wifi implements Sampler {
 
   private static final long WIFI_SAMPLE_ITVL = 100L; // millisecond
 
+  private boolean mBusy;
+
   private final SamplerListener mListener;
   private final Handler mHandler;
   private final WifiManager mWifiManager;
@@ -37,12 +39,24 @@ public class Wifi implements Sampler {
   }
 
   @Override
-  public void start() {
-    mHandler.postDelayed(mWifiScanTimeTask, WIFI_SAMPLE_ITVL);
+  public boolean start() {
+    if (mBusy == false) {
+      mBusy = true;
+      mHandler.postDelayed(mWifiScanTimeTask, WIFI_SAMPLE_ITVL);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   @Override
-  public void pause() {
-    mHandler.removeCallbacks(mWifiScanTimeTask);
+  public boolean pause() {
+    if (mBusy == true) {
+      mBusy = false;
+      mHandler.removeCallbacks(mWifiScanTimeTask);
+      return true;
+    } else {
+      return false;
+    }
   }
 }

@@ -2,7 +2,7 @@ package edu.berkeley.bearloc.sampler;
 
 public interface Sampler {
   // duration in millisecond
-  public abstract void start();
+  public abstract boolean start();
 
-  public abstract void pause();
+  public abstract boolean pause();
 }

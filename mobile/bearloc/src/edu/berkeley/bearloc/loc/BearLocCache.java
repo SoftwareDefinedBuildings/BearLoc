@@ -7,77 +7,38 @@ import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Context;
-import edu.berkeley.bearloc.loc.BearLocSampleAggregator.OnSampleEventListener;
+import android.util.Pair;
 
-public class BearLocCache implements OnSampleEventListener {
-
-  private JSONObject mDeviceInfo;
-  private JSONObject mSensorInfo;
-
-  private final Map<String, BlockingQueue<JSONObject>> mDataMap;
+public class BearLocCache {
+  private final Map<String, BlockingQueue<Pair<Long, Object>>> mDataMap;
 
   public BearLocCache(Context context) {
-    mDeviceInfo = BearLocFormat.getDeviceInfo(context);
-    mSensorInfo = BearLocFormat.getSensorInfo(context);
-
-    mDataMap = new HashMap<String, BlockingQueue<JSONObject>>();
+    mDataMap = new HashMap<String, BlockingQueue<Pair<Long, Object>>>();
   }
 
-  public void add(final String type, final JSONObject data) {
+  public void put(final String type, final Object data) {
     if (!mDataMap.containsKey(type)) {
-      mDataMap.put(type, new LinkedBlockingQueue<JSONObject>());
+      mDataMap.put(type, new LinkedBlockingQueue<Pair<Long, Object>>());
     }
-    final BlockingQueue<JSONObject> queue = mDataMap.get(type);
-    queue.add(data);
+    final BlockingQueue<Pair<Long, Object>> queue = mDataMap.get(type);
+
+    // TODO check returned value
+    Long epoch = System.currentTimeMillis();
+    queue.offer(new Pair<Long, Object>(epoch, data));
   }
 
-  public JSONObject get() {
-    JSONObject data = new JSONObject();
-    // add "device" and data
-    try {
-      data.put("device", mDeviceInfo);
-      data.put("sensormeta", mSensorInfo);
-      Iterator<Entry<String, BlockingQueue<JSONObject>>> it = mDataMap
-          .entrySet().iterator();
-      while (it.hasNext()) {
-        Map.Entry<String, BlockingQueue<JSONObject>> entry = it.next();
-        String type = entry.getKey();
-        BlockingQueue<JSONObject> eventQ = entry.getValue();
-        JSONArray eventArr = new JSONArray();
-        for (JSONObject event : eventQ) {
-          eventArr.put(event);
-        }
-        data.put(type, eventArr);
-      }
-
-      // Generate copy of data, rather than references
-      final String dataStr = data.toString();
-      data = new JSONObject(dataStr);
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-
-    return data;
+  public Map<String, BlockingQueue<Pair<Long, Object>>> get() {
+    return mDataMap;
   }
 
   public void clear() {
-    Iterator<Entry<String, BlockingQueue<JSONObject>>> it = mDataMap.entrySet()
-        .iterator();
+    Iterator<Entry<String, BlockingQueue<Pair<Long, Object>>>> it = mDataMap
+        .entrySet().iterator();
     while (it.hasNext()) {
-      Map.Entry<String, BlockingQueue<JSONObject>> entry = it.next();
-      BlockingQueue<JSONObject> eventQ = entry.getValue();
+      Map.Entry<String, BlockingQueue<Pair<Long, Object>>> entry = it.next();
+      BlockingQueue<Pair<Long, Object>> eventQ = entry.getValue();
       eventQ.clear();
     }
-  }
-
-  @Override
-  public void onSampleEvent(String type, JSONObject data) {
-    add(type, data);
   }
 }

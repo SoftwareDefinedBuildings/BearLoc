@@ -101,6 +101,7 @@ public class BearLocActivity extends Activity implements LocClientListener,
       try {
         JSONObject loc = mCurLocInfo.getJSONObject("loc");
         loc.put(targetsem, mSelectedLoc);
+        mCurLocInfo.put("confidence", 1);
         onLocChanged();
 
         mLocClient.report(loc);
@@ -128,7 +129,8 @@ public class BearLocActivity extends Activity implements LocClientListener,
     try {
       JSONObject loc = mCurLocInfo.getJSONObject("loc");
       JSONObject semtree = mCurLocInfo.getJSONObject("sem");
-      mTextView.setText(getLocStr(loc, semtree, targetsem));
+      mTextView.setText(getLocStr(loc, semtree, targetsem) + "   ("
+          + Double.toString(mCurLocInfo.getDouble("confidence")) + ")");
 
       JSONArray locArray = mCurLocInfo.getJSONObject("meta").getJSONArray(
           targetsem);

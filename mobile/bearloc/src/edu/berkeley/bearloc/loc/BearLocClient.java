@@ -52,19 +52,25 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
   }
 
   private void sendLocRequest() {
-    final String path = "/localize";
-    final URL url = getHttpURL(mContext, path);
+    try {
+      final String path = "/localize";
+      final URL url = getHttpURL(mContext, path);
 
-    final JSONObject request = new JSONObject();
+      final JSONObject request = new JSONObject();
+      request.put("epoch", System.currentTimeMillis());
 
-    new BearLocHttpPostTask(new onHttpPostRespondedListener() {
-      @Override
-      public void onHttpPostResponded(JSONObject response) {
-        if (mListener != null) {
-          mListener.onLocationReturned(response);
+      new BearLocHttpPostTask(new onHttpPostRespondedListener() {
+        @Override
+        public void onHttpPostResponded(JSONObject response) {
+          if (mListener != null) {
+            mListener.onLocationReturned(response);
+          }
         }
-      }
-    }).execute(url, request.toString());
+      }).execute(url, request.toString());
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   @Override

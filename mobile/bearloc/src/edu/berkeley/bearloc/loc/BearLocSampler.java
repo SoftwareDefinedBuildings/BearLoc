@@ -42,7 +42,7 @@ public class BearLocSampler {
 
   public void sample() {
     if (mWifi.start() == true) {
-      final Integer period = 3000;
+      final Integer period = 500;
       mActiveSamplers++;
       mHandler.postDelayed(new Runnable() {
         @Override

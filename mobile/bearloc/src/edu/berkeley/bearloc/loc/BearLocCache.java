@@ -2,43 +2,42 @@ package edu.berkeley.bearloc.loc;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import org.json.JSONObject;
 
 import android.content.Context;
 import android.util.Pair;
 
 public class BearLocCache {
-  private final Map<String, BlockingQueue<Pair<Long, Object>>> mDataMap;
+  private final Map<String, List<Pair<Object, JSONObject>>> mDataMap;
 
   public BearLocCache(Context context) {
-    mDataMap = new HashMap<String, BlockingQueue<Pair<Long, Object>>>();
+    mDataMap = new HashMap<String, List<Pair<Object, JSONObject>>>();
   }
 
-  public void put(final String type, final Object data) {
+  public void put(final String type, final Object data, final JSONObject meta) {
     if (!mDataMap.containsKey(type)) {
-      mDataMap.put(type, new LinkedBlockingQueue<Pair<Long, Object>>());
+      mDataMap.put(type, new LinkedList<Pair<Object, JSONObject>>());
     }
-    final BlockingQueue<Pair<Long, Object>> queue = mDataMap.get(type);
+    final List<Pair<Object, JSONObject>> list = mDataMap.get(type);
 
-    // TODO check returned value
-    Long epoch = System.currentTimeMillis();
-    queue.offer(new Pair<Long, Object>(epoch, data));
+    list.add(new Pair<Object, JSONObject>(data, meta));
   }
 
-  public Map<String, BlockingQueue<Pair<Long, Object>>> get() {
+  public Map<String, List<Pair<Object, JSONObject>>> get() {
     return mDataMap;
   }
 
   public void clear() {
-    Iterator<Entry<String, BlockingQueue<Pair<Long, Object>>>> it = mDataMap
+    Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = mDataMap
         .entrySet().iterator();
     while (it.hasNext()) {
-      Map.Entry<String, BlockingQueue<Pair<Long, Object>>> entry = it.next();
-      BlockingQueue<Pair<Long, Object>> eventQ = entry.getValue();
-      eventQ.clear();
+      Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it.next();
+      List<Pair<Object, JSONObject>> events = entry.getValue();
+      events.clear();
     }
   }
 }

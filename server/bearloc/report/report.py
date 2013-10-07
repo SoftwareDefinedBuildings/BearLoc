@@ -89,38 +89,24 @@ class Report(object):
                     provider TEXT, \
                     PRIMARY KEY (uuid, epoch));"
 
-    # linear acc 
-    operation += "CREATE TABLE IF NOT EXISTS " + "lacc" + \
-                 " (uuid TEXT NOT NULL, \
-                    epoch INTEGER NOT NULL, \
-                    x REAL NOT NULL, \
-                    y REAL NOT NULL, \
-                    z REAL NOT NULL, \
-                    accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
-
     # acc                                                                                                                       
     operation += "CREATE TABLE IF NOT EXISTS " + "acc" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
                     x REAL NOT NULL, \
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
                     PRIMARY KEY (uuid, epoch));"
     
-    # temp                                                                                                                      
-    operation += "CREATE TABLE IF NOT EXISTS " + "temp" + \
+    # linear acc 
+    operation += "CREATE TABLE IF NOT EXISTS " + "lacc" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
-                    temp REAL NOT NULL, \
-                    accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
-
-    # rotation                                                                                                                      
-    operation += "CREATE TABLE IF NOT EXISTS " + "rotation" + \
-                 " (uuid TEXT NOT NULL, \
-                    epoch INTEGER NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
                     x REAL NOT NULL, \
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
@@ -131,6 +117,8 @@ class Report(object):
     operation += "CREATE TABLE IF NOT EXISTS " + "gravity" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
                     x REAL NOT NULL, \
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
@@ -141,6 +129,34 @@ class Report(object):
     operation += "CREATE TABLE IF NOT EXISTS " + "gyro" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
+                    x REAL NOT NULL, \
+                    y REAL NOT NULL, \
+                    z REAL NOT NULL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (uuid, epoch));"
+    
+    # rotation                                                                                                                      
+    operation += "CREATE TABLE IF NOT EXISTS " + "rotation" + \
+                 " (uuid TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
+                    xr REAL NOT NULL, \
+                    yr REAL NOT NULL, \
+                    zr REAL NOT NULL, \
+                    cos REAL, \
+                    head_accuracy REAL, \
+                    accuracy REAL, \
+                    PRIMARY KEY (uuid, epoch));"
+
+    # magnetic                                                                                                                  
+    operation += "CREATE TABLE IF NOT EXISTS " + "magnetic" + \
+                 " (uuid TEXT NOT NULL, \
+                    epoch INTEGER NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
                     x REAL NOT NULL, \
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
@@ -151,24 +167,28 @@ class Report(object):
     operation += "CREATE TABLE IF NOT EXISTS " + "light" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
                     light REAL NOT NULL, \
                     accuracy REAL, \
                     PRIMARY KEY (uuid, epoch));"
     
-    # magnetic                                                                                                                  
-    operation += "CREATE TABLE IF NOT EXISTS " + "magnetic" + \
+    # temp                                                                                                                      
+    operation += "CREATE TABLE IF NOT EXISTS " + "temp" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
-                    x REAL NOT NULL, \
-                    y REAL NOT NULL, \
-                    z REAL NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
+                    temp REAL NOT NULL, \
                     accuracy REAL, \
                     PRIMARY KEY (uuid, epoch));"
-    
+
     # pressure                                                                                                                  
     operation += "CREATE TABLE IF NOT EXISTS " + "pressure" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
                     pressure REAL NOT NULL, \
                     accuracy REAL, \
                     PRIMARY KEY (uuid, epoch));"
@@ -177,6 +197,8 @@ class Report(object):
     operation += "CREATE TABLE IF NOT EXISTS " + "proximity" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
                     proximity REAL NOT NULL, \
                     accuracy REAL, \
                     PRIMARY KEY (uuid, epoch));"
@@ -185,6 +207,8 @@ class Report(object):
     operation += "CREATE TABLE IF NOT EXISTS " + "humidity" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
+                    sysnano INTEGER NOT NULL, \
+                    eventnano INTEGER NOT NULL, \
                     humidity REAL NOT NULL, \
                     accuracy REAL, \
                     PRIMARY KEY (uuid, epoch));"
@@ -211,14 +235,14 @@ class Report(object):
     self._insert_audio(report) if "audio" in report else None
     self._insert_bluetooth(report) if "bluetooth" in report else None
     self._insert_geoloc(report) if "geoloc" in report else None
-    self._insert_lacc(report) if "lacc" in report else None
     self._insert_acc(report) if "acc" in report else None
-    self._insert_temp(report) if "temp" in report else None
-    self._insert_rotation(report) if "rotation" in report else None
+    self._insert_lacc(report) if "lacc" in report else None
     self._insert_gravity(report) if "gravity" in report else None
     self._insert_gyro(report) if "gyro" in report else None
-    self._insert_light(report) if "light" in report else None
+    self._insert_rotation(report) if "rotation" in report else None
     self._insert_magnetic(report) if "magnetic" in report else None
+    self._insert_light(report) if "light" in report else None
+    self._insert_temp(report) if "temp" in report else None
     self._insert_pressure(report) if "pressure" in report else None
     self._insert_proximity(report) if "proximity" in report else None
     self._insert_humidity(report) if "humidity" in report else None
@@ -328,36 +352,140 @@ class Report(object):
 
     self._db.commit()
   
-  def _insert_lacc(self, report):
-    cur = self._db.cursor()
-    events = report.get("lacc") # list of linear acc events
-    for event in events:
-      data = (report.get("device").get("uuid"),
-              event.get("epoch"),
-              event.get("values")[0],
-              event.get("values")[1],
-              event.get("values")[2],
-              event.get("accuracy", None))
-  
-      operation = "INSERT OR REPLACE INTO " + "lacc" + \
-                " VALUES (?,?,?,?,?,?);"
-      cur.execute(operation, data)
-
-    self._db.commit()
-
-
   def _insert_acc(self, report):
     cur = self._db.cursor()
     events = report.get("acc") # list of acc events
     for event in events:
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
-              event.get("values")[0],
-              event.get("values")[1],
-              event.get("values")[2],
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("x"),
+              event.get("y"),
+              event.get("z"),
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "acc" + \
+                " VALUES (?,?,?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_lacc(self, report):
+    cur = self._db.cursor()
+    events = report.get("lacc") # list of linear acc events
+    for event in events:
+      data = (report.get("device").get("uuid"),
+              event.get("epoch"),
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("x"),
+              event.get("y"),
+              event.get("z"),
+              event.get("accuracy", None))
+  
+      operation = "INSERT OR REPLACE INTO " + "lacc" + \
+                " VALUES (?,?,?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+
+  def _insert_gravity(self, report):
+    cur = self._db.cursor()
+    events = report.get("gravity") # list of gravity events
+    for event in events:
+      data = (report.get("device").get("uuid"),
+              event.get("epoch"),
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("x"),
+              event.get("y"),
+              event.get("z"),
+              event.get("accuracy", None))
+  
+      operation = "INSERT OR REPLACE INTO " + "gravity" + \
+                " VALUES (?,?,?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_gyro(self, report):
+    cur = self._db.cursor()
+    events = report.get("gyro") # list of gyro events
+    for event in events:
+      data = (report.get("device").get("uuid"),
+              event.get("epoch"),
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("x"),
+              event.get("y"),
+              event.get("z"),
+              event.get("accuracy", None))
+  
+      operation = "INSERT OR REPLACE INTO " + "gyro" + \
+                " VALUES (?,?,?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_rotation(self, report):
+    cur = self._db.cursor()
+    events = report.get("rotation") # list of rotation events
+    for event in events:
+      data = (report.get("device").get("uuid"),
+              event.get("epoch"),
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("xr"),
+              event.get("yr"),
+              event.get("zr"),
+              event.get("cos", None),
+              event.get("head_accuracy", None),
+              event.get("accuracy", None))
+  
+      operation = "INSERT OR REPLACE INTO " + "rotation" + \
+                " VALUES (?,?,?,?,?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_magnetic(self, report):
+    cur = self._db.cursor()
+    events = report.get("magnetic") # list of magnetic events
+    for event in events:
+      data = (report.get("device").get("uuid"),
+              event.get("epoch"),
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("x"),
+              event.get("y"),
+              event.get("z"),
+              event.get("accuracy", None))
+  
+      operation = "INSERT OR REPLACE INTO " + "magnetic" + \
+                " VALUES (?,?,?,?,?,?,?,?);"
+      cur.execute(operation, data)
+
+    self._db.commit()
+
+  
+  def _insert_light(self, report):
+    cur = self._db.cursor()
+    events = report.get("light") # list of light events
+    for event in events:
+      data = (report.get("device").get("uuid"),
+              event.get("epoch"),
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("light"),
+              event.get("accuracy", None))
+  
+      operation = "INSERT OR REPLACE INTO " + "light" + \
                 " VALUES (?,?,?,?,?,?);"
       cur.execute(operation, data)
 
@@ -370,115 +498,31 @@ class Report(object):
     for event in events:
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
-              event.get("values")[0],
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("temp"),
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "temp" + \
-                " VALUES (?,?,?,?);"
-      cur.execute(operation, data)
-
-    self._db.commit()
-
-
-  def _insert_rotation(self, report):
-    cur = self._db.cursor()
-    events = report.get("rotation") # list of rotation events
-    for event in events:
-      data = (report.get("device").get("uuid"),
-              event.get("epoch"),
-              event.get("values")[0],
-              event.get("values")[1],
-              event.get("values")[2],
-              event.get("accuracy", None))
-  
-      operation = "INSERT OR REPLACE INTO " + "rotation" + \
                 " VALUES (?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
 
-  
-  def _insert_gravity(self, report):
-    cur = self._db.cursor()
-    events = report.get("gravity") # list of gravity events
-    for event in events:
-      data = (report.get("device").get("uuid"),
-              event.get("epoch"),
-              event.get("values")[0],
-              event.get("values")[1],
-              event.get("values")[2],
-              event.get("accuracy", None))
-  
-      operation = "INSERT OR REPLACE INTO " + "gravity" + \
-                " VALUES (?,?,?,?,?,?);"
-      cur.execute(operation, data)
 
-    self._db.commit()
-
-  
-  def _insert_gyro(self, report):
-    cur = self._db.cursor()
-    events = report.get("gyro") # list of gyro events
-    for event in events:
-      data = (report.get("device").get("uuid"),
-              event.get("epoch"),
-              event.get("values")[0],
-              event.get("values")[1],
-              event.get("values")[2],
-              event.get("accuracy", None))
-  
-      operation = "INSERT OR REPLACE INTO " + "gyro" + \
-                " VALUES (?,?,?,?,?,?);"
-      cur.execute(operation, data)
-
-    self._db.commit()
-
-  
-  def _insert_light(self, report):
-    cur = self._db.cursor()
-    events = report.get("light") # list of light events
-    for event in events:
-      data = (report.get("device").get("uuid"),
-              event.get("epoch"),
-              event.get("values")[0],
-              event.get("accuracy", None))
-  
-      operation = "INSERT OR REPLACE INTO " + "light" + \
-                " VALUES (?,?,?,?);"
-      cur.execute(operation, data)
-
-    self._db.commit()
-
-  
-  def _insert_magnetic(self, report):
-    cur = self._db.cursor()
-    events = report.get("magnetic") # list of magnetic events
-    for event in events:
-      data = (report.get("device").get("uuid"),
-              event.get("epoch"),
-              event.get("values")[0],
-              event.get("values")[1],
-              event.get("values")[2],
-              event.get("accuracy", None))
-  
-      operation = "INSERT OR REPLACE INTO " + "magnetic" + \
-                " VALUES (?,?,?,?,?,?);"
-      cur.execute(operation, data)
-
-    self._db.commit()
-
-  
   def _insert_pressure(self, report):
     cur = self._db.cursor()
     events = report.get("pressure") # list of pressure events
     for event in events:
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
-              event.get("values")[0],
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("pressure"),
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "pressure" + \
-                " VALUES (?,?,?,?);"
+                " VALUES (?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -490,11 +534,13 @@ class Report(object):
     for event in events:
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
-              event.get("values")[0],
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("proximity"),
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "proximity" + \
-                " VALUES (?,?,?,?);"
+                " VALUES (?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -506,11 +552,13 @@ class Report(object):
     for event in events:
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
-              event.get("values")[0],
+              event.get("sysnano"),
+              event.get("eventnano"),
+              event.get("humidity"),
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "humidity" + \
-                " VALUES (?,?,?,?);"
+                " VALUES (?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()

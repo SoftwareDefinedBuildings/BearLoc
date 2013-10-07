@@ -88,14 +88,21 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
 
   @Override
   public boolean report(final JSONObject semloc) {
-    mCache.put("semloc", semloc);
+    final JSONObject meta = new JSONObject();
+    try {
+      meta.put("epoch", System.currentTimeMillis());
+      meta.put("sysnano", System.nanoTime());
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    mCache.put("semloc", semloc, meta);
 
     mSampler.sample();
 
     return true;
   }
 
-  // async
   private void sendData() {
     final String path = "/report";
     final URL url = getHttpURL(mContext, path);
@@ -113,7 +120,16 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
 
   @Override
   public void onSampleEvent(String type, Object data) {
-    mCache.put(type, data);
+    final JSONObject meta = new JSONObject();
+    try {
+      meta.put("epoch", System.currentTimeMillis());
+      meta.put("sysnano", System.nanoTime());
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    mCache.put(type, data, meta);
+
     if (mDataSendItvl == null) {
       mDataSendItvl = DATA_SEND_ITVL;
       mHandler.postDelayed(mSendDataTask, mDataSendItvl);
@@ -127,7 +143,7 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
 
     URL url = null;
     try {
-      //TODO handle the exception of using IP address
+      // TODO handle the exception of using IP address
       final URI uri = new URI("http", null, host, port, path, null, null);
       url = uri.toURL();
     } catch (URISyntaxException e) {

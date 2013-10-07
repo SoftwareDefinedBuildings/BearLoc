@@ -4,8 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.BlockingQueue;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,6 +13,7 @@ import edu.berkeley.bearloc.util.DeviceUUIDFactory;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.location.Location;
 import android.media.AudioFormat;
@@ -34,23 +33,23 @@ public class BearLocFormat {
   }
 
   public JSONObject dump(
-      final Map<String, BlockingQueue<Pair<Long, Object>>> dataMap) {
+      final Map<String, List<Pair<Object, JSONObject>>> dataMap) {
     final JSONObject dumpObj = new JSONObject();
     // add "device" and data
     try {
-      Iterator<Entry<String, BlockingQueue<Pair<Long, Object>>>> it = dataMap
+      Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = dataMap
           .entrySet().iterator();
       while (it.hasNext()) {
-        final Map.Entry<String, BlockingQueue<Pair<Long, Object>>> entry = it
+        final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it
             .next();
         final String type = entry.getKey();
-        final BlockingQueue<Pair<Long, Object>> queue = entry.getValue();
+        final List<Pair<Object, JSONObject>> queue = entry.getValue();
 
         final JSONArray eventArr = new JSONArray();
-        for (Pair<Long, Object> event : queue) {
-          final Long epoch = event.first;
-          final Object data = event.second;
-          final JSONArray formated = format(type, data, epoch);
+        for (Pair<Object, JSONObject> event : queue) {
+          final Object data = event.first;
+          final JSONObject meta = event.second;
+          final JSONArray formated = format(type, data, meta);
           for (int i = 0; i < formated.length(); i++) {
             eventArr.put(formated.get(i));
           }
@@ -167,21 +166,43 @@ public class BearLocFormat {
   }
 
   private static JSONArray format(final String type, final Object data,
-      final Long epoch) {
+      final JSONObject meta) {
     if ("semloc".equals(type)) {
-      return formatSemLoc(data, epoch);
+      return formatSemLoc(data, meta);
     } else if ("wifi".equals(type)) {
-      return formatWifi(data, epoch);
+      return formatWifi(data, meta);
     } else if ("audio".equals(type)) {
-      return formatAudio(data, epoch);
+      return formatAudio(data, meta);
     } else if ("geoloc".equals(type)) {
-      return formatGeoLoc(data, epoch);
+      return formatGeoLoc(data, meta);
+    } else if ("acc".equals(type)) {
+      return formatAcc(data, meta);
+    } else if ("lacc".equals(type)) {
+      return formatLinearAcc(data, meta);
+    } else if ("gravity".equals(type)) {
+      return formatGravity(data, meta);
+    } else if ("gyro".equals(type)) {
+      return formatGyro(data, meta);
+    } else if ("rotation".equals(type)) {
+      return formatRotation(data, meta);
+    } else if ("magnetic".equals(type)) {
+      return formatMagnetic(data, meta);
+    } else if ("light".equals(type)) {
+      return formatLight(data, meta);
+    } else if ("temp".equals(type)) {
+      return formatTemp(data, meta);
+    } else if ("pressure".equals(type)) {
+      return formatPressure(data, meta);
+    } else if ("proximity".equals(type)) {
+      return formatProximity(data, meta);
+    } else if ("humidity".equals(type)) {
+      return formatHumidity(data, meta);
     }
 
     return null;
   }
 
-  private static JSONArray formatSemLoc(final Object data, final Long epoch) {
+  private static JSONArray formatSemLoc(final Object data, final JSONObject meta) {
     final JSONArray to = new JSONArray();
     final JSONObject from = (JSONObject) data;
     try {
@@ -189,7 +210,7 @@ public class BearLocFormat {
       while (it.hasNext()) {
         final JSONObject event = new JSONObject();
         final String sem = (String) it.next();
-        event.put("epoch", epoch);
+        event.put("epoch", meta.getLong("epoch"));
         event.put("semantic", sem);
         event.put("location", from.getString(sem));
 
@@ -203,13 +224,13 @@ public class BearLocFormat {
     return to;
   }
 
-  private static JSONArray formatWifi(final Object data, final Long epoch) {
+  private static JSONArray formatWifi(final Object data, final JSONObject meta) {
     final JSONArray to = new JSONArray();
     final ScanResult from = (ScanResult) data;
 
     try {
       final JSONObject event = new JSONObject();
-      event.put("epoch", epoch);
+      event.put("epoch", meta.getLong("epoch"));
       event.put("BSSID", from.BSSID);
       event.put("SSID", from.SSID);
       event.put("capability", from.capabilities);
@@ -225,7 +246,7 @@ public class BearLocFormat {
     return to;
   }
 
-  private static JSONArray formatAudio(final Object data, final Long epoch) {
+  private static JSONArray formatAudio(final Object data, final JSONObject meta) {
     final JSONArray to = new JSONArray();
     final JSONObject from = (JSONObject) data;
 
@@ -253,13 +274,13 @@ public class BearLocFormat {
     return to;
   }
 
-  private static JSONArray formatGeoLoc(final Object data, final Long epoch) {
+  private static JSONArray formatGeoLoc(final Object data, final JSONObject meta) {
     final JSONArray to = new JSONArray();
     final Location from = (Location) data;
 
     try {
       final JSONObject event = new JSONObject();
-      event.put("epoch", epoch);
+      event.put("epoch", meta.getLong("epoch"));
       event.put("accuracy", from.getAccuracy());
       event.put("altitude", from.getAltitude());
       event.put("bearing", from.getBearing());
@@ -267,6 +288,262 @@ public class BearLocFormat {
       event.put("longitude", from.getLongitude());
       event.put("provider", from.getProvider());
       event.put("speed", from.getSpeed());
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatAcc(final Object data, final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("x", from.values[0]);
+      event.put("y", from.values[1]);
+      event.put("z", from.values[2]);
+      event.put("accuracy", from.accuracy);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatLinearAcc(final Object data,
+      final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("x", from.values[0]);
+      event.put("y", from.values[1]);
+      event.put("z", from.values[2]);
+      event.put("accuracy", from.accuracy);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatGravity(final Object data,
+      final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("x", from.values[0]);
+      event.put("y", from.values[1]);
+      event.put("z", from.values[2]);
+      event.put("accuracy", from.accuracy);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatGyro(final Object data, final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("x", from.values[0]);
+      event.put("y", from.values[1]);
+      event.put("z", from.values[2]);
+      event.put("accuracy", from.accuracy);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatRotation(final Object data,
+      final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("xr", from.values[0]);
+      event.put("yr", from.values[1]);
+      event.put("zr", from.values[2]);
+      if (from.values.length >= 4) {
+        event.put("cos", from.values[3]);
+      }
+      if (from.values.length >= 5) {
+        event.put("head_accuracy", from.values[4]);
+      }
+      event.put("accuracy", from.accuracy);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatMagnetic(final Object data,
+      final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("x", from.values[0]);
+      event.put("y", from.values[1]);
+      event.put("z", from.values[2]);
+      event.put("accuracy", from.accuracy);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatLight(final Object data, final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("light", from.values[0]);
+      event.put("accuracy", from.accuracy);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatTemp(final Object data, final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("temp", from.values[0]);
+      event.put("accuracy", from.accuracy);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatPressure(final Object data,
+      final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("pressure", from.values[0]);
+      event.put("accuracy", from.accuracy);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatProximity(final Object data,
+      final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("proximity", from.values[0]);
+      event.put("accuracy", from.accuracy);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatHumidity(final Object data,
+      final JSONObject meta) {
+    final JSONArray to = new JSONArray();
+    final SensorEvent from = (SensorEvent) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("sysnano", meta.getLong("sysnano"));
+      event.put("eventnano", from.timestamp);
+      event.put("humidity", from.values[0]);
+      event.put("accuracy", from.accuracy);
 
       to.put(event);
     } catch (JSONException e) {

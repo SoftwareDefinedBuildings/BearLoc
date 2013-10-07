@@ -73,7 +73,7 @@ class Report(object):
                    sampwidth INTEGER NOT NULL, \
                    framerate INTEGER NOT NULL, \
                    nframes INTEGER NOT NULL, \
-                   path TEXT NOT NULL, \
+                   raw BLOB NOT NULL, \
                    PRIMARY KEY (uuid, epoch));"
     
     # geoloc
@@ -294,17 +294,7 @@ class Report(object):
       framerate = event.get("framerate")
       nframes = event.get("nframes")
       raw = array.array('b', event.get("raw")).tostring()
-   
-      # generate .wav audio file
-      wavfpath = audiodir + str(epoch) + '.wav'
-      wavf = wave.open(wavfpath, 'wb')
-      wavf.setnchannels(channel)
-      wavf.setsampwidth(sampwidth)
-      wavf.setframerate(framerate)
-      wavf.setnframes(nframes)
-      wavf.writeframesraw(raw)
-      wavf.close()
-        
+      
       # insert auido file info to db
       data = (report.get("device").get("uuid"),
               epoch,
@@ -313,7 +303,7 @@ class Report(object):
               sampwidth,
               framerate,
               nframes,
-              wavfpath)
+              raw)
   
       operation = "INSERT OR REPLACE INTO " + "audio" + \
                   " VALUES (?,?,?,?,?,?,?,?);" 

@@ -19,15 +19,27 @@ import edu.berkeley.bearloc.SettingsActivity;
 import edu.berkeley.bearloc.loc.BearLocSampler.OnSampleEventListener;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Handler;
 
 public class BearLocClient implements LocClient, OnSampleEventListener {
 
+  private static final int DATA_SEND_ITVL = 300; // millisecond
+
   private final Context mContext;
   private final LocClientListener mListener;
+  private final Handler mHandler;
+  private Integer mDataSendItvl = null; // Millisecond, null if not scheduled
 
   private final BearLocCache mCache;
   private final BearLocSampler mSampler;
   private final BearLocFormat mFormat;
+
+  private final Runnable mSendDataTask = new Runnable() {
+    @Override
+    public void run() {
+      sendData();
+    }
+  };
 
   private static interface onHttpPostRespondedListener {
     void onHttpPostResponded(JSONObject response);
@@ -36,6 +48,7 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
   public BearLocClient(Context context, LocClientListener listener) {
     mContext = context;
     mListener = listener;
+    mHandler = new Handler();
     mCache = new BearLocCache(mContext);
     mSampler = new BearLocSampler(mContext, this);
     mFormat = new BearLocFormat(mContext);
@@ -90,18 +103,21 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
     final JSONObject report = mFormat.dump(mCache.get());
     mCache.clear();
 
-    new BearLocHttpPostTask(null).execute(url, report.toString());
+    if (report.length() > 0) {
+      new BearLocHttpPostTask(null).execute(url, report.toString());
+      mHandler.postDelayed(mSendDataTask, mDataSendItvl);
+    } else {
+      mDataSendItvl = null;
+    }
   }
 
   @Override
   public void onSampleEvent(String type, Object data) {
     mCache.put(type, data);
-  }
-
-  @Override
-  public void onSampleDone() {
-    // TODO send data in between the data collection
-    sendData();
+    if (mDataSendItvl == null) {
+      mDataSendItvl = DATA_SEND_ITVL;
+      mHandler.postDelayed(mSendDataTask, mDataSendItvl);
+    }
   }
 
   private static URL getHttpURL(Context context, String path) {
@@ -111,6 +127,7 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
 
     URL url = null;
     try {
+      //TODO handle the exception of using IP address
       final URI uri = new URI("http", null, host, port, path, null, null);
       url = uri.toURL();
     } catch (URISyntaxException e) {

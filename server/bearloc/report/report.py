@@ -297,12 +297,13 @@ class Report(object):
    
       # generate .wav audio file
       wavfpath = audiodir + str(epoch) + '.wav'
-      with wave.open(wavfpath, 'wb') as wavef:
-        wavf.setnchannels(channel)
-        wavf.setsampwidth(sampwidth)
-        wavf.setframerate(framerate)
-        wavf.setnframes(nframes)
-        wavf.writeframesraw(raw)
+      wavf = wave.open(wavfpath, 'wb')
+      wavf.setnchannels(channel)
+      wavf.setsampwidth(sampwidth)
+      wavf.setframerate(framerate)
+      wavf.setnframes(nframes)
+      wavf.writeframesraw(raw)
+      wavf.close()
         
       # insert auido file info to db
       data = (report.get("device").get("uuid"),
@@ -312,7 +313,7 @@ class Report(object):
               sampwidth,
               framerate,
               nframes,
-              wavpath)
+              wavfpath)
   
       operation = "INSERT OR REPLACE INTO " + "audio" + \
                   " VALUES (?,?,?,?,?,?,?,?);" 
@@ -320,9 +321,6 @@ class Report(object):
 
     self._db.commit()
   
-
-  def _insert_geoloc(self, report):
-    pass
 
   def _insert_geoloc(self, report):
     cur = self._db.cursor()

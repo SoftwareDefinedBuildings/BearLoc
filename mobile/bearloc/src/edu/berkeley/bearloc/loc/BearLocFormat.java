@@ -16,6 +16,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.media.AudioFormat;
+import android.media.MediaRecorder.AudioSource;
 import android.net.wifi.ScanResult;
 import android.os.Build;
 import android.util.Pair;
@@ -35,9 +37,6 @@ public class BearLocFormat {
     final JSONObject dumpObj = new JSONObject();
     // add "device" and data
     try {
-      dumpObj.put("device", mDeviceInfo);
-      dumpObj.put("meta", mSensorInfo);
-
       Iterator<Entry<String, BlockingQueue<Pair<Long, Object>>>> it = dataMap
           .entrySet().iterator();
       while (it.hasNext()) {
@@ -59,6 +58,11 @@ public class BearLocFormat {
         if (eventArr.length() > 0) {
           dumpObj.put(type, eventArr);
         }
+      }
+
+      if (dumpObj.length() > 0) {
+        dumpObj.put("device", mDeviceInfo);
+        dumpObj.put("meta", mSensorInfo);
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
@@ -220,6 +224,28 @@ public class BearLocFormat {
 
   private static JSONArray formatAudio(final Object data, final Long epoch) {
     final JSONArray to = new JSONArray();
+    final JSONObject from = (JSONObject) data;
+
+    try {
+      final JSONObject event = from;
+      final String source = (from.getInt("source") == AudioSource.CAMCORDER) ? "CAMCORDER"
+          : "MIC";
+      final int channel = (from.getInt("channel") == AudioFormat.CHANNEL_IN_MONO) ? 1
+          : 2;
+      final int sampwidth = (from.getInt("sampwidth") == AudioFormat.ENCODING_PCM_16BIT) ? 2
+          : 1;
+      final int nframes = event.getJSONArray("raw").length()
+          / (event.getInt("sampwidth") * event.getInt("channel"));
+      event.put("source", source);
+      event.put("channel", channel);
+      event.put("sampwidth", sampwidth);
+      event.put("nframes", nframes);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
 
     return to;
   }

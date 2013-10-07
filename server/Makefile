@@ -7,7 +7,6 @@ clean:
 	find . -name '*.pyo' -delete
 	rm -rf twistd.log*
 	rm -rf report.log*
-	rm -rf audio
 
 stop:
 	if [ -a twistd.pid ] ; \

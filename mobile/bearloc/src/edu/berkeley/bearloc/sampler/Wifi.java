@@ -9,9 +9,11 @@ import android.os.Handler;
 
 public class Wifi implements Sampler {
 
-  private static final long WIFI_SAMPLE_ITVL = 100L; // millisecond
+  private static final long WIFI_SAMPLE_ITVL = 1000L; // millisecond
 
   private boolean mBusy;
+  private Integer mSampleCap;
+  private Integer nSampleNum;
 
   private final SamplerListener mListener;
   private final Handler mHandler;
@@ -21,14 +23,17 @@ public class Wifi implements Sampler {
     public abstract void onWifiEvent(List<ScanResult> results);
   }
 
-  private final Runnable mWifiScanTimeTask = new Runnable() {
+  private final Runnable mWifiScanTask = new Runnable() {
+    @Override
     public void run() {
-      final List<ScanResult> results = mWifiManager.getScanResults();
-      // TODO check return result
-      if (mListener != null) {
-        mListener.onWifiEvent(results);
-      }
-      mHandler.postDelayed(mWifiScanTimeTask, WIFI_SAMPLE_ITVL);
+      scan();
+    }
+  };
+
+  private final Runnable mPauseTask = new Runnable() {
+    @Override
+    public void run() {
+      pause();
     }
   };
 
@@ -39,24 +44,38 @@ public class Wifi implements Sampler {
   }
 
   @Override
-  public boolean start() {
+  public boolean start(Integer period, Integer num) {
     if (mBusy == false) {
       mBusy = true;
-      mHandler.postDelayed(mWifiScanTimeTask, WIFI_SAMPLE_ITVL);
+      nSampleNum = 0;
+      mSampleCap = num;
+      mHandler.postDelayed(mWifiScanTask, 0);
+      mHandler.postDelayed(mPauseTask, period);
       return true;
     } else {
       return false;
     }
   }
 
-  @Override
-  public boolean pause() {
+  private void pause() {
     if (mBusy == true) {
       mBusy = false;
-      mHandler.removeCallbacks(mWifiScanTimeTask);
-      return true;
+      mHandler.removeCallbacks(mWifiScanTask);
+      mHandler.removeCallbacks(mPauseTask);
+    }
+  }
+
+  private void scan() {
+    final List<ScanResult> results = mWifiManager.getScanResults();
+    if (mListener != null) {
+      mListener.onWifiEvent(results);
+    }
+
+    nSampleNum++;
+    if (nSampleNum < mSampleCap) {
+      mHandler.postDelayed(mWifiScanTask, WIFI_SAMPLE_ITVL);
     } else {
-      return false;
+      pause();
     }
   }
 }

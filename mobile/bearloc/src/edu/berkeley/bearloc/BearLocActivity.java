@@ -1,5 +1,6 @@
 package edu.berkeley.bearloc;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -27,6 +28,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class BearLocActivity extends Activity implements LocClientListener,
     OnClickListener, OnItemClickListener, DialogInterface.OnClickListener {
@@ -122,6 +124,8 @@ public class BearLocActivity extends Activity implements LocClientListener,
     if (locInfo != null) {
       mCurLocInfo = locInfo;
       onLocChanged();
+
+      Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT).show();
     }
   }
 
@@ -129,8 +133,10 @@ public class BearLocActivity extends Activity implements LocClientListener,
     try {
       JSONObject loc = mCurLocInfo.getJSONObject("loc");
       JSONObject semtree = mCurLocInfo.getJSONObject("sem");
-      mTextView.setText(getLocStr(loc, semtree, targetsem) + "   ("
-          + Double.toString(mCurLocInfo.getDouble("confidence")) + ")");
+      final DecimalFormat df = new DecimalFormat("#.##");
+      final String confStr = "   (Conf:"
+          + df.format(mCurLocInfo.getDouble("confidence")).toString() + ")";
+      mTextView.setText(getLocStr(loc, semtree, targetsem) + confStr);
 
       JSONArray locArray = mCurLocInfo.getJSONObject("meta").getJSONArray(
           targetsem);

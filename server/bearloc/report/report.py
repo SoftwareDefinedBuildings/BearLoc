@@ -68,6 +68,7 @@ class Report(object):
     operation += "CREATE TABLE IF NOT EXISTS " + "audio" + \
                  " (uuid TEXT NOT NULL, \
                    epoch INTEGER NOT NULL, \
+                   source TEXT, \
                    channel INTEGER NOT NULL, \
                    sampwidth INTEGER NOT NULL, \
                    framerate INTEGER NOT NULL, \
@@ -287,6 +288,7 @@ class Report(object):
     events = report.get("audio") # list of audio events
     for event in events:
       epoch = event.get("epoch")
+      source = event.get("source", None)
       channel = event.get("channel")
       sampwidth = event.get("sampwidth")
       framerate = event.get("framerate")
@@ -305,6 +307,7 @@ class Report(object):
       # insert auido file info to db
       data = (report.get("device").get("uuid"),
               epoch,
+              source,
               channel,
               sampwidth,
               framerate,
@@ -312,7 +315,7 @@ class Report(object):
               wavpath)
   
       operation = "INSERT OR REPLACE INTO " + "audio" + \
-                  " VALUES (?,?,?,?,?,?,?);" 
+                  " VALUES (?,?,?,?,?,?,?,?);" 
       cur.execute(operation, data)
 
     self._db.commit()

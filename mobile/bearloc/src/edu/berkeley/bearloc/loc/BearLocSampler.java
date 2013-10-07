@@ -5,9 +5,11 @@ import java.util.List;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.location.Location;
 import android.net.wifi.ScanResult;
 
 import edu.berkeley.bearloc.sampler.Audio;
+import edu.berkeley.bearloc.sampler.GeoLoc;
 import edu.berkeley.bearloc.sampler.Wifi;
 
 public class BearLocSampler {
@@ -16,6 +18,7 @@ public class BearLocSampler {
 
   private final Wifi mWifi;
   private final Audio mAudio;
+  private final GeoLoc mGeoLoc;
 
   public static interface OnSampleEventListener {
     void onSampleEvent(String type, Object data);
@@ -41,10 +44,19 @@ public class BearLocSampler {
         mListener.onSampleEvent(type, audio);
       }
     });
+
+    mGeoLoc = new GeoLoc(context, new GeoLoc.SamplerListener() {
+      @Override
+      public void onGeoLocEvent(Location location) {
+        final String type = "geoloc";
+        mListener.onSampleEvent(type, location);
+      }
+    });
   }
 
   public void sample() {
     mWifi.start(2000, 1);
     mAudio.start(1500, 1);
+    mGeoLoc.start(5000, 2);
   }
 }

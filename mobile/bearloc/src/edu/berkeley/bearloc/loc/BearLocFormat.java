@@ -16,6 +16,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.media.AudioFormat;
 import android.media.MediaRecorder.AudioSource;
 import android.net.wifi.ScanResult;
@@ -173,6 +174,8 @@ public class BearLocFormat {
       return formatWifi(data, epoch);
     } else if ("audio".equals(type)) {
       return formatAudio(data, epoch);
+    } else if ("geoloc".equals(type)) {
+      return formatGeoLoc(data, epoch);
     }
 
     return null;
@@ -240,6 +243,30 @@ public class BearLocFormat {
       event.put("channel", channel);
       event.put("sampwidth", sampwidth);
       event.put("nframes", nframes);
+
+      to.put(event);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return to;
+  }
+
+  private static JSONArray formatGeoLoc(final Object data, final Long epoch) {
+    final JSONArray to = new JSONArray();
+    final Location from = (Location) data;
+
+    try {
+      final JSONObject event = new JSONObject();
+      event.put("epoch", epoch);
+      event.put("accuracy", from.getAccuracy());
+      event.put("altitude", from.getAltitude());
+      event.put("bearing", from.getBearing());
+      event.put("latitude", from.getLatitude());
+      event.put("longitude", from.getLongitude());
+      event.put("provider", from.getProvider());
+      event.put("speed", from.getSpeed());
 
       to.put(event);
     } catch (JSONException e) {

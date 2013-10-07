@@ -80,7 +80,7 @@ class Report(object):
     operation += "CREATE TABLE IF NOT EXISTS " + "geoloc" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
-                    longtitude REAL NOT NULL, \
+                    longitude REAL NOT NULL, \
                     latitude REAL NOT NULL, \
                     altitude REAL, \
                     bearing REAL, \
@@ -280,10 +280,6 @@ class Report(object):
     
 
   def _insert_audio(self, report):
-    audiodir = "audio/"
-    if not os.path.exists(audiodir):
-      os.makedirs(audiodir)
-    
     cur = self._db.cursor()
     events = report.get("audio") # list of audio events
     for event in events:
@@ -318,7 +314,7 @@ class Report(object):
     for event in events:
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
-              event.get("longtitude"),
+              event.get("longitude"),
               event.get("latitude"),
               event.get("altitude", None),
               event.get("bearing", None),

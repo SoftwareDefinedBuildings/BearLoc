@@ -21,7 +21,7 @@ class Loc(object):
   
   def __init__(self, db):
     self._db = db
-    self._train_interval = 60
+    self._train_interval = 600
     reactor.callLater(0, self._train)
     
     # TODO put the table names in settings file
@@ -106,8 +106,9 @@ class Loc(object):
     building = ["Soda Hall", "Cory Hall"]
     floor = ["Floor 1", "Floor 2", "Floor 3", "Floor 4", "Floor 5", "Floor 6", "Floor 7"]
     room = ["489", "487", "485", "483", "481", "479", "477", "475", "465H", "465HA", "465G", "465E", "465C", "465A", \
-        "465B", "465D", "465F", "RADLab Kitchen", "465K", "405", "492", "494", "493", "495", "413", "415", "417", "419", \
-        "421", "Wozniak Lounge", "Wozniak Lounge Kitchen", "420", "410", "420A", "442", "440", "449", "447", "445", "443", "441"]
+        "465B", "465D", "465F", "RADLab Kitchen", "465K", "405", "492", "494", "493", "495", "411", "413", "415", "417", "419", \
+        "421", "Wozniak Lounge", "Wozniak Lounge Kitchen", "420", "410", "420A", "442", "440", "449", "447", "445", \
+        "443", "441", "RADLab Corridor", "Main Lobby", "Northwest Corridor", "Northeast Corridor"]
     meta = {"country":country, "state":state, "city":city, "street":street, "district":district, "building":building, "floor":floor, "room":room}
 
     locinfo = {"loc": loc, "sem": sem, "confidence": confidence, "meta": meta}

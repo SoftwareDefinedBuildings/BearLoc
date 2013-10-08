@@ -44,7 +44,7 @@ class Loc(object):
   
   def _predict(self, request):
     d1 = defer.Deferred()
-    reactor.callLater(1, self._predict_wifi, request, d1)
+    reactor.callLater(0, self._predict_wifi, request, d1)
 
     dl = defer.DeferredList([d1])
     return dl
@@ -56,7 +56,7 @@ class Loc(object):
       return
 
     locepoch = request['epoch']
-    thld = 500 # ms
+    thld = 1500 # ms
 
     cur = self._db.cursor()
     # extract attributes and store in db
@@ -155,7 +155,7 @@ class Loc(object):
       
     # filter epochs that do not have semloc logged
     epochs = list(set(map(lambda x: x[0], wifi)))
-    thld = 500 # ms
+    thld = 1500 # ms
     timediffs = [abs(epoch - min(roomloc, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
     epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
    

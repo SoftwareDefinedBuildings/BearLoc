@@ -77,6 +77,10 @@ public class Humidity implements Sampler, SensorEventListener {
 
   @Override
   public void onSensorChanged(SensorEvent event) {
+    if (event == null) {
+      return;
+    }
+
     if (mListener != null) {
       mListener.onHumidityEvent(event);
     }

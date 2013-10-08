@@ -33,6 +33,13 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
   private final BearLocCache mCache;
   private final BearLocSampler mSampler;
   private final BearLocFormat mFormat;
+  
+  private final Runnable mSendLocTask = new Runnable() {
+    @Override
+    public void run() {
+      sendLoc();
+    }
+  };
 
   private final Runnable mSendDataTask = new Runnable() {
     @Override
@@ -56,15 +63,14 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
 
   @Override
   public boolean localize() {
-
-    sendLocRequest();
-
     mSampler.sample();
+    
+    mHandler.postDelayed(mSendLocTask, 1500);
 
     return true;
   }
 
-  private void sendLocRequest() {
+  private void sendLoc() {
     try {
       final String path = "/localize";
       final URL url = getHttpURL(mContext, path);

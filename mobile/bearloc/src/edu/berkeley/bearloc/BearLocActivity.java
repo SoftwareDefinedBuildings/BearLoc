@@ -11,8 +11,10 @@ import org.json.JSONObject;
 import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.loc.BearLocClient;
 import edu.berkeley.bearloc.loc.LocClientListener;
+import edu.berkeley.bearloc.util.DeviceUUIDFactory;
 
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -52,6 +54,11 @@ public class BearLocActivity extends Activity implements LocClientListener,
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+
+    // Set default setting values
+    PreferenceManager.setDefaultValues(this, R.xml.settings_server, false);
+    SettingsActivity.setDeviceUUID(this, (new DeviceUUIDFactory(this))
+        .getDeviceUUID().toString());
 
     mLocClient = new BearLocClient(this, this);
 

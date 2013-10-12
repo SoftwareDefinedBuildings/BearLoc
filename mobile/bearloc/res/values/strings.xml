@@ -15,8 +15,10 @@
     <string name="pref_server_category">Server</string>
     <string name="pref_server_addr_summ">Domain name or IP address of server</string>
     <string name="pref_server_addr">Server Address</string>
+    <string name="default_server_addr">kaifei.info</string>
     <string name="pref_server_port_summ">Port of BearLoc service on server</string>
     <string name="pref_server_port">Server Port</string>
+    <string name="default_server_port">10080</string>
     
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>

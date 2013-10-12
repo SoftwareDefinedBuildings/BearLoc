@@ -50,6 +50,7 @@ public class BearLocSampler {
   public BearLocSampler(final Context context,
       final OnSampleEventListener listener) {
     mListener = listener;
+
     mWifi = new Wifi(context, new Wifi.SamplerListener() {
       @Override
       public void onWifiEvent(List<ScanResult> results) {

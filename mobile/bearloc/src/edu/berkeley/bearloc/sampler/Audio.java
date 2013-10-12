@@ -36,28 +36,31 @@ public class Audio implements Sampler {
 
     @Override
     public void run() {
+      try {
+        final int bufferSize = AudioRecord.getMinBufferSize(AUDIO_SAMPLE_RATE,
+            AUDIO_CHANNEL, AUDIO_FORMAT);
+        mRecorder = new AudioRecord(AUDIO_SOURCE, AUDIO_SAMPLE_RATE,
+            AUDIO_CHANNEL, AUDIO_FORMAT, bufferSize);
 
-      final int bufferSize = AudioRecord.getMinBufferSize(AUDIO_SAMPLE_RATE,
-          AUDIO_CHANNEL, AUDIO_FORMAT);
-      mRecorder = new AudioRecord(AUDIO_SOURCE, AUDIO_SAMPLE_RATE,
-          AUDIO_CHANNEL, AUDIO_FORMAT, bufferSize);
+        mStartEpoch = System.currentTimeMillis();
+        mRecorder.startRecording();
 
-      mStartEpoch = System.currentTimeMillis();
-      mRecorder.startRecording();
-
-      while (mRun == true) {
-        final byte[] buffer = new byte[bufferSize];
-        // blocking read, which returns when buffer.length bytes are recorded
-        mRecorder.read(buffer, 0, buffer.length); // Bytes
-        for (byte data : buffer) {
-          mRaw.put(data);
+        while (mRun == true) {
+          final byte[] buffer = new byte[bufferSize];
+          // blocking read, which returns when buffer.length bytes are recorded
+          mRecorder.read(buffer, 0, buffer.length); // Bytes
+          for (byte data : buffer) {
+            mRaw.put(data);
+          }
         }
+
+        mRecorder.stop();
+        mRecorder.release();
+
+        mListener.onAudioEvent(dump());
+      } catch (Exception e) {
+        e.printStackTrace();
       }
-
-      mRecorder.stop();
-      mRecorder.release();
-
-      mListener.onAudioEvent(dump());
     }
 
     public void terminate() {

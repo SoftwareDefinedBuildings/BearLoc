@@ -3,7 +3,6 @@ package edu.berkeley.bearloc;
 import java.util.List;
 
 import edu.berkeley.bearloc.R;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -73,11 +72,12 @@ public class SettingsActivity extends PreferenceActivity {
 
   public static String getServerAddr(Context context) {
     return PreferenceManager.getDefaultSharedPreferences(context).getString(
-        "pref_server_addr", null);
+        "pref_server_addr", context.getString(R.string.default_server_addr));
   }
 
   public static Integer getServerPort(Context context) {
     return Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(
-        context).getString("pref_server_port", null));
+        context).getString("pref_server_port",
+        context.getString(R.string.default_server_port)));
   }
 }

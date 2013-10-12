@@ -40,16 +40,22 @@ public class GeoLoc implements Sampler, LocationListener {
 
   @Override
   public boolean start(Integer period, Integer num) {
-    if (mBusy == false) {
-      mBusy = true;
-      nSampleNum = 0;
-      mSampleCap = num;
-      mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-          LOCATION_UPDATE_ITVL, LOCATION_UPDATE_DIST, this);
-      mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-          LOCATION_UPDATE_ITVL, LOCATION_UPDATE_DIST, this);
-      mHandler.postDelayed(mPauseTask, period);
-      return true;
+    if (mBusy == false && mLocationManager != null) {
+      try {
+        mBusy = true;
+        nSampleNum = 0;
+        mSampleCap = num;
+        mLocationManager.requestLocationUpdates(
+            LocationManager.NETWORK_PROVIDER, LOCATION_UPDATE_ITVL,
+            LOCATION_UPDATE_DIST, this);
+        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+            LOCATION_UPDATE_ITVL, LOCATION_UPDATE_DIST, this);
+        mHandler.postDelayed(mPauseTask, period);
+        return true;
+      } catch (IllegalArgumentException e) {
+        e.printStackTrace();
+        return false;
+      }
     } else {
       return false;
     }
@@ -65,6 +71,10 @@ public class GeoLoc implements Sampler, LocationListener {
 
   @Override
   public void onLocationChanged(Location location) {
+    if (location == null) {
+      return;
+    }
+
     if (mListener != null) {
       mListener.onGeoLocEvent(location);
     }

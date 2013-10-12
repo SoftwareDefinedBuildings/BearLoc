@@ -45,7 +45,7 @@ public class Wifi implements Sampler {
 
   @Override
   public boolean start(Integer period, Integer num) {
-    if (mBusy == false) {
+    if (mBusy == false && mWifiManager != null) {
       mBusy = true;
       nSampleNum = 0;
       mSampleCap = num;
@@ -67,6 +67,11 @@ public class Wifi implements Sampler {
 
   private void scan() {
     final List<ScanResult> results = mWifiManager.getScanResults();
+
+    if (results == null) {
+      return;
+    }
+
     if (mListener != null) {
       mListener.onWifiEvent(results);
     }

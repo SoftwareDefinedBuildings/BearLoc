@@ -8,8 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.berkeley.bearloc.util.DeviceUUIDFactory;
-
+import edu.berkeley.bearloc.SettingsActivity;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Sensor;
@@ -76,8 +75,7 @@ public class BearLocFormat {
     final JSONObject deviceInfo = new JSONObject();
     try {
       // Device Info
-      deviceInfo.put("uuid", (new DeviceUUIDFactory(context)).getDeviceUUID()
-          .toString());
+      deviceInfo.put("uuid", SettingsActivity.getDeviceUUID(context));
       deviceInfo.put("make", Build.MANUFACTURER);
       deviceInfo.put("model", Build.MODEL);
     } catch (JSONException e) {

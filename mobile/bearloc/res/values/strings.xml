@@ -12,6 +12,7 @@
     <string name="pref_device_category">Device</string>
     <string name="pref_device_uuid_summ">UUID of the device</string>
     <string name="pref_device_uuid">Device UUID</string>
+    
     <string name="pref_server_category_summ">Server settings</string>
     <string name="pref_server_category">Server</string>
     <string name="pref_server_addr_summ">Domain name or IP address of server</string>
@@ -20,6 +21,11 @@
     <string name="pref_server_port_summ">Port of BearLoc service on server</string>
     <string name="pref_server_port">Server Port</string>
     <string name="default_server_port">10080</string>
+    
+    <string name="pref_general_category_summ">General settings</string>
+    <string name="pref_general_category">General</string>
+    <string name="pref_auto_report_summ">Automatically report location when possible</string>
+    <string name="pref_auto_report">Automatic Report</string>
     
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>

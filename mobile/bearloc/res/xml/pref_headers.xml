@@ -3,11 +3,11 @@
 
     <header
         android:fragment="edu.berkeley.bearloc.SettingsActivity$SettingsFragment"
-        android:summary="@string/pref_device_category_summ"
-        android:title="@string/pref_device_category" >
+        android:summary="@string/pref_general_category_summ"
+        android:title="@string/pref_general_category" >
         <extra
             android:name="settings"
-            android:value="device" />
+            android:value="general" />
     </header>
     <header
         android:fragment="edu.berkeley.bearloc.SettingsActivity$SettingsFragment"
@@ -16,6 +16,14 @@
         <extra
             android:name="settings"
             android:value="server" />
+    </header>
+    <header
+        android:fragment="edu.berkeley.bearloc.SettingsActivity$SettingsFragment"
+        android:summary="@string/pref_device_category_summ"
+        android:title="@string/pref_device_category" >
+        <extra
+            android:name="settings"
+            android:value="device" />
     </header>
 
 </preference-headers>

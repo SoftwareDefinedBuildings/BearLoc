@@ -16,11 +16,17 @@ import edu.berkeley.bearloc.loc.LocClientListener;
 import edu.berkeley.bearloc.util.DeviceUUIDFactory;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -36,7 +42,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class BearLocActivity extends Activity implements LocClientListener,
-    OnClickListener, OnItemClickListener, DialogInterface.OnClickListener {
+    OnClickListener, OnItemClickListener, DialogInterface.OnClickListener,
+    SensorEventListener {
+
+  private static final long AUTO_REPORT_ITVL = 180000L; // millisecond
 
   private String targetsem = "room";
 
@@ -54,15 +63,26 @@ public class BearLocActivity extends Activity implements LocClientListener,
 
   private JSONObject mCurLocInfo;
 
+  private Handler mHandler;
+
+  private Sensor mAcc;
+  private final Runnable mReportLocTask = new Runnable() {
+    @Override
+    public void run() {
+      reportLoc();
+    }
+  };
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
 
     // Set default setting values
-    PreferenceManager.setDefaultValues(this, R.xml.settings_server, false);
+    PreferenceManager.setDefaultValues(this, R.xml.settings_general, false);
     SettingsActivity.setDeviceUUID(this, (new DeviceUUIDFactory(this))
         .getDeviceUUID().toString());
+    PreferenceManager.setDefaultValues(this, R.xml.settings_server, false);
 
     mLocClient = new BearLocClient(this, this);
 
@@ -76,6 +96,12 @@ public class BearLocActivity extends Activity implements LocClientListener,
 
     Button refreshButton = (Button) findViewById(R.id.refresh);
     refreshButton.setOnClickListener(this);
+
+    mHandler = new Handler();
+
+    final SensorManager sensorMgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+    mAcc = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+    sensorMgr.registerListener(this, mAcc, SensorManager.SENSOR_DELAY_NORMAL);
   }
 
   @Override
@@ -127,12 +153,12 @@ public class BearLocActivity extends Activity implements LocClientListener,
       switch (which) {
       case DialogInterface.BUTTON_POSITIVE:
         try {
-          JSONObject loc = mCurLocInfo.getJSONObject("loc");
+          final JSONObject loc = mCurLocInfo.getJSONObject("loc");
           loc.put(targetsem, mSelectedLoc);
           mCurLocInfo.put("confidence", 1);
           onLocChanged();
 
-          mLocClient.report(loc);
+          reportLoc();
         } catch (JSONException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
@@ -147,8 +173,9 @@ public class BearLocActivity extends Activity implements LocClientListener,
       switch (which) {
       case DialogInterface.BUTTON_POSITIVE:
         try {
-          final String newInputLoc = mAddLocEditText.getText().toString().trim();
-          JSONObject loc = mCurLocInfo.getJSONObject("loc");
+          final String newInputLoc = mAddLocEditText.getText().toString()
+              .trim();
+          final JSONObject loc = mCurLocInfo.getJSONObject("loc");
           loc.put(targetsem, newInputLoc);
 
           // Add new location to meta if it doesn't exist
@@ -169,7 +196,7 @@ public class BearLocActivity extends Activity implements LocClientListener,
 
           onLocChanged();
 
-          mLocClient.report(loc);
+          reportLoc();
         } catch (JSONException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
@@ -228,6 +255,36 @@ public class BearLocActivity extends Activity implements LocClientListener,
     }
   }
 
+  private void reportLoc() {
+    try {
+      final JSONObject loc = mCurLocInfo.getJSONObject("loc");
+      mLocClient.report(loc);
+
+      if (mAcc != null && SettingsActivity.getAutoReport(this) == true) {
+        // report in AUTO_REPORT_ITVL milliseconds
+        mHandler.postDelayed(mReportLocTask, AUTO_REPORT_ITVL);
+      }
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
+  @Override
+  public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public void onSensorChanged(SensorEvent event) {
+    if (event != null
+        && (Math.abs(event.values[0]) > 1 || Math.abs(event.values[0]) > 1 || event.values[2] < 9)) {
+      // If not statically face up, then stop reporting location
+      mHandler.removeCallbacks(mReportLocTask);
+    }
+  }
+
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
@@ -274,5 +331,4 @@ public class BearLocActivity extends Activity implements LocClientListener,
 
     return locStr;
   }
-
 }

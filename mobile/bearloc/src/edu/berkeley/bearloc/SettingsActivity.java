@@ -15,6 +15,7 @@ import android.preference.PreferenceManager;
 
 public class SettingsActivity extends PreferenceActivity {
 
+  final public static String ACTION_PREF_GENERAL = "edu.berkeley.bearloc.PREF_GENERAL";
   final public static String ACTION_PREF_DEVICE = "edu.berkeley.bearloc.PREF_DEVICE";
   final public static String ACTION_PREF_SERVER = "edu.berkeley.bearloc.PREF_SERVER";
 
@@ -25,7 +26,9 @@ public class SettingsActivity extends PreferenceActivity {
     super.onCreate(savedInstanceState);
 
     String action = getIntent().getAction();
-    if (action != null && action.equals(ACTION_PREF_DEVICE)) {
+    if (action != null && action.equals(ACTION_PREF_GENERAL)) {
+      addPreferencesFromResource(R.xml.settings_general);
+    } else if (action != null && action.equals(ACTION_PREF_DEVICE)) {
       addPreferencesFromResource(R.xml.settings_device);
     } else if (action != null && action.equals(ACTION_PREF_SERVER)) {
       addPreferencesFromResource(R.xml.settings_server);
@@ -49,12 +52,19 @@ public class SettingsActivity extends PreferenceActivity {
       super.onCreate(savedInstanceState);
 
       String settings = getArguments().getString("settings");
-      if ("device".equals(settings)) {
+      if ("general".equals(settings)) {
+        addPreferencesFromResource(R.xml.settings_general);
+      } else if ("device".equals(settings)) {
         addPreferencesFromResource(R.xml.settings_device);
       } else if ("server".equals(settings)) {
         addPreferencesFromResource(R.xml.settings_server);
       }
     }
+  }
+
+  public static Boolean getAutoReport(Context context) {
+    return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
+        "pref_auto_report", false);
   }
 
   public static void setDeviceUUID(Context context, String uuid) {

@@ -204,16 +204,18 @@ public class BearLocFormat {
     final JSONArray to = new JSONArray();
     final JSONObject from = (JSONObject) data;
     try {
-      final Iterator<?> it = from.keys();
-      while (it.hasNext()) {
-        final JSONObject event = new JSONObject();
-        final String sem = (String) it.next();
-        event.put("epoch", meta.getLong("epoch"));
-        event.put("semantic", sem);
-        event.put("location", from.getString(sem));
+      final JSONObject event = new JSONObject();
+      event.put("epoch", meta.getLong("epoch"));
+      event.put("country", from.optString("country", null));
+      event.put("state", from.optString("state", null));
+      event.put("city", from.optString("city", null));
+      event.put("street", from.optString("street", null));
+      event.put("district ", from.optString("district", null));
+      event.put("building", from.optString("building", null));
+      event.put("floor", from.optString("floor", null));
+      event.put("room", from.optString("room", null));
 
-        to.put(event);
-      }
+      to.put(event);
     } catch (JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();

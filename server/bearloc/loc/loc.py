@@ -87,33 +87,79 @@ class Loc(object):
 
   def _aggr(self, results):
     # wifi only now, hard code to get reuslt
+    loc = {"country":"US", "state":"CA", "city":"Berkeley", "street":"Leroy Ave", "district":"UC Berkeley", \
+           "building":"Soda Hall", "floor":"Floor 4"}
     room = results[0][1][0]
-    confidence = results[0][1][1]
-   
-    loc = {"country":"US", "state":"CA", "city":"Berkeley", "street":"Leroy Ave", "district":"UC Berkeley", "building":"Soda Hall", "floor":"Floor 4"}
     loc["room"] = room
-    
-    sem = self._tree()
-    sem["country"]["state"]["city"]["district"]["building"]["floor"]["room"]
-    sem["country"]["state"]["city"]["street"]
-    
-    # hardcoded
-    country = ["US"]
-    state = ["CA", "WA", "MA"]
-    city = ["Berkeley", "San Francisco"]
-    street = ["Hearst Ave", "Leroy Ave", "Channing Way"]
-    district = ["UC Berkeley"]
-    building = ["Soda Hall", "Cory Hall"]
-    floor = ["Floor 1", "Floor 2", "Floor 3", "Floor 4", "Floor 5", "Floor 6", "Floor 7"]
-    room = ["489", "487", "485", "483", "481", "479", "477", "475", "465H", "465HA", "465G", "465E", "465C", "465A", \
-        "465B", "465D", "465F", "RADLab Kitchen", "465K", "405", "492", "494", "493", "495", "411", "413", "415", "417", "419", \
-        "421", "Wozniak Lounge", "Wozniak Lounge Kitchen", "420", "410", "420A", "442", "440", "449", "447", "445", \
-        "443", "441", "RADLab Corridor", "Main Lobby", "Northwest Corridor", "Northeast Corridor"]
-    meta = {"country":country, "state":state, "city":city, "street":street, "district":district, "building":building, "floor":floor, "room":room}
 
-    locinfo = {"loc": loc, "sem": sem, "confidence": confidence, "meta": meta}
+    confidence = results[0][1][1]
+    
+    sem = self._sem()
+
+    meta = self._meta(loc)
+
+    locinfo = {"loc": loc, "confidence": confidence, "sem": sem, "meta": meta}
 
     return locinfo
+
+
+  def _sem(self):
+    sem = self._tree()
+    sem["country"]["state"]["city"]["street"]
+    sem["country"]["state"]["city"]["district"]["building"]["floor"]["room"]
+
+    return sem
+
+
+  def _meta(self, loc):
+    cur = self._db.cursor()
+
+    operation = "SELECT DISTINCT country FROM " + "semloc"
+    cur.execute(operation)
+    country = [x[0] for x in cur.fetchall()]
+
+    operation = "SELECT DISTINCT state FROM " + "semloc" + " WHERE country='" + loc["country"] + "'"
+    cur.execute(operation)
+    state = [x[0] for x in cur.fetchall()]
+
+    operation = "SELECT DISTINCT city FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
+                " AND state='" + loc["state"] + "'"
+    cur.execute(operation)
+    city = [x[0] for x in cur.fetchall()]
+
+    operation = "SELECT DISTINCT street FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
+                " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'"
+    cur.execute(operation)
+    street = [x[0] for x in cur.fetchall()]
+
+    operation = "SELECT DISTINCT district FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
+                " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'"
+    cur.execute(operation)
+    district = [x[0] for x in cur.fetchall()]
+
+    operation = "SELECT DISTINCT building FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
+                " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'" + \
+                " AND district='" + loc["district"] + "'"
+    cur.execute(operation)
+    building = [x[0] for x in cur.fetchall()]
+
+    operation = "SELECT DISTINCT floor FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
+                " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'" + \
+                " AND district='" + loc["district"] + "'" + " AND building='" + loc["building"] + "'"
+    cur.execute(operation)
+    floor = [x[0] for x in cur.fetchall()]
+
+    operation = "SELECT DISTINCT room FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
+                " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'" + \
+                " AND district='" + loc["district"] + "'" + " AND building='" + loc["building"] + "'" + \
+                " AND floor='" + loc["floor"] + "'"
+    cur.execute(operation)
+    room = [x[0] for x in cur.fetchall()]
+
+    meta = {"country":country, "state":state, "city":city, "street":street, "district":district, \
+            "building":building, "floor":floor, "room":room}
+
+    return meta
 
 
   def _tree(self):
@@ -146,8 +192,7 @@ class Loc(object):
     wifi = cur.fetchall()
    
     # TODO create estimator for all semantics
-    operation = "SELECT DISTINCT epoch, location FROM " + "semloc" + \
-                " WHERE semantic=" + "'room'"
+    operation = "SELECT DISTINCT epoch, room FROM " + "semloc"
     cur.execute(operation)
     roomloc = cur.fetchall()
 

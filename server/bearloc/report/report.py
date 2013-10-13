@@ -26,6 +26,9 @@ class Report(object):
   def report(self, report):
     """Store reported location and corresponding data.
     """
+    if "semloc" in report and len(report["semloc"]) > 0 and "location" in report["semloc"][0]:
+      return defer.fail(Exception("Old Version"))
+
     reactor.callLater(0, self._insert, report)
     
     response = {'result': True}
@@ -40,8 +43,8 @@ class Report(object):
                   make TEXT, \
                   model TEXT);"
     
-    # meta
-    operation += "CREATE TABLE IF NOT EXISTS " + "meta" + \
+    # sensormeta
+    operation += "CREATE TABLE IF NOT EXISTS " + "sensormeta" + \
                  " (uuid TEXT NOT NULL, \
                     sensor TEXT NOT NULL, \
                     vendor TEXT, \
@@ -217,9 +220,15 @@ class Report(object):
     operation += "CREATE TABLE IF NOT EXISTS " + "semloc" + \
                  " (uuid TEXT NOT NULL, \
                     epoch INTEGER NOT NULL, \
-                    semantic TEXT NOT NULL, \
-                    location TEXT NOT NULL, \
-                    PRIMARY KEY (uuid, epoch, semantic));"
+                    country TEXT, \
+                    state TEXT, \
+                    city TEXT, \
+                    street TEXT, \
+                    district TEXT, \
+                    building TEXT, \
+                    floor TEXT, \
+                    room TEXT, \
+                    PRIMARY KEY (uuid, epoch));"
   
     cur = self._db.cursor()    
     cur.executescript(operation)
@@ -230,7 +239,7 @@ class Report(object):
   def _insert(self, report):
     """Insert the report to database"""
     self._insert_device(report) if "device" in report else None
-    self._insert_meta(report) if "meta" in report else None
+    self._insert_sensormeta(report) if "sensormeta" in report else None
     self._insert_wifi(report) if "wifi" in report else None
     self._insert_audio(report) if "audio" in report else None
     self._insert_bluetooth(report) if "bluetooth" in report else None
@@ -263,21 +272,21 @@ class Report(object):
     self._db.commit()
 
  
-  def _insert_meta(self, report):
+  def _insert_sensormeta(self, report):
     cur = self._db.cursor()
-    meta = report.get("meta") # dict of meta, which is also dict
-    for sensortype, sensormeta in meta.iteritems():
+    sensormeta = report.get("sensormeta") # dict of sensormeta, which is also dict
+    for sensortype, meta in sensormeta.iteritems():
       data = (report.get("device").get("uuid"),
               sensortype,
-              sensormeta.get("vendor", None),
-              sensormeta.get("name", None),
-              sensormeta.get("power", None),
-              sensormeta.get("minDelay", None),
-              sensormeta.get("maxRange",None ),
-              sensormeta.get("version", None),
-              sensormeta.get("resolution", None))
+              meta.get("vendor", None),
+              meta.get("name", None),
+              meta.get("power", None),
+              meta.get("minDelay", None),
+              meta.get("maxRange",None ),
+              meta.get("version", None),
+              meta.get("resolution", None))
   
-      operation = "INSERT OR REPLACE INTO " + "meta" + \
+      operation = "INSERT OR REPLACE INTO " + "sensormeta" + \
                 " VALUES (?,?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
@@ -570,11 +579,17 @@ class Report(object):
     for event in events:
       data = (report.get("device").get("uuid"),
               event.get("epoch"),
-              event.get("semantic"),
-              event.get("location"))
+              event.get("country", None),
+              event.get("state", None),
+              event.get("city", None),
+              event.get("street", None),
+              event.get("district", None),
+              event.get("building", None),
+              event.get("floor", None),
+              event.get("room", None))
   
       operation = "INSERT OR REPLACE INTO " + "semloc" + \
-                " VALUES (?,?,?,?);"
+                " VALUES (?,?,?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()

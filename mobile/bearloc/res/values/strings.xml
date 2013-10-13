@@ -6,6 +6,7 @@
     <string name="main_title">BearLoc</string>
     <string name="settings_title">Settings</string>
     <string name="refresh">Refresh</string>
+    <string name="add_new">+ Add New</string>
 
     <string name="pref_device_category_summ">Device settings</string>
     <string name="pref_device_category">Device</string>

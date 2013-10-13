@@ -1,8 +1,10 @@
 package edu.berkeley.bearloc;
 
 import java.text.DecimalFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,6 +30,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,8 +40,9 @@ public class BearLocActivity extends Activity implements LocClientListener,
 
   private String targetsem = "room";
 
-  private AlertDialog.Builder mDialogBuilder;
   private AlertDialog mSelectDialog;
+  private AlertDialog mAddDialog;
+  private EditText mAddLocEditText;
   private String mSelectedLoc;
 
   private ListView mListView;
@@ -61,8 +65,6 @@ public class BearLocActivity extends Activity implements LocClientListener,
         .getDeviceUUID().toString());
 
     mLocClient = new BearLocClient(this, this);
-
-    mDialogBuilder = new AlertDialog.Builder(this);
 
     mListView = (ListView) findViewById(R.id.list);
     mArrayAdapter = new ArrayAdapter<String>(this,
@@ -88,41 +90,96 @@ public class BearLocActivity extends Activity implements LocClientListener,
   @Override
   public void onItemClick(AdapterView<?> parent, View view, int position,
       long id) {
-    mSelectedLoc = mArrayAdapter.getItem(position);
-    if (mSelectedLoc.endsWith("*")) {
-      // location cannot end with *, * is used to label current location
-      mSelectedLoc = mSelectedLoc.substring(0, mSelectedLoc.length() - 1);
-    }
+    if (position < mArrayAdapter.getCount() - 1) {
+      // If NOT the last one (+ Add new) is selected
+      mSelectedLoc = mArrayAdapter.getItem(position);
+      if (mSelectedLoc.endsWith("*")) {
+        // location cannot end with *, * is used to label current location
+        mSelectedLoc = mSelectedLoc.substring(0, mSelectedLoc.length() - 1);
+      }
 
-    mDialogBuilder.setMessage("Change " + targetsem + " to " + mSelectedLoc
-        + "?");
-    mDialogBuilder.setCancelable(true);
-    mDialogBuilder.setPositiveButton(R.string.ok, this);
-    mDialogBuilder.setNegativeButton(R.string.cancel, this);
-    mSelectDialog = mDialogBuilder.create();
-    mSelectDialog.show();
+      final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setMessage("Change " + targetsem + " to " + mSelectedLoc + "?");
+      builder.setCancelable(true);
+      builder.setPositiveButton(R.string.ok, this);
+      builder.setNegativeButton(R.string.cancel, this);
+
+      mSelectDialog = builder.create();
+      mSelectDialog.show();
+    } else {
+      // If the last one (+ Add new) is selected
+      final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setMessage("Please input your current location.");
+      mAddLocEditText = new EditText(this);
+      builder.setView(mAddLocEditText);
+      builder.setCancelable(true);
+      builder.setPositiveButton(R.string.ok, this);
+      builder.setNegativeButton(R.string.cancel, this);
+
+      mAddDialog = builder.create();
+      mAddDialog.show();
+    }
   }
 
   @Override
   public void onClick(DialogInterface dialog, int which) {
-    switch (which) {
-    case DialogInterface.BUTTON_POSITIVE:
-      try {
-        JSONObject loc = mCurLocInfo.getJSONObject("loc");
-        loc.put(targetsem, mSelectedLoc);
-        mCurLocInfo.put("confidence", 1);
-        onLocChanged();
+    if (dialog == mSelectDialog) {
+      switch (which) {
+      case DialogInterface.BUTTON_POSITIVE:
+        try {
+          JSONObject loc = mCurLocInfo.getJSONObject("loc");
+          loc.put(targetsem, mSelectedLoc);
+          mCurLocInfo.put("confidence", 1);
+          onLocChanged();
 
-        mLocClient.report(loc);
-      } catch (JSONException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+          mLocClient.report(loc);
+        } catch (JSONException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+        break;
+      case DialogInterface.BUTTON_NEGATIVE:
+        break;
+      default:
+        break;
       }
-      break;
-    case DialogInterface.BUTTON_NEGATIVE:
-      break;
-    default:
-      break;
+    } else if (dialog == mAddDialog) {
+      switch (which) {
+      case DialogInterface.BUTTON_POSITIVE:
+        try {
+          final String newInputLoc = mAddLocEditText.getText().toString().trim();
+          JSONObject loc = mCurLocInfo.getJSONObject("loc");
+          loc.put(targetsem, newInputLoc);
+
+          // Add new location to meta if it doesn't exist
+          final JSONArray locArray = mCurLocInfo.getJSONObject("meta")
+              .getJSONArray(targetsem);
+          boolean newLocExist = false;
+          for (int i = 0; i < locArray.length(); i++) {
+            if (newInputLoc.equals(locArray.getString(i))) {
+              newLocExist = true;
+              break;
+            }
+          }
+          if (newLocExist == false) {
+            locArray.put(newInputLoc);
+          }
+
+          mCurLocInfo.put("confidence", 1);
+
+          onLocChanged();
+
+          mLocClient.report(loc);
+        } catch (JSONException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+        break;
+      case DialogInterface.BUTTON_NEGATIVE:
+        break;
+      default:
+        break;
+      }
     }
   }
 
@@ -147,19 +204,23 @@ public class BearLocActivity extends Activity implements LocClientListener,
 
       JSONArray locArray = mCurLocInfo.getJSONObject("meta").getJSONArray(
           targetsem);
-      String[] stringArray = new String[locArray.length()];
+      List<String> stringArray = new ArrayList<String>();
 
       for (int i = 0; i < locArray.length(); i++) {
-        stringArray[i] = locArray.getString(i);
-        if (loc.getString(targetsem).equals(stringArray[i])) {
-          stringArray[i] += "*";
+        if (loc.getString(targetsem).equals(locArray.getString(i))) {
+          stringArray.add(locArray.getString(i) + "*");
+        } else {
+          stringArray.add(locArray.getString(i));
         }
       }
-      Arrays.sort(stringArray);
+      Collections.sort(stringArray);
+
+      stringArray.add(getString(R.string.add_new));
 
       mArrayAdapter.clear();
-      for (int i = 0; i < locArray.length(); ++i) {
-        mArrayAdapter.add(stringArray[i]);
+      Iterator<String> iterator = stringArray.iterator();
+      while (iterator.hasNext()) {
+        mArrayAdapter.add(iterator.next());
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block

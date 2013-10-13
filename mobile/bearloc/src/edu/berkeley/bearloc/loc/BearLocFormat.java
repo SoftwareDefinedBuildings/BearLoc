@@ -210,7 +210,7 @@ public class BearLocFormat {
       event.put("state", from.optString("state", null));
       event.put("city", from.optString("city", null));
       event.put("street", from.optString("street", null));
-      event.put("district ", from.optString("district", null));
+      event.put("district", from.optString("district", null));
       event.put("building", from.optString("building", null));
       event.put("floor", from.optString("floor", null));
       event.put("room", from.optString("room", null));

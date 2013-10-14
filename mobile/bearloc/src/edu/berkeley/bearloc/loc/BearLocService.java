@@ -12,28 +12,37 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.berkeley.bearloc.SettingsActivity;
 import edu.berkeley.bearloc.loc.BearLocSampler.OnSampleEventListener;
+import android.app.Service;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Binder;
 import android.os.Handler;
+import android.os.IBinder;
 
-public class BearLocClient implements LocClient, OnSampleEventListener {
+public class BearLocService extends Service implements LocClient,
+    OnSampleEventListener {
 
   private static final int DATA_SEND_ITVL = 300; // millisecond
 
-  private final Context mContext;
-  private final LocClientListener mListener;
-  private final Handler mHandler;
+  private IBinder mBinder;
+
+  private List<LocClientListener> mListeners;
+  private Handler mHandler;
   private Integer mDataSendItvl = null; // Millisecond, null if not scheduled
 
-  private final BearLocCache mCache;
-  private final BearLocSampler mSampler;
-  private final BearLocFormat mFormat;
-  
+  private BearLocCache mCache;
+  private BearLocSampler mSampler;
+  private BearLocFormat mFormat;
+
   private final Runnable mSendLocTask = new Runnable() {
     @Override
     public void run() {
@@ -52,19 +61,36 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
     void onHttpPostResponded(JSONObject response);
   }
 
-  public BearLocClient(Context context, LocClientListener listener) {
-    mContext = context;
-    mListener = listener;
-    mHandler = new Handler();
-    mCache = new BearLocCache(mContext);
-    mSampler = new BearLocSampler(mContext, this);
-    mFormat = new BearLocFormat(mContext);
+  public class BearLocBinder extends Binder {
+    public BearLocService getService() {
+      // Return this instance of LocalService so clients can call public methods
+      return BearLocService.this;
+    }
   }
 
   @Override
-  public boolean localize() {
+  public void onCreate() {
+    mBinder = new BearLocBinder();
+    mListeners = new LinkedList<LocClientListener>();
+    mHandler = new Handler();
+    mCache = new BearLocCache(this);
+    mSampler = new BearLocSampler(this, this);
+    mFormat = new BearLocFormat(this);
+  }
+
+  @Override
+  public IBinder onBind(Intent intent) {
+    return mBinder;
+  }
+
+  @Override
+  public boolean localize(LocClientListener listener) {
+    if (listener != null) {
+      mListeners.add(listener);
+    }
+
     mSampler.sample();
-    
+
     mHandler.postDelayed(mSendLocTask, 1500);
 
     return true;
@@ -73,7 +99,7 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
   private void sendLoc() {
     try {
       final String path = "/localize";
-      final URL url = getHttpURL(mContext, path);
+      final URL url = getHttpURL(this, path);
 
       final JSONObject request = new JSONObject();
       request.put("epoch", System.currentTimeMillis());
@@ -81,9 +107,17 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
       new BearLocHttpPostTask(new onHttpPostRespondedListener() {
         @Override
         public void onHttpPostResponded(JSONObject response) {
-          if (mListener != null) {
-            mListener.onLocationReturned(response);
+          for (LocClientListener listener : mListeners) {
+            if (listener != null) {
+              try {
+                listener.onLocationReturned(new JSONObject(response.toString()));
+              } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+              }
+            }
           }
+          mListeners.clear();
         }
       }).execute(url, request.toString());
     } catch (JSONException e) {
@@ -111,7 +145,7 @@ public class BearLocClient implements LocClient, OnSampleEventListener {
 
   private void sendData() {
     final String path = "/report";
-    final URL url = getHttpURL(mContext, path);
+    final URL url = getHttpURL(this, path);
 
     final JSONObject report = mFormat.dump(mCache.get());
     mCache.clear();

@@ -42,10 +42,10 @@ public class BearLocFormat {
         final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it
             .next();
         final String type = entry.getKey();
-        final List<Pair<Object, JSONObject>> queue = entry.getValue();
+        final List<Pair<Object, JSONObject>> list = entry.getValue();
 
         final JSONArray eventArr = new JSONArray();
-        for (Pair<Object, JSONObject> event : queue) {
+        for (Pair<Object, JSONObject> event : list) {
           final Object data = event.first;
           final JSONObject meta = event.second;
           final JSONArray formated = format(type, data, meta);

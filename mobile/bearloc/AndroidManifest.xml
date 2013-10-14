@@ -35,6 +35,8 @@
                 <category android:name="android.intent.category.PREFERENCE" />
             </intent-filter>
         </activity>
+
+        <service android:name="edu.berkeley.bearloc.loc.BearLocService" />
     </application>
 
 </manifest>

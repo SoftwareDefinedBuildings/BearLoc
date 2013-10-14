@@ -11,18 +11,22 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.berkeley.bearloc.R;
-import edu.berkeley.bearloc.loc.BearLocClient;
+import edu.berkeley.bearloc.loc.BearLocService;
+import edu.berkeley.bearloc.loc.BearLocService.BearLocBinder;
 import edu.berkeley.bearloc.loc.LocClientListener;
 import edu.berkeley.bearloc.util.DeviceUUIDFactory;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -59,7 +63,8 @@ public class BearLocActivity extends Activity implements LocClientListener,
 
   private TextView mTextView;
 
-  private BearLocClient mLocClient;
+  private BearLocService mBearLocService;
+  private boolean mBound = false;
 
   private JSONObject mCurLocInfo;
 
@@ -70,6 +75,20 @@ public class BearLocActivity extends Activity implements LocClientListener,
     @Override
     public void run() {
       reportLoc();
+    }
+  };
+
+  private ServiceConnection mBearLocConn = new ServiceConnection() {
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+      BearLocBinder binder = (BearLocBinder) service;
+      mBearLocService = binder.getService();
+      mBound = true;
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+      mBound = false;
     }
   };
 
@@ -84,7 +103,8 @@ public class BearLocActivity extends Activity implements LocClientListener,
         .getDeviceUUID().toString());
     PreferenceManager.setDefaultValues(this, R.xml.settings_server, false);
 
-    mLocClient = new BearLocClient(this, this);
+    Intent intent = new Intent(this, BearLocService.class);
+    bindService(intent, mBearLocConn, Context.BIND_AUTO_CREATE);
 
     mListView = (ListView) findViewById(R.id.list);
     mArrayAdapter = new ArrayAdapter<String>(this,
@@ -105,10 +125,20 @@ public class BearLocActivity extends Activity implements LocClientListener,
   }
 
   @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    // Unbind from the service
+    if (mBound) {
+      unbindService(mBearLocConn);
+      mBound = false;
+    }
+  }
+
+  @Override
   public void onClick(View v) {
     switch (v.getId()) {
     case R.id.refresh:
-      mLocClient.localize();
+      mBearLocService.localize(this);
       break;
     }
   }
@@ -258,7 +288,7 @@ public class BearLocActivity extends Activity implements LocClientListener,
   private void reportLoc() {
     try {
       final JSONObject loc = mCurLocInfo.getJSONObject("loc");
-      mLocClient.report(loc);
+      mBearLocService.report(loc);
 
       if (mAcc != null && SettingsActivity.getAutoReport(this) == true) {
         // report in AUTO_REPORT_ITVL milliseconds

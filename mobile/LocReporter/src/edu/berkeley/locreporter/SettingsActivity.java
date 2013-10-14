@@ -23,11 +23,13 @@ public class SettingsActivity extends PreferenceActivity {
     super.onCreate(savedInstanceState);
 
     String action = getIntent().getAction();
-    if (action != null && action.equals(ACTION_PREF_GENERAL)) {
-      addPreferencesFromResource(R.xml.settings_general);
-    } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-      // Load the legacy preferences headers
-      addPreferencesFromResource(R.xml.pref_headers_legacy);
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+      if (action != null && action.equals(ACTION_PREF_GENERAL)) {
+        addPreferencesFromResource(R.xml.settings_general);
+      } else {
+        // Load the legacy preferences headers
+        addPreferencesFromResource(R.xml.pref_headers_legacy);
+      }
     }
   }
 

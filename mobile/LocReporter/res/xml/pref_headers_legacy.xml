@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <Preference
+        android:summary="@string/pref_general_category_summ"
+        android:title="@string/pref_general_category" >
+        <intent
+            android:action="edu.berkeley.locreporter.PREF_GENERAL"
+            android:targetClass="edu.berkeley.locreporter.SettingsActivity"
+            android:targetPackage="edu.berkeley.locreporter" />
+    </Preference>
+
+</PreferenceScreen>

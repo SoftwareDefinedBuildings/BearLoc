@@ -27,7 +27,7 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 
-public class BearLocService extends Service implements LocClient,
+public class BearLocService extends Service implements SemLocService,
     OnSampleEventListener {
 
   private static final int DATA_SEND_ITVL = 300; // millisecond
@@ -36,7 +36,7 @@ public class BearLocService extends Service implements LocClient,
 
   private IBinder mBinder;
 
-  private List<LocClientListener> mListeners;
+  private List<SemLocListener> mListeners;
   private Handler mHandler;
   private Integer mDataSendItvl = null; // Millisecond, null if not scheduled
 
@@ -72,7 +72,7 @@ public class BearLocService extends Service implements LocClient,
   @Override
   public void onCreate() {
     mBinder = new BearLocBinder();
-    mListeners = new LinkedList<LocClientListener>();
+    mListeners = new LinkedList<SemLocListener>();
     mHandler = new Handler();
     mCache = new BearLocCache(this);
     mSampler = new BearLocSampler(this, this);
@@ -85,7 +85,7 @@ public class BearLocService extends Service implements LocClient,
   }
 
   @Override
-  public boolean localize(final LocClientListener listener) {
+  public boolean localize(final SemLocListener listener) {
     if (listener != null) {
       mListeners.add(listener);
     }
@@ -108,10 +108,10 @@ public class BearLocService extends Service implements LocClient,
       new BearLocHttpPostTask(new onHttpPostRespondedListener() {
         @Override
         public void onHttpPostResponded(JSONObject response) {
-          for (LocClientListener listener : mListeners) {
+          for (SemLocListener listener : mListeners) {
             if (listener != null) {
               try {
-                listener.onLocationReturned(new JSONObject(response.toString()));
+                listener.onSemLocChanged(new JSONObject(response.toString()));
               } catch (JSONException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

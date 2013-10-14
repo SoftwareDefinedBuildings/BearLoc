@@ -12,6 +12,7 @@ from collections import defaultdict
 import numpy as np
 from sklearn import tree
 from collections import Counter
+import time
 
 
 class Loc(object):
@@ -22,6 +23,7 @@ class Loc(object):
   def __init__(self, db):
     self._db = db
     self._train_interval = 600
+    self._train_history = 2592000000 # 30 days
     reactor.callLater(0, self._train)
     
     # TODO put the table names in settings file
@@ -75,7 +77,7 @@ class Loc(object):
     bssids = self._wifi_bssids 
     data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
     data = np.array(data)
-    
+
     if len(data) == 0:
       d.callback((None, 1))
       return
@@ -186,13 +188,16 @@ class Loc(object):
     """Train model for wifi data."""
     cur = self._db.cursor()
 
+    curepoch = int(round(time.time() * 1000))
     # extract attributes and store in db
-    operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi"
+    operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
+                " WHERE epoch-" + str(curepoch) + ">=" + str(self._train_history)
     cur.execute(operation)
     wifi = cur.fetchall()
    
     # TODO create estimator for all semantics
-    operation = "SELECT DISTINCT epoch, room FROM " + "semloc"
+    operation = "SELECT DISTINCT epoch, room FROM " + "semloc" + \
+                " WHERE epoch-" + str(curepoch) + ">=" + str(self._train_history)
     cur.execute(operation)
     roomloc = cur.fetchall()
 

@@ -37,6 +37,9 @@
         </activity>
 
         <service android:name="edu.berkeley.bearloc.BearLocService" />
+        <service
+            android:name="edu.berkeley.locreporter.LocReporterService"
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -10,13 +10,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.berkeley.locreporter.LocReporterService.LocReporterBinder;
 import edu.berkeley.locreporter.R;
-import edu.berkeley.bearloc.BearLocService;
-import edu.berkeley.bearloc.BearLocService.BearLocBinder;
-import edu.berkeley.bearloc.LocClientListener;
+import edu.berkeley.bearloc.SemLocListener;
 
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.app.Activity;
@@ -26,10 +24,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -44,11 +38,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class LocReporterActivity extends Activity implements LocClientListener,
-    OnClickListener, OnItemClickListener, DialogInterface.OnClickListener,
-    SensorEventListener {
-
-  private static final long AUTO_REPORT_ITVL = 180000L; // millisecond
+public class LocReporterActivity extends Activity implements SemLocListener,
+    OnClickListener, OnItemClickListener, DialogInterface.OnClickListener {
 
   private String targetsem = "room";
 
@@ -62,26 +53,15 @@ public class LocReporterActivity extends Activity implements LocClientListener,
 
   private TextView mTextView;
 
-  private BearLocService mBearLocService;
+  private LocReporterService mService;
   private boolean mBound = false;
 
-  private JSONObject mCurLocInfo;
-
-  private Handler mHandler;
-
-  private Sensor mAcc;
-  private final Runnable mReportLocTask = new Runnable() {
-    @Override
-    public void run() {
-      reportLoc();
-    }
-  };
-
-  private ServiceConnection mBearLocConn = new ServiceConnection() {
+  private ServiceConnection mServiceConn = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-      BearLocBinder binder = (BearLocBinder) service;
-      mBearLocService = binder.getService();
+      LocReporterBinder binder = (LocReporterBinder) service;
+      mService = binder.getService();
+      mService.setLocListener(LocReporterActivity.this);
       mBound = true;
     }
 
@@ -99,9 +79,6 @@ public class LocReporterActivity extends Activity implements LocClientListener,
     // Set default setting values
     PreferenceManager.setDefaultValues(this, R.xml.settings_general, false);
 
-    Intent intent = new Intent(this, BearLocService.class);
-    bindService(intent, mBearLocConn, Context.BIND_AUTO_CREATE);
-
     mListView = (ListView) findViewById(R.id.list);
     mArrayAdapter = new ArrayAdapter<String>(this,
         android.R.layout.simple_list_item_1);
@@ -113,11 +90,8 @@ public class LocReporterActivity extends Activity implements LocClientListener,
     Button refreshButton = (Button) findViewById(R.id.refresh);
     refreshButton.setOnClickListener(this);
 
-    mHandler = new Handler();
-
-    final SensorManager sensorMgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-    mAcc = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-    sensorMgr.registerListener(this, mAcc, SensorManager.SENSOR_DELAY_NORMAL);
+    Intent intent = new Intent(this, LocReporterService.class);
+    bindService(intent, mServiceConn, Context.BIND_AUTO_CREATE);
   }
 
   @Override
@@ -125,8 +99,50 @@ public class LocReporterActivity extends Activity implements LocClientListener,
     super.onDestroy();
     // Unbind from the service
     if (mBound) {
-      unbindService(mBearLocConn);
+      unbindService(mServiceConn);
       mBound = false;
+    }
+  }
+
+  @Override
+  public void onSemLocChanged(JSONObject semLocInfo) {
+    if (semLocInfo != null) {
+      try {
+        // Get location list
+        final JSONObject loc = semLocInfo.getJSONObject("loc");
+        final JSONObject semtree = semLocInfo.getJSONObject("sem");
+        final DecimalFormat df = new DecimalFormat("#.##");
+        final String confStr = "   (Conf:"
+            + df.format(semLocInfo.getDouble("confidence")).toString() + ")";
+        mTextView.setText(getLocStr(loc, semtree, targetsem) + confStr);
+
+        JSONArray locArray = semLocInfo.getJSONObject("meta").getJSONArray(
+            targetsem);
+        List<String> stringArray = new ArrayList<String>();
+
+        for (int i = 0; i < locArray.length(); i++) {
+          if (loc.getString(targetsem).equals(locArray.getString(i))) {
+            stringArray.add(locArray.getString(i) + "*");
+          } else {
+            stringArray.add(locArray.getString(i));
+          }
+        }
+        Collections.sort(stringArray);
+
+        stringArray.add(getString(R.string.add_new));
+
+        // Show locations on ListView
+        mArrayAdapter.clear();
+        Iterator<String> iterator = stringArray.iterator();
+        while (iterator.hasNext()) {
+          mArrayAdapter.add(iterator.next());
+        }
+      } catch (JSONException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+
+      Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT).show();
     }
   }
 
@@ -134,7 +150,7 @@ public class LocReporterActivity extends Activity implements LocClientListener,
   public void onClick(View v) {
     switch (v.getId()) {
     case R.id.refresh:
-      mBearLocService.localize(this);
+      mService.localize();
       break;
     }
   }
@@ -178,17 +194,7 @@ public class LocReporterActivity extends Activity implements LocClientListener,
     if (dialog == mSelectDialog) {
       switch (which) {
       case DialogInterface.BUTTON_POSITIVE:
-        try {
-          final JSONObject loc = mCurLocInfo.getJSONObject("loc");
-          loc.put(targetsem, mSelectedLoc);
-          mCurLocInfo.put("confidence", 1);
-          onLocChanged();
-
-          reportLoc();
-        } catch (JSONException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-        }
+        mService.update(targetsem, mSelectedLoc);
         break;
       case DialogInterface.BUTTON_NEGATIVE:
         break;
@@ -198,116 +204,14 @@ public class LocReporterActivity extends Activity implements LocClientListener,
     } else if (dialog == mAddDialog) {
       switch (which) {
       case DialogInterface.BUTTON_POSITIVE:
-        try {
-          final String newInputLoc = mAddLocEditText.getText().toString()
-              .trim();
-          final JSONObject loc = mCurLocInfo.getJSONObject("loc");
-          loc.put(targetsem, newInputLoc);
-
-          // Add new location to meta if it doesn't exist
-          final JSONArray locArray = mCurLocInfo.getJSONObject("meta")
-              .getJSONArray(targetsem);
-          boolean newLocExist = false;
-          for (int i = 0; i < locArray.length(); i++) {
-            if (newInputLoc.equals(locArray.getString(i))) {
-              newLocExist = true;
-              break;
-            }
-          }
-          if (newLocExist == false) {
-            locArray.put(newInputLoc);
-          }
-
-          mCurLocInfo.put("confidence", 1);
-
-          onLocChanged();
-
-          reportLoc();
-        } catch (JSONException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-        }
+        final String newInputLoc = mAddLocEditText.getText().toString().trim();
+        mService.update(targetsem, newInputLoc);
         break;
       case DialogInterface.BUTTON_NEGATIVE:
         break;
       default:
         break;
       }
-    }
-  }
-
-  @Override
-  public void onLocationReturned(JSONObject locInfo) {
-    if (locInfo != null) {
-      mCurLocInfo = locInfo;
-      onLocChanged();
-
-      Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT).show();
-    }
-  }
-
-  private void onLocChanged() {
-    try {
-      JSONObject loc = mCurLocInfo.getJSONObject("loc");
-      JSONObject semtree = mCurLocInfo.getJSONObject("sem");
-      final DecimalFormat df = new DecimalFormat("#.##");
-      final String confStr = "   (Conf:"
-          + df.format(mCurLocInfo.getDouble("confidence")).toString() + ")";
-      mTextView.setText(getLocStr(loc, semtree, targetsem) + confStr);
-
-      JSONArray locArray = mCurLocInfo.getJSONObject("meta").getJSONArray(
-          targetsem);
-      List<String> stringArray = new ArrayList<String>();
-
-      for (int i = 0; i < locArray.length(); i++) {
-        if (loc.getString(targetsem).equals(locArray.getString(i))) {
-          stringArray.add(locArray.getString(i) + "*");
-        } else {
-          stringArray.add(locArray.getString(i));
-        }
-      }
-      Collections.sort(stringArray);
-
-      stringArray.add(getString(R.string.add_new));
-
-      mArrayAdapter.clear();
-      Iterator<String> iterator = stringArray.iterator();
-      while (iterator.hasNext()) {
-        mArrayAdapter.add(iterator.next());
-      }
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-  }
-
-  private void reportLoc() {
-    try {
-      final JSONObject loc = mCurLocInfo.getJSONObject("loc");
-      mBearLocService.report(loc);
-
-      if (mAcc != null && SettingsActivity.getAutoReport(this) == true) {
-        // report in AUTO_REPORT_ITVL milliseconds
-        mHandler.postDelayed(mReportLocTask, AUTO_REPORT_ITVL);
-      }
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-  }
-
-  @Override
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void onSensorChanged(SensorEvent event) {
-    if (event != null
-        && (Math.abs(event.values[0]) > 1 || Math.abs(event.values[0]) > 1 || event.values[2] < 9)) {
-      // If not statically face up, then stop reporting location
-      mHandler.removeCallbacks(mReportLocTask);
     }
   }
 

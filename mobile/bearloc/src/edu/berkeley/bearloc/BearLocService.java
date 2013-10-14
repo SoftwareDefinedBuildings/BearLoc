@@ -108,6 +108,10 @@ public class BearLocService extends Service implements SemLocService,
       new BearLocHttpPostTask(new onHttpPostRespondedListener() {
         @Override
         public void onHttpPostResponded(JSONObject response) {
+          if (response == null) {
+            return;
+          }
+
           for (SemLocListener listener : mListeners) {
             if (listener != null) {
               try {

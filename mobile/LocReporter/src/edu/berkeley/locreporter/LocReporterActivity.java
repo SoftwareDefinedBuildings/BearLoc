@@ -61,7 +61,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     public void onServiceConnected(ComponentName name, IBinder service) {
       LocReporterBinder binder = (LocReporterBinder) service;
       mService = binder.getService();
-      mService.setLocListener(LocReporterActivity.this);
+      mService.setSemLocListener(LocReporterActivity.this);
       mBound = true;
     }
 
@@ -109,19 +109,19 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     if (semLocInfo != null) {
       try {
         // Get location list
-        final JSONObject loc = semLocInfo.getJSONObject("loc");
+        final JSONObject semloc = semLocInfo.getJSONObject("loc");
         final JSONObject semtree = semLocInfo.getJSONObject("sem");
         final DecimalFormat df = new DecimalFormat("#.##");
         final String confStr = "   (Conf:"
             + df.format(semLocInfo.getDouble("confidence")).toString() + ")";
-        mTextView.setText(getLocStr(loc, semtree, targetsem) + confStr);
+        mTextView.setText(getLocStr(semloc, semtree, targetsem) + confStr);
 
         JSONArray locArray = semLocInfo.getJSONObject("meta").getJSONArray(
             targetsem);
         List<String> stringArray = new ArrayList<String>();
 
         for (int i = 0; i < locArray.length(); i++) {
-          if (loc.getString(targetsem).equals(locArray.getString(i))) {
+          if (locArray.getString(i).equals(semloc.getString(targetsem))) {
             stringArray.add(locArray.getString(i) + "*");
           } else {
             stringArray.add(locArray.getString(i));

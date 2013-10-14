@@ -90,7 +90,7 @@ public class LocReporterService extends Service implements SemLocListener,
     return mBinder;
   }
 
-  public void setLocListener(final SemLocListener listener) {
+  public void setSemLocListener(final SemLocListener listener) {
     mListener = listener;
   }
 

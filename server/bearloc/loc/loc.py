@@ -58,7 +58,7 @@ class Loc(object):
       return
 
     locepoch = request['epoch']
-    thld = 1500 # ms
+    thld = 5000 # ms
 
     cur = self._db.cursor()
     # extract attributes and store in db
@@ -66,7 +66,7 @@ class Loc(object):
                 " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld)
     cur.execute(operation)
     wifi = cur.fetchall()
- 
+
     if len(wifi) == 0:
       d.callback((None, 1))
       return 
@@ -191,13 +191,13 @@ class Loc(object):
     curepoch = int(round(time.time() * 1000))
     # extract attributes and store in db
     operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                " WHERE epoch-" + str(curepoch) + ">=" + str(self._train_history)
+                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history)
     cur.execute(operation)
     wifi = cur.fetchall()
-   
+  
     # TODO create estimator for all semantics
     operation = "SELECT DISTINCT epoch, room FROM " + "semloc" + \
-                " WHERE epoch-" + str(curepoch) + ">=" + str(self._train_history)
+                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history)
     cur.execute(operation)
     roomloc = cur.fetchall()
 

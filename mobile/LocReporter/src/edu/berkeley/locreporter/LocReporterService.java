@@ -51,7 +51,7 @@ public class LocReporterService extends Service implements SemLocListener,
   private final Runnable mReportLocTask = new Runnable() {
     @Override
     public void run() {
-      reportLoc();
+      reportSemLoc();
     }
   };
 
@@ -123,7 +123,7 @@ public class LocReporterService extends Service implements SemLocListener,
 
       mCurSemLocInfo.put("confidence", 1);
 
-      reportLoc();
+      reportSemLoc();
 
       if (mListener != null) {
         mListener.onSemLocChanged(mCurSemLocInfo);
@@ -134,7 +134,7 @@ public class LocReporterService extends Service implements SemLocListener,
     }
   }
 
-  private void reportLoc() {
+  private void reportSemLoc() {
     try {
       final JSONObject semloc = mCurSemLocInfo.getJSONObject("loc");
       mBearLocService.report(semloc);

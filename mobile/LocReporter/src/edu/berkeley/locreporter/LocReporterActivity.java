@@ -98,7 +98,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
   protected void onDestroy() {
     super.onDestroy();
     // Unbind from the service
-    if (mBound) {
+    if (mBound == true) {
       unbindService(mServiceConn);
       mBound = false;
     }

@@ -111,17 +111,24 @@ local.properties
 .buildpath
 
 
+## R.gitignore
+# History files
+.Rhistory
+
+# Data files
+.RData
+
+# Example code in package build process
+*-Ex.R
+
+
 ## Mine.gitignore
 
-# Database files
+# Data files
 *.db
+*.csv
 
 # Twisted Log Files
 *.log
 *.log.*
 *.pid
-
-#BOSS Log Files
-boss.db
-report.log*
-audio/

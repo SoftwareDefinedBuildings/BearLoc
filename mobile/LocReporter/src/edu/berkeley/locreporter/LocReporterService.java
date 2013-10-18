@@ -152,7 +152,10 @@ public class LocReporterService extends Service implements SemLocListener,
   @Override
   public void onSemLocChanged(JSONObject semLocInfo) {
     mCurSemLocInfo = semLocInfo;
-    mListener.onSemLocChanged(mCurSemLocInfo);
+
+    if (mListener != null) {
+      mListener.onSemLocChanged(mCurSemLocInfo);
+    }
   }
 
   @Override

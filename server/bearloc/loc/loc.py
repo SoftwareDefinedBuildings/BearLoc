@@ -22,8 +22,8 @@ class Loc(object):
   
   def __init__(self, db):
     self._db = db
-    self._train_interval = 600
-    self._train_history = 2592000000 # 30 days
+    self._train_interval = 10*60 # in second
+    self._train_history = 30*24*60*60 # in second = 30 days
     reactor.callLater(0, self._train)
     
     # TODO put the table names in settings file
@@ -35,11 +35,10 @@ class Loc(object):
     """Execute localization service, which fuses results of multiple 
     localization services.
   
-    Return {loc:{label: loc} dict, sem: tree of semantic, confidence: value of confidence, meta: list of candidates of deapest semantic} 
+    Return {loc:{label: loc} dict, confidence: value of confidence, sem: tree of semantic, meta: list of candidates of deapest semantic} 
     """
     # TODO handle the case there is trained model
     dl = self._predict(request)
-    dl.addCallback(self._aggr)
 
     return dl
 
@@ -49,6 +48,8 @@ class Loc(object):
     reactor.callLater(0, self._predict_wifi, request, d1)
 
     dl = defer.DeferredList([d1])
+    dl.addCallback(self._aggr)
+    
     return dl
 
 
@@ -89,8 +90,7 @@ class Loc(object):
 
   def _aggr(self, results):
     # wifi only now, hard code to get reuslt
-    loc = {"country":"US", "state":"CA", "city":"Berkeley", "street":"Leroy Ave", "district":"UC Berkeley", \
-           "building":"Soda Hall", "floor":"Floor 4"}
+    loc = {"country":"US", "state":"CA", "city":"Berkeley", "street":"Leroy Ave", "building":"Soda Hall", "floor":"Floor 4"}
     room = results[0][1][0]
     loc["room"] = room
 
@@ -106,9 +106,9 @@ class Loc(object):
 
 
   def _sem(self):
+    # Kepp semantic tree linear, it is too much hassles to deal with different branches
     sem = self._tree()
-    sem["country"]["state"]["city"]["street"]
-    sem["country"]["state"]["city"]["district"]["building"]["floor"]["room"]
+    sem["country"]["state"]["city"]["street"]["building"]["floor"]["room"]
 
     return sem
 
@@ -134,32 +134,27 @@ class Loc(object):
     cur.execute(operation)
     street = [x[0] for x in cur.fetchall()]
 
-    operation = "SELECT DISTINCT district FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
-                " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'"
-    cur.execute(operation)
-    district = [x[0] for x in cur.fetchall()]
-
     operation = "SELECT DISTINCT building FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
                 " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'" + \
-                " AND district='" + loc["district"] + "'"
+                " AND street='" + loc["street"] + "'"
     cur.execute(operation)
     building = [x[0] for x in cur.fetchall()]
 
     operation = "SELECT DISTINCT floor FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
                 " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'" + \
-                " AND district='" + loc["district"] + "'" + " AND building='" + loc["building"] + "'"
+                " AND street='" + loc["street"] + "'" + " AND building='" + loc["building"] + "'"
     cur.execute(operation)
     floor = [x[0] for x in cur.fetchall()]
 
     operation = "SELECT DISTINCT room FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
                 " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'" + \
-                " AND district='" + loc["district"] + "'" + " AND building='" + loc["building"] + "'" + \
+                " AND street='" + loc["street"] + "'" + " AND building='" + loc["building"] + "'" + \
                 " AND floor='" + loc["floor"] + "'"
     cur.execute(operation)
     room = [x[0] for x in cur.fetchall()]
 
-    meta = {"country":country, "state":state, "city":city, "street":street, "district":district, \
-            "building":building, "floor":floor, "room":room}
+    meta = {"country":country, "state":state, "city":city, "street":street, "building":building, \
+            "floor":floor, "room":room}
 
     return meta
 
@@ -191,23 +186,25 @@ class Loc(object):
     curepoch = int(round(time.time() * 1000))
     # extract attributes and store in db
     operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history)
+                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000)
     cur.execute(operation)
     wifi = cur.fetchall()
   
     # TODO create estimator for all semantics
     operation = "SELECT DISTINCT epoch, room FROM " + "semloc" + \
-                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history)
+                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000)
     cur.execute(operation)
-    roomloc = cur.fetchall()
+    rooms = cur.fetchall()
 
-    if len(wifi) == 0 or len(roomloc) == 0:
+    print operation
+
+    if len(wifi) == 0 or len(rooms) == 0:
       return 
       
     # filter epochs that do not have semloc logged
     epochs = list(set(map(lambda x: x[0], wifi)))
     thld = 1500 # ms
-    timediffs = [abs(epoch - min(roomloc, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
+    timediffs = [abs(epoch - min(rooms, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
     epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
    
     # sigs: {BSSID: RSSI}
@@ -215,7 +212,7 @@ class Loc(object):
     bssids = tuple(set(map(lambda x: x[1], wifi)))
     data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
     
-    rooms = [min(roomloc, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
+    rooms = [min(rooms, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
 
     data = np.array(data)
     rooms = np.array(rooms)

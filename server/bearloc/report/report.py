@@ -224,7 +224,6 @@ class Report(object):
                     state TEXT, \
                     city TEXT, \
                     street TEXT, \
-                    district TEXT, \
                     building TEXT, \
                     floor TEXT, \
                     room TEXT, \
@@ -583,13 +582,12 @@ class Report(object):
               event.get("state", None),
               event.get("city", None),
               event.get("street", None),
-              event.get("district", None),
               event.get("building", None),
               event.get("floor", None),
               event.get("room", None))
   
       operation = "INSERT OR REPLACE INTO " + "semloc" + \
-                " VALUES (?,?,?,?,?,?,?,?,?,?);"
+                " VALUES (?,?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()

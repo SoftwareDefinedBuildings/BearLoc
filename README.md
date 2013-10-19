@@ -3,11 +3,11 @@ BOSS
 # How to run the server
 In terminal, go to ./server, and execute
 
-    twistd -y boss.tac
+    make run
 
 . To kill the server, run
 
-    kill `cat twistd.pid`
+    make stop
 
 <!--
 The -B is just to avoid generating .py[co] files on import.

@@ -107,6 +107,7 @@ class Loc(object):
 
   def _sem(self):
     # Kepp semantic tree linear, it is too much hassles to deal with different branches
+    # hardcoded here
     sem = self._tree()
     sem["country"]["state"]["city"]["street"]["building"]["floor"]["room"]
 
@@ -114,49 +115,36 @@ class Loc(object):
 
 
   def _meta(self, loc):
-    cur = self._db.cursor()
+    # semantics sequence should be compatible with semantic tree
+    # hardcoded here
+    semseq = ['country', 'state', 'city', 'street', 'building', 'floor', 'room']
 
-    operation = "SELECT DISTINCT country FROM " + "semloc"
-    cur.execute(operation)
-    country = [x[0] for x in cur.fetchall()]
-
-    operation = "SELECT DISTINCT state FROM " + "semloc" + " WHERE country='" + loc["country"] + "'"
-    cur.execute(operation)
-    state = [x[0] for x in cur.fetchall()]
-
-    operation = "SELECT DISTINCT city FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
-                " AND state='" + loc["state"] + "'"
-    cur.execute(operation)
-    city = [x[0] for x in cur.fetchall()]
-
-    operation = "SELECT DISTINCT street FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
-                " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'"
-    cur.execute(operation)
-    street = [x[0] for x in cur.fetchall()]
-
-    operation = "SELECT DISTINCT building FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
-                " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'" + \
-                " AND street='" + loc["street"] + "'"
-    cur.execute(operation)
-    building = [x[0] for x in cur.fetchall()]
-
-    operation = "SELECT DISTINCT floor FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
-                " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'" + \
-                " AND street='" + loc["street"] + "'" + " AND building='" + loc["building"] + "'"
-    cur.execute(operation)
-    floor = [x[0] for x in cur.fetchall()]
-
-    operation = "SELECT DISTINCT room FROM " + "semloc" + " WHERE country='" + loc["country"] + "'" + \
-                " AND state='" + loc["state"] + "'" + " AND city='" + loc["city"] + "'" + \
-                " AND street='" + loc["street"] + "'" + " AND building='" + loc["building"] + "'" + \
-                " AND floor='" + loc["floor"] + "'"
-    cur.execute(operation)
-    room = [x[0] for x in cur.fetchall()]
+    country = self._siblings(loc, semseq, 'country')
+    state = self._siblings(loc, semseq, 'state')
+    city = self._siblings(loc, semseq, 'city')
+    street = self._siblings(loc, semseq, 'street')
+    building = self._siblings(loc, semseq, 'building')
+    floor = self._siblings(loc, semseq, 'floor')
+    room = self._siblings(loc, semseq, 'room')
 
     meta = {"country":country, "state":state, "city":city, "street":street, "building":building, \
             "floor":floor, "room":room}
 
     return meta
+
+
+  def _siblings(self, loc, semseq, targetsem):
+    cur = self._db.cursor()
+    
+    condsems = semseq[0:semseq.index(targetsem)]
+    operation = "SELECT DISTINCT " + targetsem + " FROM " + "semloc"
+    conds = [sem+"='"+loc[sem]+"'" for sem in condsems]
+    if conds:
+      operation += " WHERE " + " AND ".join(conds)
+    cur.execute(operation)
+    siblings = [x[0] for x in cur.fetchall()]
+
+    return siblings
 
 
   def _tree(self):
@@ -195,8 +183,6 @@ class Loc(object):
                 " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000)
     cur.execute(operation)
     rooms = cur.fetchall()
-
-    print operation
 
     if len(wifi) == 0 or len(rooms) == 0:
       return 

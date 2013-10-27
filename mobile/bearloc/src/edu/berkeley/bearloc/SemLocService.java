@@ -27,9 +27,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
-  */
+/*
+ * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
+ */
 
 package edu.berkeley.bearloc;
 
@@ -40,4 +40,7 @@ public interface SemLocService {
 
   // report semloc data
   public abstract boolean report(final JSONObject semloc);
+
+  public abstract boolean meta(final JSONObject semloc,
+      final MetaListener listener);
 }

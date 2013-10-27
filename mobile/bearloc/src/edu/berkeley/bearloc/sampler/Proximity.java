@@ -27,9 +27,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
-  */
+/*
+ * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
+ */
 
 package edu.berkeley.bearloc.sampler;
 

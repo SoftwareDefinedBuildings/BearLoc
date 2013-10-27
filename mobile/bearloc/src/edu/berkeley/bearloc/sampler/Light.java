@@ -27,9 +27,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
-  */
+/*
+ * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
+ */
 
 package edu.berkeley.bearloc.sampler;
 
@@ -44,7 +44,7 @@ public class Light implements Sampler, SensorEventListener {
 
   private boolean mBusy;
   private Integer mSampleCap;
-  private Integer nSampleNum;
+  private Integer mSampleNum;
 
   private final SamplerListener mListener;
   private final Handler mHandler;
@@ -74,7 +74,7 @@ public class Light implements Sampler, SensorEventListener {
   public boolean start(Integer period, Integer num) {
     if (mBusy == false && mLight != null) {
       mBusy = true;
-      nSampleNum = 0;
+      mSampleNum = 0;
       mSampleCap = num;
       mSensorManager.registerListener(this, mLight,
           SensorManager.SENSOR_DELAY_NORMAL);
@@ -109,8 +109,8 @@ public class Light implements Sampler, SensorEventListener {
       mListener.onLightEvent(event);
     }
 
-    nSampleNum++;
-    if (nSampleNum >= mSampleCap) {
+    mSampleNum++;
+    if (mSampleNum >= mSampleCap) {
       pause();
     }
   }

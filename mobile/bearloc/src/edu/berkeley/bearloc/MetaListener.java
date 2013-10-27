@@ -35,6 +35,6 @@ package edu.berkeley.bearloc;
 
 import org.json.JSONObject;
 
-public interface SemLocListener {
-  public abstract void onSemLocChanged(final JSONObject semLocInfo);
+public interface MetaListener {
+  public abstract void onMetaReturned(final JSONObject meta);
 }

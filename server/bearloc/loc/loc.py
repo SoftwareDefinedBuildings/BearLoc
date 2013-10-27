@@ -1,3 +1,5 @@
+from __future__ import division
+
 """
 Copyright (c) 2013, Regents of the University of California
 All rights reserved.
@@ -29,8 +31,6 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
-
-from __future__ import division
 
 from bearloc.loc.interface import ILoc
 

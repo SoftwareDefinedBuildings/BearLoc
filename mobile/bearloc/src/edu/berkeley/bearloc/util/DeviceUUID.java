@@ -27,11 +27,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Original codes from http://stackoverflow.com/questions/5088474/how-can-i-get-the-uuid-of-my-android-phone-in-an-application
-  *
-  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
-  */
+/*
+ * Original codes from http://stackoverflow.com/questions/5088474/how-can-i-get-the-uuid-of-my-android-phone-in-an-application
+ *
+ * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
+ */
 
 package edu.berkeley.bearloc.util;
 

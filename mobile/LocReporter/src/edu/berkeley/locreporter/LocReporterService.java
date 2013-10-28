@@ -33,11 +33,14 @@
 
 package edu.berkeley.locreporter;
 
+import java.util.Arrays;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.berkeley.bearloc.BearLocService;
+import edu.berkeley.bearloc.MetaListener;
 import edu.berkeley.bearloc.SemLocListener;
 import edu.berkeley.bearloc.BearLocService.BearLocBinder;
 import android.app.Service;
@@ -54,7 +57,7 @@ import android.os.Handler;
 import android.os.IBinder;
 
 public class LocReporterService extends Service implements SemLocListener,
-    SensorEventListener {
+    MetaListener, SensorEventListener {
 
   private static final long AUTO_REPORT_ITVL = 180000L; // millisecond
 
@@ -74,11 +77,15 @@ public class LocReporterService extends Service implements SemLocListener,
     }
   };
 
+  final public static String[] Sems = new String[] { "country", "state",
+      "city", "street", "building", "floor", "room" };
   private JSONObject mCurSemLocInfo;
+  private JSONObject mCurMeta;
 
   private IBinder mBinder;
   private Handler mHandler;
-  private SemLocListener mListener;
+  private SemLocListener mSemLocListener;
+  private MetaListener mMetaListener;
 
   private Sensor mAcc;
   private final Runnable mReportLocTask = new Runnable() {
@@ -99,6 +106,9 @@ public class LocReporterService extends Service implements SemLocListener,
   public void onCreate() {
     Intent intent = new Intent(this, BearLocService.class);
     bindService(intent, mBearLocConn, Context.BIND_AUTO_CREATE);
+
+    mCurSemLocInfo = new JSONObject();
+    mCurMeta = new JSONObject();
 
     mBinder = new LocReporterBinder();
     mHandler = new Handler();
@@ -123,26 +133,52 @@ public class LocReporterService extends Service implements SemLocListener,
     return mBinder;
   }
 
-  public void setSemLocListener(final SemLocListener listener) {
-    mListener = listener;
+  public void setSemLocListener(final SemLocListener semLocListener) {
+    mSemLocListener = semLocListener;
+  }
+
+  public void setMetaListener(final MetaListener metaListener) {
+    mMetaListener = metaListener;
+  }
+
+  public JSONObject curSemLocInfo() {
+    return mCurSemLocInfo;
+  }
+
+  public JSONObject curMeta() {
+    return mCurMeta;
   }
 
   public boolean localize() {
-    if (mListener == null) {
+    if (mSemLocListener == null) {
       return false;
     }
 
     return mBearLocService.localize(this);
   }
 
-  public void update(final String sem, final String loc) {
+  /*
+   * Application changes current semantic location
+   */
+  public void changeSemLoc(final String sem, final String loc) {
     try {
-      final JSONObject semloc = mCurSemLocInfo.getJSONObject("loc");
+      final JSONObject semloc = mCurSemLocInfo.getJSONObject("semloc");
       semloc.put(sem, loc);
+      mCurSemLocInfo.put("confidence", 1);
 
-      // Add new location to meta if it doesn't exist
-      final JSONArray locArray = mCurSemLocInfo.getJSONObject("meta")
-          .getJSONArray(sem);
+      reportSemLoc();
+
+      changeMeta(sem, loc);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
+  private void changeMeta(final String sem, final String loc) {
+    try {
+      // add new location to meta if it doesn't exist
+      final JSONArray locArray = mCurMeta.getJSONArray(sem);
       boolean newLocExist = false;
       for (int i = 0; i < locArray.length(); i++) {
         if (loc.equals(locArray.getString(i))) {
@@ -154,12 +190,14 @@ public class LocReporterService extends Service implements SemLocListener,
         locArray.put(loc);
       }
 
-      mCurSemLocInfo.put("confidence", 1);
+      // clear all meta in lower levels
+      for (int i = Arrays.asList(Sems).indexOf(sem) + 1; i < Sems.length; i++) {
+        mCurMeta.put(Sems[i], new JSONArray());
+      }
 
-      reportSemLoc();
-
-      if (mListener != null) {
-        mListener.onSemLocChanged(mCurSemLocInfo);
+      // request new meta if sem is not at lowest level
+      if (Arrays.asList(Sems).indexOf(sem) < Sems.length - 1) {
+        requestMeta();
       }
     } catch (JSONException e) {
       // TODO Auto-generated catch block
@@ -167,9 +205,31 @@ public class LocReporterService extends Service implements SemLocListener,
     }
   }
 
+  public static String getLocStr(final JSONObject semloc, final String[] sems,
+      final String endSem) {
+    String locStr = "";
+
+    try {
+      for (int i = 0; i < sems.length; i++) {
+        if (sems[i] == endSem) {
+          break;
+        }
+        locStr += "/" + semloc.getString(sems[i]);
+      }
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return locStr;
+  }
+
+  /*
+   * Async call to report current location
+   */
   private void reportSemLoc() {
     try {
-      final JSONObject semloc = mCurSemLocInfo.getJSONObject("loc");
+      final JSONObject semloc = mCurSemLocInfo.getJSONObject("semloc");
       mBearLocService.report(semloc);
 
       if (mAcc != null && SettingsActivity.getAutoReport(this) == true) {
@@ -182,12 +242,37 @@ public class LocReporterService extends Service implements SemLocListener,
     }
   }
 
-  @Override
-  public void onSemLocChanged(JSONObject semLocInfo) {
-    mCurSemLocInfo = semLocInfo;
+  /*
+   * Async call to request meta for current location
+   */
+  private boolean requestMeta() {
+    try {
+      final JSONObject semloc = mCurSemLocInfo.getJSONObject("semloc");
+      return mBearLocService.meta(semloc, this);
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
 
-    if (mListener != null) {
-      mListener.onSemLocChanged(mCurSemLocInfo);
+    return false;
+  }
+
+  @Override
+  public void onSemLocInfoReturned(JSONObject semLocInfo) {
+    mCurSemLocInfo = semLocInfo;
+    requestMeta();
+
+    if (mSemLocListener != null) {
+      mSemLocListener.onSemLocInfoReturned(mCurSemLocInfo);
+    }
+  }
+
+  @Override
+  public void onMetaReturned(JSONObject meta) {
+    mCurMeta = meta;
+
+    if (mMetaListener != null) {
+      mMetaListener.onMetaReturned(mCurMeta);
     }
   }
 

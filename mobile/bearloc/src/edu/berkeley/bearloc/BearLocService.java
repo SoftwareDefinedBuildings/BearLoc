@@ -77,10 +77,10 @@ public class BearLocService extends Service implements SemLocService,
   private BearLocSampler mSampler;
   private BearLocFormat mFormat;
 
-  private final Runnable mSendLocTask = new Runnable() {
+  private final Runnable mSendLocRequestTask = new Runnable() {
     @Override
     public void run() {
-      sendLoc();
+      sendLocRequest();
     }
   };
 
@@ -126,12 +126,12 @@ public class BearLocService extends Service implements SemLocService,
     mSampler.sample();
 
     // Post localization request after 1500 milliseconds
-    mHandler.postDelayed(mSendLocTask, 1500);
+    mHandler.postDelayed(mSendLocRequestTask, 1500);
 
     return true;
   }
 
-  private void sendLoc() {
+  private void sendLocRequest() {
     try {
       final String path = "/localize";
       final URL url = getHttpURL(this, path);
@@ -151,7 +151,8 @@ public class BearLocService extends Service implements SemLocService,
               try {
                 // Generate new copy of response as it calls back to several
                 // listeners
-                listener.onSemLocChanged(new JSONObject(response.toString()));
+                listener.onSemLocInfoReturned(new JSONObject(response
+                    .toString()));
               } catch (JSONException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

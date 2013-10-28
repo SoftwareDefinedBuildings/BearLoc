@@ -34,6 +34,7 @@
 package edu.berkeley.locreporter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -44,6 +45,7 @@ import org.json.JSONObject;
 
 import edu.berkeley.locreporter.LocReporterService.LocReporterBinder;
 import edu.berkeley.locreporter.R;
+import edu.berkeley.bearloc.MetaListener;
 import edu.berkeley.bearloc.SemLocListener;
 
 import android.os.Bundle;
@@ -71,14 +73,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class LocReporterActivity extends Activity implements SemLocListener,
-    OnClickListener, OnItemClickListener, DialogInterface.OnClickListener {
+    MetaListener, OnClickListener, OnItemClickListener,
+    DialogInterface.OnClickListener {
 
-  final private String[] mSems = new String[] { "country", "state", "city",
-      "street", "building", "floor", "room" };
-  private int mCurSemIdx = mSems.length - 1;
+  private String mCurSem;
 
-  private AlertDialog mSelectDialog;
   private AlertDialog mAddDialog;
+  private AlertDialog mChangeSemDialog;
+  private AlertDialog mSelectDialog;
   private EditText mAddLocEditText;
   private String mSelectedLoc;
 
@@ -97,6 +99,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
       LocReporterBinder binder = (LocReporterBinder) service;
       mService = binder.getService();
       mService.setSemLocListener(LocReporterActivity.this);
+      mService.setMetaListener(LocReporterActivity.this);
       mBound = true;
     }
 
@@ -113,6 +116,8 @@ public class LocReporterActivity extends Activity implements SemLocListener,
 
     // Set default setting values
     PreferenceManager.setDefaultValues(this, R.xml.settings_general, false);
+
+    mCurSem = LocReporterService.Sems[LocReporterService.Sems.length - 1];
 
     mListView = (ListView) findViewById(R.id.list);
     mArrayAdapter = new ArrayAdapter<String>(this,
@@ -145,50 +150,12 @@ public class LocReporterActivity extends Activity implements SemLocListener,
   }
 
   @Override
-  public void onSemLocChanged(JSONObject semLocInfo) {
-    if (semLocInfo != null) {
-      try {
-        // Get location list
-        final JSONObject semloc = semLocInfo.getJSONObject("loc");
-        if (mCurSemIdx > 0) {
-          mLocPrefixTextView.setText(getLocStr(semloc, mSems,
-              mSems[mCurSemIdx - 1]));
-        } else {
-          mLocPrefixTextView.setText("");
-        }
-        mCurSemLocTextView.setText(mSems[mCurSemIdx] + ":\n"
-            + semloc.getString(mSems[mCurSemIdx]));
-
-        JSONArray locArray = semLocInfo.getJSONObject("meta").getJSONArray(
-            mSems[mCurSemIdx]);
-        List<String> stringArray = new ArrayList<String>();
-
-        for (int i = 0; i < locArray.length(); i++) {
-          stringArray.add(locArray.getString(i));
-        }
-        Collections.sort(stringArray);
-
-        // Show locations on ListView
-        mArrayAdapter.clear();
-        Iterator<String> iterator = stringArray.iterator();
-        while (iterator.hasNext()) {
-          mArrayAdapter.add(iterator.next());
-        }
-      } catch (JSONException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-
-      Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT).show();
-    }
-  }
-
-  @Override
   public void onClick(View v) {
+    AlertDialog.Builder builder;
     switch (v.getId()) {
     case R.id.add_loc:
-      final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-      builder.setMessage("Please input your current location.");
+      builder = new AlertDialog.Builder(this);
+      builder.setMessage("Please input your CURRENT " + mCurSem + ".");
       mAddLocEditText = new EditText(this);
       builder.setView(mAddLocEditText);
       builder.setCancelable(true);
@@ -199,7 +166,13 @@ public class LocReporterActivity extends Activity implements SemLocListener,
       mAddDialog.show();
       break;
     case R.id.change_sem:
-      // TODO
+      builder = new AlertDialog.Builder(this);
+      builder.setTitle("Please select a semantic.");
+      builder.setCancelable(true);
+      builder.setItems(LocReporterService.Sems, this);
+
+      mChangeSemDialog = builder.create();
+      mChangeSemDialog.show();
       break;
     case R.id.localize:
       mService.localize();
@@ -215,8 +188,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     mSelectedLoc = mArrayAdapter.getItem(position);
 
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setMessage("Change " + mSems[mCurSemIdx] + " to " + mSelectedLoc
-        + "?");
+    builder.setMessage("Change " + mCurSem + " to " + mSelectedLoc + "?");
     builder.setCancelable(true);
     builder.setPositiveButton(R.string.ok, this);
     builder.setNegativeButton(R.string.cancel, this);
@@ -227,21 +199,26 @@ public class LocReporterActivity extends Activity implements SemLocListener,
 
   @Override
   public void onClick(DialogInterface dialog, int which) {
-    if (dialog == mSelectDialog) {
+    if (dialog == mAddDialog) {
       switch (which) {
       case DialogInterface.BUTTON_POSITIVE:
-        mService.update(mSems[mCurSemIdx], mSelectedLoc);
+        final String newInputLoc = mAddLocEditText.getText().toString().trim();
+        changeSemLoc(newInputLoc);
+        refresh();
         break;
       case DialogInterface.BUTTON_NEGATIVE:
         break;
       default:
         break;
       }
-    } else if (dialog == mAddDialog) {
+    } else if (dialog == mChangeSemDialog) {
+      mCurSem = LocReporterService.Sems[which];
+      refresh();
+    } else if (dialog == mSelectDialog) {
       switch (which) {
       case DialogInterface.BUTTON_POSITIVE:
-        final String newInputLoc = mAddLocEditText.getText().toString().trim();
-        mService.update(mSems[mCurSemIdx], newInputLoc);
+        changeSemLoc(mSelectedLoc);
+        refresh();
         break;
       case DialogInterface.BUTTON_NEGATIVE:
         break;
@@ -249,6 +226,65 @@ public class LocReporterActivity extends Activity implements SemLocListener,
         break;
       }
     }
+  }
+
+  /*
+   * User changes current semantic location
+   */
+  private void changeSemLoc(final String loc) {
+    mService.changeSemLoc(mCurSem, loc);
+
+    // move semantic downward if it is not at lowest level
+    int curSemIdx = Arrays.asList(LocReporterService.Sems).indexOf(mCurSem);
+    if (curSemIdx < LocReporterService.Sems.length - 1) {
+      mCurSem = LocReporterService.Sems[curSemIdx + 1];
+    }
+  }
+
+  /*
+   * Update UI
+   */
+  private void refresh() {
+    try {
+      // update location text
+      if (mService.curSemLocInfo().has("semloc")) {
+        final JSONObject semloc = mService.curSemLocInfo().getJSONObject(
+            "semloc");
+        mLocPrefixTextView.setText(LocReporterService.getLocStr(semloc,
+            LocReporterService.Sems, mCurSem));
+        mCurSemLocTextView.setText(mCurSem + ":\n" + semloc.getString(mCurSem));
+      }
+
+      // update locations of current semantic on ListView
+      if (mService.curMeta().has(mCurSem)) {
+        JSONArray locArray = mService.curMeta().getJSONArray(mCurSem);
+        List<String> stringArray = new ArrayList<String>();
+        for (int i = 0; i < locArray.length(); i++) {
+          stringArray.add(locArray.getString(i));
+        }
+        Collections.sort(stringArray);
+        mArrayAdapter.clear();
+        Iterator<String> iterator = stringArray.iterator();
+        while (iterator.hasNext()) {
+          mArrayAdapter.add(iterator.next());
+        }
+      }
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
+  @Override
+  public void onSemLocInfoReturned(JSONObject semLocInfo) {
+    refresh();
+    Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT).show();
+  }
+
+  @Override
+  public void onMetaReturned(JSONObject meta) {
+    refresh();
+    Toast.makeText(this, R.string.meta_updated, Toast.LENGTH_SHORT).show();
   }
 
   @Override
@@ -268,24 +304,5 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     default:
       return super.onOptionsItemSelected(item);
     }
-  }
-
-  private static String getLocStr(final JSONObject semloc, final String[] sems,
-      final String endsem) {
-    String locStr = "";
-
-    try {
-      for (int i = 0; i < sems.length; i++) {
-        locStr += "/" + semloc.getString(sems[i]);
-        if (sems[i] == endsem) {
-          break;
-        }
-      }
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-
-    return locStr;
   }
 }

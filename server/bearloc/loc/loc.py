@@ -129,7 +129,7 @@ class Loc(object):
 
     meta = self._meta(loc)
 
-    locinfo = {"loc": loc, "confidence": confidence, "sem": sem, "meta": meta}
+    locinfo = {"semloc": loc, "confidence": confidence, "sem": sem}
 
     return locinfo
 

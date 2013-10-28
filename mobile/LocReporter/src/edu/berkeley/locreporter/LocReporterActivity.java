@@ -232,7 +232,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
    * User changes current semantic location
    */
   private void changeSemLoc(final String loc) {
-    mService.changeSemLoc(mCurSem, loc);
+    mService.changeSemLoc(new String(mCurSem), loc);
 
     // move semantic downward if it is not at lowest level
     int curSemIdx = Arrays.asList(LocReporterService.Sems).indexOf(mCurSem);
@@ -252,7 +252,8 @@ public class LocReporterActivity extends Activity implements SemLocListener,
             "semloc");
         mLocPrefixTextView.setText(LocReporterService.getLocStr(semloc,
             LocReporterService.Sems, mCurSem));
-        mCurSemLocTextView.setText(mCurSem + ":\n" + semloc.getString(mCurSem));
+        mCurSemLocTextView.setText(mCurSem + ":\n"
+            + semloc.optString(mCurSem, null));
       }
 
       // update locations of current semantic on ListView

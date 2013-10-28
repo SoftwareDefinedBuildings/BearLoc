@@ -30,44 +30,13 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from bearloc.interface import IBearLocService
-from bearloc.report.resource import ReportResource
-from bearloc.loc.resource import LocResource
-from bearloc.meta.resource import MetaResource
-
-from twisted.web import resource, server
-from twisted.python import log, components
-from twisted.internet import defer
-import simplejson as json
-import httplib
+from zope.interface import Interface
 
 
-class BearLocResource(resource.Resource):
-  """BearLoc web-accessible resource"""
-  
-  def __init__(self, service):
-    resource.Resource.__init__(self)
-    self._service = service
-    if 'report' in self._service.content():
-      self.putChild('report', ReportResource(self._service.report))
-    if 'localize' in self._service.content():
-      self.putChild('localize', LocResource(self._service.loc))
-    if 'meta' in self._service.content():
-      self.putChild('meta', MetaResource(self._service.meta))
-  
-  
-  def getChild(self, path, request):
-    if path == '':
-      return self
-    else:
-      return resource.Resource.getChild(self, path, request)
-  
-  
-  def render_GET(self, request):
-    request.setHeader('Content-type', 'application/json')
-    return json.dumps(self._service.content())
+class IMeta(Interface):
+  """Interface of BearLoc Metadata service"""
 
-
-components.registerAdapter(BearLocResource, 
-                           IBearLocService, 
-                           resource.IResource)
+  def meta(request):
+    """
+    Return a deferred returning a dictionary.
+    """

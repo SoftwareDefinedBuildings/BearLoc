@@ -31,8 +31,9 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from bearloc.interface import IBearLocService
-from bearloc.loc.loc import Loc
 from bearloc.report.report import Report
+from bearloc.loc.loc import Loc
+from bearloc.meta.meta import Meta
 
 from twisted.application import service
 from twisted.internet import defer
@@ -49,9 +50,11 @@ class BearLocService(service.Service):
     self._content = content
     
     if 'report' in self._content:
-      self.report = Report(self._db) # Report.__init__() create all data tables
+      self.report = Report(self._db) # Report.__init__() create and write all data tables 
     if 'localize' in self._content:
       self.loc = Loc(self._db)
+    if 'meta' in self._content:
+      self.meta = Meta(self._db)
 
 
   def content(self):

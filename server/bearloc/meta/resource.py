@@ -30,10 +30,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from bearloc.interface import IBearLocService
-from bearloc.report.resource import ReportResource
-from bearloc.loc.resource import LocResource
-from bearloc.meta.resource import MetaResource
+from bearloc.meta.interface import IMeta
 
 from twisted.web import resource, server
 from twisted.python import log, components
@@ -42,18 +39,12 @@ import simplejson as json
 import httplib
 
 
-class BearLocResource(resource.Resource):
-  """BearLoc web-accessible resource"""
+class MetaResource(resource.Resource):
+  """BearLoc Metadata web-accessible resource"""
   
-  def __init__(self, service):
+  def __init__(self, meta):
     resource.Resource.__init__(self)
-    self._service = service
-    if 'report' in self._service.content():
-      self.putChild('report', ReportResource(self._service.report))
-    if 'localize' in self._service.content():
-      self.putChild('localize', LocResource(self._service.loc))
-    if 'meta' in self._service.content():
-      self.putChild('meta', MetaResource(self._service.meta))
+    self._meta = meta
   
   
   def getChild(self, path, request):
@@ -64,10 +55,49 @@ class BearLocResource(resource.Resource):
   
   
   def render_GET(self, request):
+    return  self.__doc__ + ": POST JSON to me!"
+  
+  
+  def render_POST(self, request):
+    """POST metadata request"""
+    log.msg("Received metadata request from " + request.getHost().host)
+    
     request.setHeader('Content-type', 'application/json')
-    return json.dumps(self._service.content())
+    try:
+      content = json.load(request.content)
+    except:
+      # TODO: handle bad request
+      return ""
+
+    d = self._meta.meta(content)
+    d.addCallback(self._succeed, request)
+    d.addErrback(self._fail, request)
+    
+    # cancel meta deferred if the connection is lost before it fires
+    request.notifyFinish().addErrback(self._cancel, d, request)
+    
+    return server.NOT_DONE_YET
+  
+  
+  def _succeed(self, meta, request):
+    request.setResponseCode(httplib.OK)
+    request.write(json.dumps(meta))
+    request.finish()
+    log.msg(request.getHost().host + " metadata request returned")
 
 
-components.registerAdapter(BearLocResource, 
-                           IBearLocService, 
+  def _fail(self, err, request):
+    if err.check(defer.CancelledError):
+      log.msg(request.getHost().host + " metadata request canceled")
+    else:
+      pass
+
+
+  def _cancel(self, err, deferred, request):
+    deferred.cancel()
+    log.msg(request.getHost().host + " lost connection")
+
+
+components.registerAdapter(MetaResource, 
+                           IMeta, 
                            resource.IResource)

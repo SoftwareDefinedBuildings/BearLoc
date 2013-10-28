@@ -38,7 +38,7 @@ from bearloc import resource as bearloc_resource
 
 
 application = service.Application('bearloc')
-bearloc = BearLocService(db="bearloc.db", content=['report', 'localize'])
+bearloc = BearLocService(db="bearloc.db", content=['report', 'localize', 'meta'])
 serviceCollection = service.IServiceCollection(application)
 # HTTP service
 site = server.Site(twisted_resource.IResource(bearloc))

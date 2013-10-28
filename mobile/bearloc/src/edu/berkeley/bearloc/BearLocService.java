@@ -187,48 +187,33 @@ public class BearLocService extends Service implements SemLocService,
 
   @Override
   public boolean meta(final JSONObject semloc, final MetaListener listener) {
-    // try {
-    // final String path = "/meta";
-    // final URL url = getHttpURL(this, path);
-    //
-    // final JSONObject request = new JSONObject();
-    // request.put("semloc", semloc);
-    //
-    // new BearLocHttpPostTask(new onHttpPostRespondedListener() {
-    // @Override
-    // public void onHttpPostResponded(JSONObject response) {
-    // if (response == null) {
-    // return;
-    // }
-    //
-    // if (listener != null) {
-    // listener.onMetaReturned(response);
-    // }
-    // }
-    // }).execute(url, request.toString());
-    //
-    // return true;
-    // } catch (JSONException e) {
-    // // TODO Auto-generated catch block
-    // e.printStackTrace();
-    // }
-    //
-    // return false;
+    try {
+      final String path = "/meta";
+      final URL url = getHttpURL(this, path);
 
-    // TODO remove these test codes
-    final String fakemeta = "{'country': ['US'], 'state': ['CA', 'WA', 'MA'], 'city': ['Berkeley', 'San Francisco'], 'street': ['Hearst Ave', 'Leroy Ave', 'Channing Way'], 'building': ['Soda Hall', 'Cory Hall'], 'floor': ['Floor 1', 'Floor 2', 'Floor 3', 'Floor 4', 'Floor 5', 'Floor 6', 'Floor 7'], 'room': ['489', '487', '485', '483', '481', '479', '477', '475', '465H', '465HA', '465G', '465E', '465C', '465A', '465B', '465D', '465F', 'RADLab Kitchen', '465K', '405', '492', '494', '493', '495', '413', '415', '417', '419', '421', 'Wozniak Lounge', 'Wozniak Lounge Kitchen', '420', '410', '420A', '442', '440', '449', '447', '445', '443', '441']}";
-    mHandler.postDelayed(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          listener.onMetaReturned(new JSONObject(fakemeta));
-        } catch (JSONException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+      final JSONObject request = new JSONObject();
+      request.put("semloc", semloc);
+
+      new BearLocHttpPostTask(new onHttpPostRespondedListener() {
+        @Override
+        public void onHttpPostResponded(JSONObject response) {
+          if (response == null) {
+            return;
+          }
+
+          if (listener != null) {
+            listener.onMetaReturned(response);
+          }
         }
-      }
-    }, 1500);
-    return true;
+      }).execute(url, request.toString());
+
+      return true;
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return false;
   }
 
   private void sendData() {

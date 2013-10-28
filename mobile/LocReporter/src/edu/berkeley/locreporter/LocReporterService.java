@@ -164,6 +164,12 @@ public class LocReporterService extends Service implements SemLocListener,
     try {
       final JSONObject semloc = mCurSemLocInfo.getJSONObject("semloc");
       semloc.put(sem, loc);
+
+      // clear all locations in lower levels
+      for (int i = Arrays.asList(Sems).indexOf(sem) + 1; i < Sems.length; i++) {
+        semloc.remove(Sems[i]);
+      }
+
       mCurSemLocInfo.put("confidence", 1);
 
       reportSemLoc();
@@ -179,14 +185,14 @@ public class LocReporterService extends Service implements SemLocListener,
     try {
       // add new location to meta if it doesn't exist
       final JSONArray locArray = mCurMeta.getJSONArray(sem);
-      boolean newLocExist = false;
+      boolean newLoc = true;
       for (int i = 0; i < locArray.length(); i++) {
         if (loc.equals(locArray.getString(i))) {
-          newLocExist = true;
+          newLoc = false;
           break;
         }
       }
-      if (newLocExist == false) {
+      if (newLoc == true) {
         locArray.put(loc);
       }
 
@@ -195,8 +201,8 @@ public class LocReporterService extends Service implements SemLocListener,
         mCurMeta.put(Sems[i], new JSONArray());
       }
 
-      // request new meta if sem is not at lowest level
-      if (Arrays.asList(Sems).indexOf(sem) < Sems.length - 1) {
+      // request new meta if it is not a new location sem is not at lowest level
+      if (newLoc == false && Arrays.asList(Sems).indexOf(sem) < Sems.length - 1) {
         requestMeta();
       }
     } catch (JSONException e) {
@@ -209,16 +215,11 @@ public class LocReporterService extends Service implements SemLocListener,
       final String endSem) {
     String locStr = "";
 
-    try {
-      for (int i = 0; i < sems.length; i++) {
-        if (sems[i] == endSem) {
-          break;
-        }
-        locStr += "/" + semloc.getString(sems[i]);
+    for (int i = 0; i < sems.length; i++) {
+      if (sems[i] == endSem) {
+        break;
       }
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      locStr += "/" + semloc.optString(sems[i], null);
     }
 
     return locStr;

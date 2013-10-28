@@ -64,7 +64,7 @@ class Loc(object):
     """Execute localization service, which fuses results of multiple 
     localization services.
   
-    Return {loc:{label: loc} dict, confidence: value of confidence, sem: tree of semantic, meta: list of candidates of deapest semantic} 
+    Return {semloc:{label: loc} dict, confidence: value of confidence, sem: tree of semantic} 
     """
     # TODO handle the case there is trained model
     dl = self._predict(request)

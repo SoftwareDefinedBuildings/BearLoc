@@ -88,11 +88,17 @@ class Meta(object):
     cur = self._db.cursor()
     
     condsems = self._sems[0:self._sems.index(targetsem)]
-    operation = "SELECT DISTINCT " + targetsem + " FROM " + "semloc"
-    conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
-    if conds:
-      operation += " WHERE " + " AND ".join(conds)
-    cur.execute(operation)
-    siblings = [x[0] for x in cur.fetchall()]
+    # if semloc miss some consems, we return empty list
+    if all([sem in semloc for sem in condsems]):
+      operation = "SELECT DISTINCT " + targetsem + " FROM " + "semloc"
+      conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
+      if conds:
+        operation += " WHERE " + " AND ".join(conds) + " AND " + targetsem + " IS NOT NULL"
+      else:
+        operation += " WHERE " + targetsem + " IS NOT NULL"
+      cur.execute(operation)
+      siblings = [x[0] for x in cur.fetchall()]
 
-    return siblings
+      return siblings
+    else:
+      return []

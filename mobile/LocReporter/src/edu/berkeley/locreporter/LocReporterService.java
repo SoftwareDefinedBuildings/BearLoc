@@ -161,33 +161,34 @@ public class LocReporterService extends Service implements SemLocListener,
    * Application changes current semantic location
    */
   public void changeSemLoc(final String sem, final String loc) {
-    try {
-      final JSONObject semloc = mCurSemLocInfo.getJSONObject("semloc");
-      semloc.put(sem, loc);
+    final JSONObject semloc = mCurSemLocInfo.optJSONObject("semloc");
+    if (semloc != null) {
+      try {
+        semloc.put(sem, loc);
+        mCurSemLocInfo.put("confidence", 1);
+      } catch (JSONException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
 
       // clear all locations in lower levels
       for (int i = Arrays.asList(Sems).indexOf(sem) + 1; i < Sems.length; i++) {
         semloc.remove(Sems[i]);
       }
 
-      mCurSemLocInfo.put("confidence", 1);
-
       reportSemLoc();
 
       changeMeta(sem, loc);
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
     }
   }
 
   private void changeMeta(final String sem, final String loc) {
-    try {
+    final JSONArray locArray = mCurMeta.optJSONArray(sem);
+    if (locArray != null) {
       // add new location to meta if it doesn't exist
-      final JSONArray locArray = mCurMeta.getJSONArray(sem);
       boolean newLoc = true;
       for (int i = 0; i < locArray.length(); i++) {
-        if (loc.equals(locArray.getString(i))) {
+        if (loc.equals(locArray.optString(i))) {
           newLoc = false;
           break;
         }
@@ -198,16 +199,18 @@ public class LocReporterService extends Service implements SemLocListener,
 
       // clear all meta in lower levels
       for (int i = Arrays.asList(Sems).indexOf(sem) + 1; i < Sems.length; i++) {
-        mCurMeta.put(Sems[i], new JSONArray());
+        try {
+          mCurMeta.put(Sems[i], new JSONArray());
+        } catch (JSONException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
       }
 
       // request new meta if it is not a new location sem is not at lowest level
       if (newLoc == false && Arrays.asList(Sems).indexOf(sem) < Sems.length - 1) {
         requestMeta();
       }
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
     }
   }
 
@@ -229,17 +232,14 @@ public class LocReporterService extends Service implements SemLocListener,
    * Async call to report current location
    */
   private void reportSemLoc() {
-    try {
-      final JSONObject semloc = mCurSemLocInfo.getJSONObject("semloc");
+    final JSONObject semloc = mCurSemLocInfo.optJSONObject("semloc");
+    if (semloc != null) {
       mBearLocService.report(semloc);
 
       if (mAcc != null && SettingsActivity.getAutoReport(this) == true) {
         // report in AUTO_REPORT_ITVL milliseconds
         mHandler.postDelayed(mReportLocTask, AUTO_REPORT_ITVL);
       }
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
     }
   }
 
@@ -247,14 +247,10 @@ public class LocReporterService extends Service implements SemLocListener,
    * Async call to request meta for current location
    */
   private boolean requestMeta() {
-    try {
-      final JSONObject semloc = mCurSemLocInfo.getJSONObject("semloc");
+    final JSONObject semloc = mCurSemLocInfo.optJSONObject("semloc");
+    if (semloc != null) {
       return mBearLocService.meta(semloc, this);
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
     }
-
     return false;
   }
 

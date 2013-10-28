@@ -209,7 +209,8 @@ class Loc(object):
   
     # TODO create estimator for all semantics
     operation = "SELECT DISTINCT epoch, room FROM " + "semloc" + \
-                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000)
+                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000) + \
+                " AND room IS NOT NULL"
     cur.execute(operation)
     rooms = cur.fetchall()
 

@@ -40,7 +40,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.berkeley.locreporter.LocReporterService.LocReporterBinder;
@@ -203,8 +202,10 @@ public class LocReporterActivity extends Activity implements SemLocListener,
       switch (which) {
       case DialogInterface.BUTTON_POSITIVE:
         final String newInputLoc = mAddLocEditText.getText().toString().trim();
-        changeSemLoc(newInputLoc);
-        refresh();
+        if (newInputLoc.length() > 0) {
+          changeSemLoc(newInputLoc);
+          refresh();
+        }
         break;
       case DialogInterface.BUTTON_NEGATIVE:
         break;
@@ -232,7 +233,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
    * User changes current semantic location
    */
   private void changeSemLoc(final String loc) {
-    mService.changeSemLoc(new String(mCurSem), loc);
+    mService.changeSemLoc(mCurSem, loc);
 
     // move semantic downward if it is not at lowest level
     int curSemIdx = Arrays.asList(LocReporterService.Sems).indexOf(mCurSem);
@@ -245,34 +246,28 @@ public class LocReporterActivity extends Activity implements SemLocListener,
    * Update UI
    */
   private void refresh() {
-    try {
-      // update location text
-      if (mService.curSemLocInfo().has("semloc")) {
-        final JSONObject semloc = mService.curSemLocInfo().getJSONObject(
-            "semloc");
-        mLocPrefixTextView.setText(LocReporterService.getLocStr(semloc,
-            LocReporterService.Sems, mCurSem));
-        mCurSemLocTextView.setText(mCurSem + ":\n"
-            + semloc.optString(mCurSem, null));
-      }
+    // update location text
+    final JSONObject semloc = mService.curSemLocInfo().optJSONObject("semloc");
+    if (semloc != null) {
+      mLocPrefixTextView.setText(LocReporterService.getLocStr(semloc,
+          LocReporterService.Sems, mCurSem));
+      mCurSemLocTextView.setText(mCurSem + ":\n"
+          + semloc.optString(mCurSem, null));
+    }
 
-      // update locations of current semantic on ListView
-      if (mService.curMeta().has(mCurSem)) {
-        JSONArray locArray = mService.curMeta().getJSONArray(mCurSem);
-        List<String> stringArray = new ArrayList<String>();
-        for (int i = 0; i < locArray.length(); i++) {
-          stringArray.add(locArray.getString(i));
-        }
-        Collections.sort(stringArray);
-        mArrayAdapter.clear();
-        Iterator<String> iterator = stringArray.iterator();
-        while (iterator.hasNext()) {
-          mArrayAdapter.add(iterator.next());
-        }
+    // update locations of current semantic on ListView
+    JSONArray locArray = mService.curMeta().optJSONArray(mCurSem);
+    if (locArray != null) {
+      List<String> stringArray = new ArrayList<String>();
+      for (int i = 0; i < locArray.length(); i++) {
+        stringArray.add(locArray.optString(i));
       }
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      Collections.sort(stringArray);
+      mArrayAdapter.clear();
+      Iterator<String> iterator = stringArray.iterator();
+      while (iterator.hasNext()) {
+        mArrayAdapter.add(iterator.next());
+      }
     }
   }
 

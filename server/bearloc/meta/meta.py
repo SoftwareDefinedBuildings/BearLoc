@@ -52,7 +52,7 @@ class Meta(object):
 
     # semantics list should be compatible with semantic tree in loc.py
     # hardcoded here
-    self._sems = ['country', 'state', 'city', 'street', 'building', 'floor', 'room']
+    self._sems = ("country", "state", "city", "street", "building", "floor", "room")
 
 
   def meta(self, request):
@@ -69,13 +69,13 @@ class Meta(object):
   def _meta(self, request, d):
     semloc = request.get("semloc")
 
-    country = self._locs(semloc, 'country')
-    state = self._locs(semloc, 'state')
-    city = self._locs(semloc, 'city')
-    street = self._locs(semloc, 'street')
-    building = self._locs(semloc, 'building')
-    floor = self._locs(semloc, 'floor')
-    room = self._locs(semloc, 'room')
+    country = self._locs(semloc, "country")
+    state = self._locs(semloc, "state")
+    city = self._locs(semloc, "city")
+    street = self._locs(semloc, "street")
+    building = self._locs(semloc, "building")
+    floor = self._locs(semloc, "floor")
+    room = self._locs(semloc, "room")
 
     meta = {"country":country, "state":state, "city":city, "street":street, "building":building, \
             "floor":floor, "room":room}

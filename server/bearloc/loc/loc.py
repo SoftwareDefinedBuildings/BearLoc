@@ -55,8 +55,9 @@ class Loc(object):
     self._train_history = 30*24*60*60 # in second = 30 days
     reactor.callLater(0, self._train)
     
-    # TODO put the table names in settings file
-    self._wifi_clf = {} # {semantic: estimator}
+
+    self._clfs = {} # classifiers {(semloc, semantic): classifier}
+    self._wifi_bssids = {}
     self._wifi_minrssi = -150
 
 
@@ -66,26 +67,85 @@ class Loc(object):
   
     Return {semloc:{label: loc} dict, confidence: value of confidence, sem: tree of semantic} 
     """
-    # TODO handle the case there is trained model
-    dl = self._predict(request)
+    d = self._localize(request)
 
-    return dl
+    return d
 
-  
-  def _predict(self, request):
-    d1 = defer.Deferred()
-    reactor.callLater(0, self._predict_wifi, request, d1)
 
-    dl = defer.DeferredList([d1])
-    dl.addCallback(self._aggr)
+  @defer.inlineCallbacks
+  def _localize(self, request):
+    (semloc, confidence) = ({}, 1)
+    (semloc, confidence) = yield self._predict_country((semloc, confidence), request)
+    (semloc, confidence) = yield self._predict_state((semloc, confidence), request)
+    (semloc, confidence) = yield self._predict_city((semloc, confidence), request)
+    (semloc, confidence) = yield self._predict_street((semloc, confidence), request)
+    (semloc, confidence) = yield self._predict_building((semloc, confidence), request)
+    (semloc, confidence) = yield self._predict_floor((semloc, confidence), request)
+    (semloc, confidence) = yield self._predict_room((semloc, confidence), request)
+
+    semlocinfo = yield self._aggr((semloc, confidence))
     
-    return dl
+    defer.returnValue(semlocinfo)
 
 
-  def _predict_wifi(self, request, d):
-    if 'room' not in self._wifi_clf:
-      d.callback((None, 1))
-      return
+  def _predict_country(self, (semloc, confidence), request):
+    clf = self._clfs.get((frozenset(semloc.items()), "country"))
+    if clf == None:
+      return defer.succeed((semloc, confidence))
+
+    locepoch = request['epoch']
+    thld =  60*60 # in second, 1 hour
+
+    cur = self._db.cursor()
+    # extract attributes and store in db
+    operation = "SELECT longitude, latitude FROM " + "geoloc" + \
+                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld*1000) + \
+                " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
+                " LIMIT 1"
+    cur.execute(operation)
+    geoloc = cur.fetchall()
+
+    if len(geoloc) == 0:
+      return defer.succeed((semloc, confidence))
+
+    data = np.array(geoloc)
+
+    country = clf.predict(data)
+    semloc["country"] = country[0]
+    confidence = 1
+
+    return defer.succeed((semloc, confidence))
+
+
+  def _predict_state(self, (semloc, confidence), request):
+    semloc["state"] = "CA"
+    return defer.succeed((semloc, confidence))
+
+
+  def _predict_city(self, (semloc, confidence), request):
+    semloc["city"] = "Berkeley"
+    return defer.succeed((semloc, confidence))
+
+
+  def _predict_street(self, (semloc, confidence), request):
+    semloc["street"] = "Leroy Ave"
+    return defer.succeed((semloc, confidence))
+
+
+  def _predict_building(self, (semloc, confidence), request):
+    semloc["building"] = "Soda Hall"
+    return defer.succeed((semloc, confidence))
+
+
+  def _predict_floor(self, (semloc, confidence), request):
+    semloc["floor"] = "Floor 4"
+    return defer.succeed((semloc, confidence))
+
+
+  def _predict_room(self, (semloc, confidence), request):
+    clf = self._clfs.get((frozenset(semloc.items()), "room"))
+    if clf == None:
+      return defer.succeed((semloc, confidence))
 
     locepoch = request['epoch']
     thld = 5000 # ms
@@ -98,40 +158,30 @@ class Loc(object):
     wifi = cur.fetchall()
 
     if len(wifi) == 0:
-      d.callback((None, 1))
-      return 
+      return defer.succeed((semloc, confidence))
 
     epochs = list(set(map(lambda x: x[0], wifi)))
     # sigs: {BSSID: RSSI}
     sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
-    bssids = self._wifi_bssids 
+    bssids = self._wifi_bssids[frozenset(semloc.items())]
     data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
     data = np.array(data)
 
     if len(data) == 0:
-      d.callback((None, 1))
-      return
+      return defer.succeed((semloc, confidence))
 
-    rooms = self._wifi_clf["room"].predict(data)
+    rooms = clf.predict(data)
     count = Counter(rooms)
-    d.callback((count.most_common(1)[0][0], count.most_common(1)[0][1]/len(rooms)))
+    semloc["room"] = count.most_common(1)[0][0]
+    return defer.succeed((semloc, confidence))
 
 
-  def _aggr(self, results):
-    # wifi only now, hard code to get reuslt
-    loc = {"country":"US", "state":"CA", "city":"Berkeley", "street":"Leroy Ave", "building":"Soda Hall", "floor":"Floor 4"}
-    room = results[0][1][0]
-    loc["room"] = room
-
-    confidence = results[0][1][1]
-    
+  def _aggr(self, (semloc, confidence)):
     sem = self._sem()
 
-    meta = self._meta(loc)
+    semlocinfo = {"semloc": semloc, "confidence": confidence, "sem": sem}
 
-    locinfo = {"semloc": loc, "confidence": confidence, "sem": sem}
-
-    return locinfo
+    return semlocinfo
 
 
   def _sem(self):
@@ -143,39 +193,6 @@ class Loc(object):
     return sem
 
 
-  def _meta(self, loc):
-    # semantics sequence should be compatible with semantic tree
-    # hardcoded here
-    semseq = ['country', 'state', 'city', 'street', 'building', 'floor', 'room']
-
-    country = self._siblings(loc, semseq, 'country')
-    state = self._siblings(loc, semseq, 'state')
-    city = self._siblings(loc, semseq, 'city')
-    street = self._siblings(loc, semseq, 'street')
-    building = self._siblings(loc, semseq, 'building')
-    floor = self._siblings(loc, semseq, 'floor')
-    room = self._siblings(loc, semseq, 'room')
-
-    meta = {"country":country, "state":state, "city":city, "street":street, "building":building, \
-            "floor":floor, "room":room}
-
-    return meta
-
-
-  def _siblings(self, loc, semseq, targetsem):
-    cur = self._db.cursor()
-    
-    condsems = semseq[0:semseq.index(targetsem)]
-    operation = "SELECT DISTINCT " + targetsem + " FROM " + "semloc"
-    conds = [sem+"='"+loc[sem]+"'" for sem in condsems]
-    if conds:
-      operation += " WHERE " + " AND ".join(conds)
-    cur.execute(operation)
-    siblings = [x[0] for x in cur.fetchall()]
-
-    return siblings
-
-
   def _tree(self):
     """Autovivification of tree.
     ref http://recursive-labs.com/blog/2012/05/31/one-line-python-tree-explained/
@@ -183,12 +200,20 @@ class Loc(object):
     return defaultdict(self._tree)
 
 
+  @defer.inlineCallbacks
   def _train(self):
-    """Train model for all data."""
+    """Train model for all semantic."""
     # TODO online/incremental training
     log.msg("Started Loc training")
 
-    self._train_wifi()
+    semlocs = [{}]
+    semlocs = yield self._train_country(semlocs)
+    semlocs = yield self._train_state(semlocs)
+    semlocs = yield self._train_city(semlocs)
+    semlocs = yield self._train_street(semlocs)
+    semlocs = yield self._train_building(semlocs)
+    semlocs = yield self._train_floor(semlocs)
+    self._train_room(semlocs)
 
     # Only schedule next training task when this one finishes
     reactor.callLater(self._train_interval, self._train)
@@ -196,46 +221,120 @@ class Loc(object):
     log.msg("Stopped Loc training")
   
 
-  def _train_wifi(self):
-    """Train model for wifi data."""
-    cur = self._db.cursor()
+  def _train_country(self, semlocs):
+    new_semlocs = []
+    for semloc in semlocs:
+      if len(semloc) != 0:
+        continue
 
-    curepoch = int(round(time.time() * 1000))
-    # extract attributes and store in db
-    operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000)
-    cur.execute(operation)
-    wifi = cur.fetchall()
-  
-    # TODO create estimator for all semantics
-    operation = "SELECT DISTINCT epoch, room FROM " + "semloc" + \
-                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000) + \
-                " AND room IS NOT NULL"
-    cur.execute(operation)
-    rooms = cur.fetchall()
+      cur = self._db.cursor()
 
-    if len(wifi) == 0 or len(rooms) == 0:
-      return 
+      curepoch = int(round(time.time() * 1000))
+      # extract attributes stored in db
+      operation = "SELECT DISTINCT epoch, longitude, latitude FROM " + "geoloc"
+      cur.execute(operation)
+      geoloc = cur.fetchall()
+    
+      # extract locations stored in db
+      operation = "SELECT DISTINCT epoch, country FROM " + "semloc" + \
+                  " WHERE country IS NOT NULL"
+      cur.execute(operation)
+      countrys = cur.fetchall()
+
+      if len(geoloc) == 0 or len(countrys) == 0:
+        continue 
+        
+      # filter epochs that do not have semloc logged
+      epochs = list(set(map(lambda x: x[0], geoloc)))
+      thld = 0.5*24*60*60*1000 # in ms, 0.5 day
+      timediffs = [abs(epoch - min(countrys, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
+      epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
+     
+      data = [(g[1], g[2]) for epoch in epochs for g in geoloc if g[0]==epoch]
       
-    # filter epochs that do not have semloc logged
-    epochs = list(set(map(lambda x: x[0], wifi)))
-    thld = 1500 # ms
-    timediffs = [abs(epoch - min(rooms, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-    epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
-   
-    # sigs: {BSSID: RSSI}
-    sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
-    bssids = tuple(set(map(lambda x: x[1], wifi)))
-    data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
-    
-    rooms = [min(rooms, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
+      countrys = [min(countrys, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
 
-    data = np.array(data)
-    rooms = np.array(rooms)
+      data = np.array(data)
+      countrys = np.array(countrys)
 
-    # TODO only update when there are enough new data
-    if len(data) == 0 or len(rooms)== 0:
-      return
+      # TODO only update when there are enough new data
+      if len(data) == 0 or len(countrys)== 0:
+        continue
+      
+      self._clfs[(frozenset(semloc.items()), "country")] = tree.DecisionTreeClassifier().fit(data, countrys)
+      
+      for country in set(countrys):
+        semloc["country"] = country
+        new_semlocs.append(semloc)
+
+    return defer.succeed(new_semlocs)
+
+
+  def _train_state(self, semlocs):
+    return defer.succeed([{"country": "US", "state": "CA"}])
+
+
+  def _train_city(self, semlocs):
+    return defer.succeed([{"country": "US", "state": "CA", "city": "Berkeley"}])
+
+
+  def _train_street(self, semlocs):
+    return defer.succeed([{"country": "US", "state": "CA", "city": "Berkeley", "street": "Leroy Ave"}])
+
+
+  def _train_building(self, semlocs):
+    return defer.succeed([{"country": "US", "state": "CA", "city": "Berkeley", "street": "Leroy Ave", "building": "Soda Hall"}])
+
+
+  def _train_floor(self, semlocs):
+    return defer.succeed([{"country": "US", "state": "CA", "city": "Berkeley", "street": "Leroy Ave", "building": "Soda Hall", "floor": "Floor 4"}])
+
+
+  def _train_room(self, semlocs):
+    new_semlocs = []
+    condsems = ("country", "state", "city", "street", "building", "floor")
+
+    for semloc in semlocs:
+      if not all(k in semloc for k in condsems):
+        continue
+
+      cur = self._db.cursor()
+
+      curepoch = int(round(time.time() * 1000))
+      # extract attributes and store in db
+      operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
+                  " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000)
+      cur.execute(operation)
+      wifi = cur.fetchall()
     
-    self._wifi_clf["room"] = tree.DecisionTreeClassifier().fit(data, rooms)
-    self._wifi_bssids = bssids
+      operation = "SELECT DISTINCT epoch, room FROM " + "semloc"
+      conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
+      operation += " WHERE " + " AND ".join(conds) + " AND room IS NOT NULL"
+      cur.execute(operation)
+      rooms = cur.fetchall()
+
+      if len(wifi) == 0 or len(rooms) == 0:
+        continue 
+        
+      # filter epochs that do not have semloc logged
+      epochs = list(set(map(lambda x: x[0], wifi)))
+      thld = 1500 # ms
+      timediffs = [abs(epoch - min(rooms, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
+      epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
+     
+      # sigs: {BSSID: RSSI}
+      sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
+      bssids = tuple(set(map(lambda x: x[1], wifi)))
+      data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
+      
+      rooms = [min(rooms, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
+
+      data = np.array(data)
+      rooms = np.array(rooms)
+
+      # TODO only update when there are enough new data
+      if len(data) == 0 or len(rooms)== 0:
+        continue
+      
+      self._clfs[(frozenset(semloc.items()), "room")] = tree.DecisionTreeClassifier().fit(data, rooms)
+      self._wifi_bssids[frozenset(semloc.items())] = bssids

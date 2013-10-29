@@ -79,9 +79,9 @@ class LocResource(resource.Resource):
     return server.NOT_DONE_YET
   
   
-  def _succeed(self, locinfo, request):
+  def _succeed(self, semlocinfo, request):
     request.setResponseCode(httplib.OK)
-    request.write(json.dumps(locinfo))
+    request.write(json.dumps(semlocinfo))
     request.finish()
     log.msg(request.getHost().host + " is localized")
 

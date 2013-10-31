@@ -56,8 +56,7 @@ class Loc(object):
     reactor.callLater(0, self._train)
     
 
-    self._clfs = {} # classifiers {(semloc, semantic): classifier}
-    self._wifi_bssids = {}
+    self._clf_infos = {} # classifiers {(semloc, semantic): {"clf": clf, ...}}
     self._wifi_minrssi = -150
 
 
@@ -89,188 +88,111 @@ class Loc(object):
 
 
   def _predict_country(self, (semloc, confidence), request):
-    clf = self._clfs.get((frozenset(semloc.items()), "country"))
-    if clf == None:
+    clf_info = self._clf_infos.get((frozenset(semloc.items()), "country"))
+    if clf_info == None:
       return defer.succeed((semloc, confidence))
 
-    locepoch = request['epoch']
-    thld = 60*60 # in second, 1 hour
-
-    cur = self._db.cursor()
-    # extract attributes and store in db
-    operation = "SELECT longitude, latitude FROM " + "geoloc" + \
-                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld*1000) + \
-                " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
-                " LIMIT 1"
-    cur.execute(operation)
-    geoloc = cur.fetchall()
-
-    if len(geoloc) == 0:
-      return defer.succeed((semloc, confidence))
-
-    data = np.array(geoloc)
-
-    country = clf.predict(data)
-    semloc["country"] = country[0]
-    confidence = 1
-
+    (countrys, confidence) = self._predict_geoloc(clf_info, request)
+    count = Counter(countrys)
+    semloc["country"] = count.most_common(1)[0][0]
     return defer.succeed((semloc, confidence))
 
 
   def _predict_state(self, (semloc, confidence), request):
-    clf = self._clfs.get((frozenset(semloc.items()), "state"))
-    if clf == None:
+    clf_info = self._clf_infos.get((frozenset(semloc.items()), "state"))
+    if clf_info == None:
       return defer.succeed((semloc, confidence))
 
-    locepoch = request['epoch']
-    thld = 60*60 # in second, 1 hour
-
-    cur = self._db.cursor()
-    # extract attributes and store in db
-    operation = "SELECT longitude, latitude FROM " + "geoloc" + \
-                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld*1000) + \
-                " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
-                " LIMIT 1"
-    cur.execute(operation)
-    geoloc = cur.fetchall()
-
-    if len(geoloc) == 0:
-      return defer.succeed((semloc, confidence))
-
-    data = np.array(geoloc)
-
-    state = clf.predict(data)
-    semloc["state"] = state[0]
-    confidence = 1
-
+    (states, confidence) = self._predict_geoloc(clf_info, request)
+    count = Counter(states)
+    semloc["state"] = count.most_common(1)[0][0]
     return defer.succeed((semloc, confidence))
 
 
   def _predict_city(self, (semloc, confidence), request):
-    clf = self._clfs.get((frozenset(semloc.items()), "city"))
-    if clf == None:
+    clf_info = self._clf_infos.get((frozenset(semloc.items()), "city"))
+    if clf_info == None:
       return defer.succeed((semloc, confidence))
 
-    locepoch = request['epoch']
-    thld = 60*60 # in second, 1 hour
-
-    cur = self._db.cursor()
-    # extract attributes and store in db
-    operation = "SELECT longitude, latitude FROM " + "geoloc" + \
-                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld*1000) + \
-                " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
-                " LIMIT 1"
-    cur.execute(operation)
-    geoloc = cur.fetchall()
-
-    if len(geoloc) == 0:
-      return defer.succeed((semloc, confidence))
-
-    data = np.array(geoloc)
-
-    city = clf.predict(data)
-    semloc["city"] = city[0]
-    confidence = 1
-
+    (citys, confidence) = self._predict_geoloc(clf_info, request)
+    count = Counter(citys)
+    semloc["city"] = count.most_common(1)[0][0]
     return defer.succeed((semloc, confidence))
 
 
   def _predict_street(self, (semloc, confidence), request):
-    clf = self._clfs.get((frozenset(semloc.items()), "street"))
-    if clf == None:
+    clf_info = self._clf_infos.get((frozenset(semloc.items()), "street"))
+    if clf_info == None:
       return defer.succeed((semloc, confidence))
 
-    locepoch = request['epoch']
-    thld = 60*60 # in second, 1 hour
-
-    cur = self._db.cursor()
-    # extract attributes and store in db
-    operation = "SELECT longitude, latitude FROM " + "geoloc" + \
-                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld*1000) + \
-                " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
-                " LIMIT 1"
-    cur.execute(operation)
-    geoloc = cur.fetchall()
-
-    if len(geoloc) == 0:
-      return defer.succeed((semloc, confidence))
-
-    data = np.array(geoloc)
-
-    street = clf.predict(data)
-    semloc["street"] = street[0]
-    confidence = 1
-
+    (streets, confidence) = self._predict_geoloc(clf_info, request)
+    count = Counter(streets)
+    semloc["street"] = count.most_common(1)[0][0]
     return defer.succeed((semloc, confidence))
 
 
   def _predict_building(self, (semloc, confidence), request):
-    clf = self._clfs.get((frozenset(semloc.items()), "building"))
-    if clf == None:
+    clf_info = self._clf_infos.get((frozenset(semloc.items()), "building"))
+    if clf_info == None:
       return defer.succeed((semloc, confidence))
-
-    locepoch = request['epoch']
-    thld = 60*60 # in second, 1 hour
-
-    cur = self._db.cursor()
-    # extract attributes and store in db
-    operation = "SELECT longitude, latitude FROM " + "geoloc" + \
-                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld*1000) + \
-                " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
-                " LIMIT 1"
-    cur.execute(operation)
-    geoloc = cur.fetchall()
-
-    if len(geoloc) == 0:
-      return defer.succeed((semloc, confidence))
-
-    data = np.array(geoloc)
-
-    building = clf.predict(data)
-    semloc["building"] = building[0]
-    confidence = 1
-
+    
+    (buildings, confidence) = self._predict_geoloc(clf_info, request)
+    count = Counter(buildings)
+    semloc["building"] = count.most_common(1)[0][0]
     return defer.succeed((semloc, confidence))
 
 
   def _predict_floor(self, (semloc, confidence), request):
-    clf = self._clfs.get((frozenset(semloc.items()), "floor"))
-    if clf == None:
+    clf_info = self._clf_infos.get((frozenset(semloc.items()), "floor"))
+    if clf_info == None:
       return defer.succeed((semloc, confidence))
 
-    locepoch = request['epoch']
-    thld = 5000 # ms
-
-    cur = self._db.cursor()
-    # extract attributes and store in db
-    operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld)
-    cur.execute(operation)
-    wifi = cur.fetchall()
-
-    if len(wifi) == 0:
-      return defer.succeed((semloc, confidence))
-
-    epochs = list(set(map(lambda x: x[0], wifi)))
-    # sigs: {BSSID: RSSI}
-    sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
-    bssids = self._wifi_bssids[(frozenset(semloc.items()), "floor")]
-    data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
-    data = np.array(data)
-
-    if len(data) == 0:
-      return defer.succeed((semloc, confidence))
-
-    floors = clf.predict(data)
+    (floors, confidence) = self._predict_wifi(clf_info, request)
     count = Counter(floors)
     semloc["floor"] = count.most_common(1)[0][0]
     return defer.succeed((semloc, confidence))
 
 
   def _predict_room(self, (semloc, confidence), request):
-    clf = self._clfs.get((frozenset(semloc.items()), "room"))
-    if clf == None:
+    clf_info = self._clf_infos.get((frozenset(semloc.items()), "room"))
+    if clf_info == None:
       return defer.succeed((semloc, confidence))
+    
+    (rooms, confidence) = self._predict_wifi(clf_info, request)
+    count = Counter(rooms)
+    semloc["room"] = count.most_common(1)[0][0]
+    return defer.succeed((semloc, confidence))
+
+
+  def _predict_geoloc(self, clf_info, request):
+    clf = clf_info["clf"]
+
+    locepoch = request['epoch']
+    thld = 60*60 # in second, 1 hour
+
+    cur = self._db.cursor()
+    # extract attributes and store in db
+    operation = "SELECT longitude, latitude FROM " + "geoloc" + \
+                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld*1000) + \
+                " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
+                " LIMIT 1"
+    cur.execute(operation)
+    geoloc = cur.fetchall()
+
+    if len(geoloc) == 0:
+      return defer.succeed((semloc, confidence))
+
+    data = np.array(geoloc)
+
+    locations = clf.predict(data)
+    confidence = 1
+
+    return (locations, confidence)
+
+
+  def _predict_wifi(self, clf_info, request):
+    bssids = clf_info["bssids"]
+    clf = clf_info["clf"]
 
     locepoch = request['epoch']
     thld = 5000 # ms
@@ -288,17 +210,16 @@ class Loc(object):
     epochs = list(set(map(lambda x: x[0], wifi)))
     # sigs: {BSSID: RSSI}
     sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
-    bssids = self._wifi_bssids[(frozenset(semloc.items()), "room")]
     data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
     data = np.array(data)
 
     if len(data) == 0:
       return defer.succeed((semloc, confidence))
 
-    rooms = clf.predict(data)
-    count = Counter(rooms)
-    semloc["room"] = count.most_common(1)[0][0]
-    return defer.succeed((semloc, confidence))
+    locations = clf.predict(data)
+    confidence = 1
+
+    return (locations, confidence)
 
 
   def _aggr(self, (semloc, confidence)):
@@ -331,14 +252,14 @@ class Loc(object):
     # TODO online/incremental training
     log.msg("Started Loc training")
 
-    semlocs = [{}]
-    semlocs = yield self._train_country(semlocs)
-    semlocs = yield self._train_state(semlocs)
-    semlocs = yield self._train_city(semlocs)
-    semlocs = yield self._train_street(semlocs)
-    semlocs = yield self._train_building(semlocs)
-    semlocs = yield self._train_floor(semlocs)
-    self._train_room(semlocs)
+    condsemlocs = [{}]
+    condsemlocs = yield self._train_country(condsemlocs)
+    condsemlocs = yield self._train_state(condsemlocs)
+    condsemlocs = yield self._train_city(condsemlocs)
+    condsemlocs = yield self._train_street(condsemlocs)
+    condsemlocs = yield self._train_building(condsemlocs)
+    condsemlocs = yield self._train_floor(condsemlocs)
+    yield self._train_room(condsemlocs)
 
     # Only schedule next training task when this one finishes
     reactor.callLater(self._train_interval, self._train)
@@ -346,367 +267,167 @@ class Loc(object):
     log.msg("Stopped Loc training")
   
 
-  def _train_country(self, semlocs):
-    new_semlocs = []
-    for semloc in semlocs:
-      if len(semloc) != 0:
-        continue
+  def _train_country(self, condsemlocs):
+    condsems = ()
+    new_condsemlocs = self._model(condsems, condsemlocs, "country", "geoloc")
 
-      cur = self._db.cursor()
-
-      curepoch = int(round(time.time() * 1000))
-      # extract attributes stored in db
-      operation = "SELECT DISTINCT epoch, longitude, latitude FROM " + "geoloc"
-      cur.execute(operation)
-      geoloc = cur.fetchall()
-    
-      # extract locations stored in db
-      operation = "SELECT DISTINCT epoch, country FROM " + "semloc" + \
-                  " WHERE country IS NOT NULL"
-      cur.execute(operation)
-      countrys = cur.fetchall()
-
-      if len(geoloc) == 0 or len(countrys) == 0:
-        continue 
-        
-      # filter epochs that do not have semloc logged
-      epochs = list(set(map(lambda x: x[0], geoloc)))
-      thld = 0.5*24*60*60*1000 # in ms, 0.5 day
-      timediffs = [abs(epoch - min(countrys, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-      epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
-     
-      data = [(g[1], g[2]) for epoch in epochs for g in geoloc if g[0]==epoch]
-      
-      countrys = [min(countrys, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
-
-      data = np.array(data)
-      countrys = np.array(countrys)
-
-      # TODO only update when there are enough new data
-      if len(data) == 0 or len(countrys)== 0:
-        continue
-      
-      self._clfs[(frozenset(semloc.items()), "country")] = tree.DecisionTreeClassifier().fit(data, countrys)
-      
-      for country in set(countrys):
-        new_semloc = semloc.copy()
-        new_semloc["country"] = country
-        new_semlocs.append(new_semloc)
-
-    return defer.succeed(new_semlocs)
+    return defer.succeed(new_condsemlocs)
 
 
-  def _train_state(self, semlocs):
-    new_semlocs = []
+  def _train_state(self, condsemlocs):
     condsems = ("country", )
-    for semloc in semlocs:
-      if not all(k in semloc for k in condsems):
-        continue
-      
-      cur = self._db.cursor()
+    new_condsemlocs = self._model(condsems, condsemlocs, "state", "geoloc")
 
-      curepoch = int(round(time.time() * 1000))
-      # extract attributes stored in db
-      operation = "SELECT DISTINCT epoch, longitude, latitude FROM " + "geoloc"
-      cur.execute(operation)
-      geoloc = cur.fetchall()
-    
-      # extract locations stored in db
-      operation = "SELECT DISTINCT epoch, state FROM " + "semloc"
-      conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
-      operation += " WHERE " + " AND ".join(conds) + " AND state IS NOT NULL"
-      cur.execute(operation)
-      states = cur.fetchall()
-
-      if len(geoloc) == 0 or len(states) == 0:
-        continue
-        
-      # filter epochs that do not have semloc logged
-      epochs = list(set(map(lambda x: x[0], geoloc)))
-      thld = 0.5*24*60*60*1000 # in ms, 0.5 day
-      timediffs = [abs(epoch - min(states, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-      epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
-     
-      data = [(g[1], g[2]) for epoch in epochs for g in geoloc if g[0]==epoch]
-      
-      states = [min(states, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
-
-      data = np.array(data)
-      states = np.array(states)
-
-      # TODO only update when there are enough new data
-      if len(data) == 0 or len(states)== 0:
-        continue
-
-      self._clfs[(frozenset(semloc.items()), "state")] = tree.DecisionTreeClassifier().fit(data, states)
-      
-      for state in set(states):
-        new_semloc = semloc.copy()
-        new_semloc["state"] = state
-        new_semlocs.append(new_semloc)
-
-    return defer.succeed(new_semlocs)
+    return defer.succeed(new_condsemlocs)
 
 
-  def _train_city(self, semlocs):
-    new_semlocs = []
+  def _train_city(self, condsemlocs):
     condsems = ("country", "state")
-    for semloc in semlocs:
-      if not all(k in semloc for k in condsems):
-        continue
+    new_condsemlocs = self._model(condsems, condsemlocs, "city", "geoloc")
 
-      cur = self._db.cursor()
-
-      curepoch = int(round(time.time() * 1000))
-      # extract attributes stored in db
-      operation = "SELECT DISTINCT epoch, longitude, latitude FROM " + "geoloc"
-      cur.execute(operation)
-      geoloc = cur.fetchall()
-    
-      # extract locations stored in db
-      operation = "SELECT DISTINCT epoch, city FROM " + "semloc"
-      conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
-      operation += " WHERE " + " AND ".join(conds) + " AND city IS NOT NULL"
-      cur.execute(operation)
-      citys = cur.fetchall()
-
-      if len(geoloc) == 0 or len(citys) == 0:
-        continue 
-        
-      # filter epochs that do not have semloc logged
-      epochs = list(set(map(lambda x: x[0], geoloc)))
-      thld = 0.5*24*60*60*1000 # in ms, 0.5 day
-      timediffs = [abs(epoch - min(citys, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-      epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
-     
-      data = [(g[1], g[2]) for epoch in epochs for g in geoloc if g[0]==epoch]
-      
-      citys = [min(citys, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
-
-      data = np.array(data)
-      citys = np.array(citys)
-
-      # TODO only update when there are enough new data
-      if len(data) == 0 or len(citys)== 0:
-        continue
-      
-      self._clfs[(frozenset(semloc.items()), "city")] = tree.DecisionTreeClassifier().fit(data, citys)
-      
-      for city in set(citys):
-        new_semloc = semloc.copy()
-        new_semloc["city"] = city
-        new_semlocs.append(new_semloc)
-
-    return defer.succeed(new_semlocs)
+    return defer.succeed(new_condsemlocs)
 
 
-  def _train_street(self, semlocs):
-    new_semlocs = []
+  def _train_street(self, condsemlocs):
     condsems = ("country", "state", "city")
-    for semloc in semlocs:
-      if not all(k in semloc for k in condsems):
-        continue
+    new_condsemlocs = self._model(condsems, condsemlocs, "street", "geoloc")
 
-      cur = self._db.cursor()
-
-      curepoch = int(round(time.time() * 1000))
-      # extract attributes stored in db
-      operation = "SELECT DISTINCT epoch, longitude, latitude FROM " + "geoloc"
-      cur.execute(operation)
-      geoloc = cur.fetchall()
-    
-      # extract locations stored in db
-      operation = "SELECT DISTINCT epoch, street FROM " + "semloc"
-      conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
-      operation += " WHERE " + " AND ".join(conds) + " AND street IS NOT NULL"
-      cur.execute(operation)
-      streets = cur.fetchall()
-
-      if len(geoloc) == 0 or len(streets) == 0:
-        continue 
-        
-      # filter epochs that do not have semloc logged
-      epochs = list(set(map(lambda x: x[0], geoloc)))
-      thld = 0.5*24*60*60*1000 # in ms, 0.5 day
-      timediffs = [abs(epoch - min(streets, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-      epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
-     
-      data = [(g[1], g[2]) for epoch in epochs for g in geoloc if g[0]==epoch]
-      
-      streets = [min(streets, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
-
-      data = np.array(data)
-      streets = np.array(streets)
-
-      # TODO only update when there are enough new data
-      if len(data) == 0 or len(streets)== 0:
-        continue
-      
-      self._clfs[(frozenset(semloc.items()), "street")] = tree.DecisionTreeClassifier().fit(data, streets)
-      
-      for street in set(streets):
-        new_semloc = semloc.copy()
-        new_semloc["street"] = street
-        new_semlocs.append(new_semloc)
-
-    return defer.succeed(new_semlocs)
+    return defer.succeed(new_condsemlocs)
 
 
-  def _train_building(self, semlocs):
-    new_semlocs = []
+  def _train_building(self, condsemlocs):
     condsems = ("country", "state", "city", "street")
+    new_condsemlocs = self._model(condsems, condsemlocs, "building", "geoloc")
 
-    for semloc in semlocs:
-      if not all(k in semloc for k in condsems):
+    return defer.succeed(new_condsemlocs)
+
+
+  def _train_floor(self, condsemlocs):
+    condsems = ("country", "state", "city", "street", "building")
+    new_condsemlocs = self._model(condsems, condsemlocs, "floor", "wifi")
+
+    return defer.succeed(new_condsemlocs)
+
+
+  def _train_room(self, condsemlocs):
+    condsems = ("country", "state", "city", "street", "building", "floor")
+    new_condsemlocs = self._model(condsems, condsemlocs, "room", "wifi")
+
+    return defer.succeed(new_condsemlocs)
+
+
+  def _model(self, condsems, condsemlocs, sem, type):
+    """Build model for sem under conditional sems and semlocs.
+
+    return new conditional semlocs for lower level."""
+    new_condsemlocs = []
+
+    for condsemloc in condsemlocs:
+      if not all(condsem in condsemloc for condsem in condsems):
         continue
 
       cur = self._db.cursor()
-
-      curepoch = int(round(time.time() * 1000))
-      # extract attributes stored in db
-      operation = "SELECT DISTINCT epoch, longitude, latitude FROM " + "geoloc"
-      cur.execute(operation)
-      geoloc = cur.fetchall()
     
       # extract locations stored in db
-      operation = "SELECT DISTINCT epoch, building FROM " + "semloc"
-      conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
-      operation += " WHERE " + " AND ".join(conds) + " AND building IS NOT NULL"
+      operation = "SELECT DISTINCT epoch, " + sem + " FROM " + "semloc"
+      conds = [condsem+"='"+condsemloc[condsem]+"'" for condsem in condsems]
+      if conds:
+        operation += " WHERE " + " AND ".join(conds) + " AND " + sem + " IS NOT NULL"
+      else:
+        operation += " WHERE " + sem + " IS NOT NULL"
       cur.execute(operation)
-      buildings = cur.fetchall()
+      locations = cur.fetchall()
 
-      if len(geoloc) == 0 or len(buildings) == 0:
+      if len(locations) == 0:
         continue 
         
-      # filter epochs that do not have semloc logged
-      epochs = list(set(map(lambda x: x[0], geoloc)))
-      thld = 0.5*24*60*60*1000 # in ms, 0.5 day
-      timediffs = [abs(epoch - min(buildings, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-      epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
-     
-      data = [(g[1], g[2]) for epoch in epochs for g in geoloc if g[0]==epoch]
+      clf = None
+      if type == "geoloc":
+        (clf, locations) = self._train_geoloc(locations)
+        if clf != None:
+          self._clf_infos[(frozenset(condsemloc.items()), sem)] = {"clf": clf}
+      elif type == "wifi":
+        (clf, locations, bssids) = self._train_wifi(locations)
+        if clf != None:
+          self._clf_infos[(frozenset(condsemloc.items()), sem)] = {"clf": clf, "bssids": bssids}
+
+      if clf:
+        for location in set(locations):
+          new_condsemloc = condsemloc.copy()
+          new_condsemloc[sem] = location
+          new_condsemlocs.append(new_condsemloc)
+
+    return new_condsemlocs
+
+
+  # TODO make this defer.inlineCallbacks
+  def _train_geoloc(self, locations):
+    cur = self._db.cursor()
+
+    # extract attributes stored in db
+    operation = "SELECT DISTINCT epoch, longitude, latitude FROM " + "geoloc"
+    cur.execute(operation)
+    geoloc = cur.fetchall()
+
+    if len(geoloc) == 0 or len(locations) == 0:
+      return (None, None) 
       
-      buildings = [min(buildings, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
-
-      data = np.array(data)
-      buildings = np.array(buildings)
-
-      # TODO only update when there are enough new data
-      if len(data) == 0 or len(buildings)== 0:
-        continue
-      
-      self._clfs[(frozenset(semloc.items()), "building")] = tree.DecisionTreeClassifier().fit(data, buildings)
-      
-      for building in set(buildings):
-        new_semloc = semloc.copy()
-        new_semloc["building"] = building
-        new_semlocs.append(new_semloc)
-
-    return defer.succeed(new_semlocs)
-
-
-  def _train_floor(self, semlocs):
-    new_semlocs = []
-    condsems = ("country", "state", "city", "street", "building")
-
-    for semloc in semlocs:
-      if not all(k in semloc for k in condsems):
-        continue
-
-      cur = self._db.cursor()
-
-      curepoch = int(round(time.time() * 1000))
-      # extract attributes and store in db
-      operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                  " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000)
-      cur.execute(operation)
-      wifi = cur.fetchall()
+    # filter epochs that do not have condsemloc logged
+    epochs = list(set(map(lambda x: x[0], geoloc)))
+    thld = 60*60*1000 # in ms, 1 hour
+    timediffs = [abs(epoch - min(locations, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
+    epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
+   
+    # TODO this is not optimal
+    data = [(g[1], g[2]) for epoch in epochs for g in geoloc if g[0]==epoch]
     
-      operation = "SELECT DISTINCT epoch, floor FROM " + "semloc"
-      conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
-      operation += " WHERE " + " AND ".join(conds) + " AND floor IS NOT NULL"
-      cur.execute(operation)
-      floors = cur.fetchall()
+    locations = [min(locations, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
 
-      if len(wifi) == 0 or len(floors) == 0:
-        continue 
-        
-      # filter epochs that do not have semloc logged
-      epochs = list(set(map(lambda x: x[0], wifi)))
-      thld = 1500 # ms
-      timediffs = [abs(epoch - min(floors, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-      epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
-     
-      # sigs: {BSSID: RSSI}
-      sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
-      bssids = tuple(set(map(lambda x: x[1], wifi)))
-      data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
-      
-      floors = [min(floors, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
+    data = np.array(data)
+    locations = np.array(locations)
 
-      data = np.array(data)
-      floors = np.array(floors)
-
-      # TODO only update when there are enough new data
-      if len(data) == 0 or len(floors) == 0:
-        continue
-      
-      self._clfs[(frozenset(semloc.items()), "floor")] = tree.DecisionTreeClassifier().fit(data, floors)
-      self._wifi_bssids[(frozenset(semloc.items()), "floor")] = bssids
-
-      for floor in set(floors):
-        new_semloc = semloc.copy()
-        new_semloc["floor"] = floor
-        new_semlocs.append(new_semloc)
-
-    return defer.succeed(new_semlocs)
-
-
-  def _train_room(self, semlocs):
-    new_semlocs = []
-    condsems = ("country", "state", "city", "street", "building", "floor")
-
-    for semloc in semlocs:
-      if not all(k in semloc for k in condsems):
-        continue
-
-      cur = self._db.cursor()
-
-      curepoch = int(round(time.time() * 1000))
-      # extract attributes and store in db
-      operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                  " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000)
-      cur.execute(operation)
-      wifi = cur.fetchall()
+    # TODO only update when there are enough new data
+    if len(data) == 0 or len(locations) == 0:
+      return (None, None) 
     
-      operation = "SELECT DISTINCT epoch, room FROM " + "semloc"
-      conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
-      operation += " WHERE " + " AND ".join(conds) + " AND room IS NOT NULL"
-      cur.execute(operation)
-      rooms = cur.fetchall()
+    clf = tree.DecisionTreeClassifier().fit(data, locations)
 
-      if len(wifi) == 0 or len(rooms) == 0:
-        continue 
-        
-      # filter epochs that do not have semloc logged
-      epochs = list(set(map(lambda x: x[0], wifi)))
-      thld = 1500 # ms
-      timediffs = [abs(epoch - min(rooms, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-      epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
-     
-      # sigs: {BSSID: RSSI}
-      sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
-      bssids = tuple(set(map(lambda x: x[1], wifi)))
-      data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
+    return (clf, locations)
+
+
+  def _train_wifi(self, locations):
+    cur = self._db.cursor()
+
+    curepoch = int(round(time.time() * 1000))
+    # extract attributes and store in db
+    operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
+                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000)
+    cur.execute(operation)
+    wifi = cur.fetchall()
+
+    if len(wifi) == 0 or len(locations) == 0:
+      return (None, None, None)
       
-      rooms = [min(rooms, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
+    # filter epochs that do not have semloc logged
+    epochs = list(set(map(lambda x: x[0], wifi)))
+    thld = 1500 # ms
+    timediffs = [abs(epoch - min(locations, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
+    epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
+   
+    # sigs: {BSSID: RSSI}
+    sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
+    bssids = tuple(set(map(lambda x: x[1], wifi)))
+    data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
+    
+    locations = [min(locations, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
 
-      data = np.array(data)
-      rooms = np.array(rooms)
+    data = np.array(data)
+    locations = np.array(locations)
 
-      # TODO only update when there are enough new data
-      if len(data) == 0 or len(rooms)== 0:
-        continue
-      
-      self._clfs[(frozenset(semloc.items()), "room")] = tree.DecisionTreeClassifier().fit(data, rooms)
-      self._wifi_bssids[(frozenset(semloc.items()), "room")] = bssids
+    # TODO only update when there are enough new data
+    if len(data) == 0 or len(locations) == 0:
+      return (None, None, None)
+    
+    clf = tree.DecisionTreeClassifier().fit(data, locations)
+
+    return (clf, locations, bssids)

@@ -42,6 +42,8 @@ import numpy as np
 from sklearn import tree
 from collections import Counter
 import time
+import bisect
+import itertools
 
 
 class Loc(object):
@@ -55,9 +57,11 @@ class Loc(object):
     self._train_history = 30*24*60*60 # in second = 30 days
     reactor.callLater(0, self._train)
     
-
     self._clf_infos = {} # classifiers {(semloc, semantic): {"clf": clf, ...}}
+
+    self._geoloc_epoch_thld = 60*60*1000 # in ms, 1 hour
     self._wifi_minrssi = -150
+    self._wifi_epoch_thld = 1500 # ms
 
 
   def localize(self, request):
@@ -374,25 +378,24 @@ class Loc(object):
       
     # filter epochs that do not have condsemloc logged
     epochs = list(set(map(lambda x: x[0], geoloc)))
-    thld = 60*60*1000 # in ms, 1 hour
     timediffs = [abs(epoch - min(locations, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-    epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
+    epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <=  self._geoloc_epoch_thld]
    
     # TODO this is not optimal
     data = [(g[1], g[2]) for epoch in epochs for g in geoloc if g[0]==epoch]
     
-    locations = [min(locations, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
+    classes = [min(locations, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
 
     data = np.array(data)
-    locations = np.array(locations)
+    classes = np.array(classes)
 
     # TODO only update when there are enough new data
-    if len(data) == 0 or len(locations) == 0:
+    if len(data) == 0 or len(classes) == 0:
       return (None, None) 
     
-    clf = tree.DecisionTreeClassifier().fit(data, locations)
+    clf = tree.DecisionTreeClassifier().fit(data, classes)
 
-    return (clf, locations)
+    return (clf, classes)
 
 
   def _train_wifi(self, locations):
@@ -407,27 +410,42 @@ class Loc(object):
 
     if len(wifi) == 0 or len(locations) == 0:
       return (None, None, None)
-      
-    # filter epochs that do not have semloc logged
-    epochs = list(set(map(lambda x: x[0], wifi)))
-    thld = 1500 # ms
-    timediffs = [abs(epoch - min(locations, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-    epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <= thld]
-   
-    # sigs: {BSSID: RSSI}
-    sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
+
+    # sort wifi and locations based on epoch
+    getepoch_f = lambda x: x[0]
+    wifi.sort(key=getepoch_f)
+    locations.sort(key=getepoch_f)
+    # group wifi {BSSID:RSSI} by epoch
+    wifisigs = [(epoch, {bssid:rssi for (epoch, bssid, rssi) in group}) \
+                for epoch, group in itertools.groupby(wifi, key=getepoch_f)]
+    
+    sigs = []
+    epochs = []
+    classes = []  # locations corresponding to sigs
+    locepochs = [location[0] for location in locations]
+    for epoch, sig in wifisigs:
+      bisect_idx = bisect.bisect_left(locepochs, epoch)
+      low_idx = bisect_idx-1 if bisect_idx > 0 else 0
+      (epochdiff, epoch, cls) = min( \
+                                 [(abs(epoch - location[0]), location[0], location[1]) \
+                                  for location in locations[low_idx:bisect_idx+1]], \
+                                key=lambda x: x[0])
+
+      if epochdiff <= self._wifi_epoch_thld:
+        sigs.append(sig)
+        epochs.append(epoch)
+        classes.append(cls)
+
     bssids = tuple(set(map(lambda x: x[1], wifi)))
     data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
-    
-    locations = [min(locations, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
 
     data = np.array(data)
-    locations = np.array(locations)
+    classes = np.array(classes)
 
     # TODO only update when there are enough new data
-    if len(data) == 0 or len(locations) == 0:
+    if len(data) == 0 or len(classes) == 0:
       return (None, None, None)
     
-    clf = tree.DecisionTreeClassifier().fit(data, locations)
+    clf = tree.DecisionTreeClassifier().fit(data, classes)
 
-    return (clf, locations, bssids)
+    return (clf, classes, bssids)

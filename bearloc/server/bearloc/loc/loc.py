@@ -40,7 +40,7 @@ from zope.interface import implements
 from collections import defaultdict
 import numpy as np
 from sklearn import tree
-from collections import Counter
+import collections
 import time
 import bisect
 import itertools
@@ -68,7 +68,7 @@ class Loc(object):
     """Execute localization service, which fuses results of multiple 
     localization services.
   
-    Return {semloc:{label: loc} dict, confidence: value of confidence, sem: tree of semantic} 
+    Return {semloc: {semantic: loc} dict, alter: {semantic: {alternative location: confidence}}, sem: tree of semantic} 
     """
     d = self._localize(request)
 
@@ -77,95 +77,118 @@ class Loc(object):
 
   @defer.inlineCallbacks
   def _localize(self, request):
-    (semloc, confidence) = ({}, 1)
-    (semloc, confidence) = yield self._predict_country((semloc, confidence), request)
-    (semloc, confidence) = yield self._predict_state((semloc, confidence), request)
-    (semloc, confidence) = yield self._predict_city((semloc, confidence), request)
-    (semloc, confidence) = yield self._predict_street((semloc, confidence), request)
-    (semloc, confidence) = yield self._predict_building((semloc, confidence), request)
-    (semloc, confidence) = yield self._predict_floor((semloc, confidence), request)
-    (semloc, confidence) = yield self._predict_room((semloc, confidence), request)
+    semloc = {}
+    alter = {}
+    (semloc, alter) = yield self._predict_country((semloc, alter), request)
+    print semloc, alter
+    (semloc, alter) = yield self._predict_state((semloc, alter), request)
+    (semloc, alter) = yield self._predict_city((semloc, alter), request)
+    (semloc, alter) = yield self._predict_street((semloc, alter), request)
+    (semloc, alter) = yield self._predict_building((semloc, alter), request)
+    (semloc, alter) = yield self._predict_floor((semloc, alter), request)
+    (semloc, alter) = yield self._predict_room((semloc, alter), request)
 
-    semlocinfo = yield self._aggr((semloc, confidence))
+    semlocinfo = yield self._aggr((semloc, alter))
     
     defer.returnValue(semlocinfo)
 
 
-  def _predict_country(self, (semloc, confidence), request):
+  def _predict_country(self, (semloc, alter), request):
     clf_info = self._clf_infos.get((frozenset(semloc.items()), "country"))
     if clf_info == None:
-      return defer.succeed((semloc, confidence))
+      return defer.succeed((semloc, alter))
 
-    (countrys, confidence) = self._predict_geoloc(clf_info, request)
-    count = Counter(countrys)
-    semloc["country"] = count.most_common(1)[0][0]
-    return defer.succeed((semloc, confidence))
+    (country, alter_country) = self._predict_geoloc(clf_info, request)
+    if country == None or alter_country == None:
+      return defer.succeed((semloc, alter))
+      
+    semloc["country"] = country
+    alter["country"] = alter_country
+    return defer.succeed((semloc, alter))
 
 
-  def _predict_state(self, (semloc, confidence), request):
+  def _predict_state(self, (semloc, alter), request):
     clf_info = self._clf_infos.get((frozenset(semloc.items()), "state"))
     if clf_info == None:
-      return defer.succeed((semloc, confidence))
+      return defer.succeed((semloc, alter))
 
-    (states, confidence) = self._predict_geoloc(clf_info, request)
-    count = Counter(states)
-    semloc["state"] = count.most_common(1)[0][0]
-    return defer.succeed((semloc, confidence))
+    (state, alter_state) = self._predict_geoloc(clf_info, request)
+    if state == None or alter_state == None:
+      return defer.succeed((semloc, alter))
+      
+    semloc["state"] = state
+    alter["state"] = alter_state
+    return defer.succeed((semloc, alter))
 
 
-  def _predict_city(self, (semloc, confidence), request):
+  def _predict_city(self, (semloc, alter), request):
     clf_info = self._clf_infos.get((frozenset(semloc.items()), "city"))
     if clf_info == None:
-      return defer.succeed((semloc, confidence))
+      return defer.succeed((semloc, alter))
 
-    (citys, confidence) = self._predict_geoloc(clf_info, request)
-    count = Counter(citys)
-    semloc["city"] = count.most_common(1)[0][0]
-    return defer.succeed((semloc, confidence))
+    (city, alter_city) = self._predict_geoloc(clf_info, request)
+    if city == None or alter_city == None:
+      return defer.succeed((semloc, alter))
+      
+    semloc["city"] = city
+    alter["city"] = alter_city
+    return defer.succeed((semloc, alter))
 
 
-  def _predict_street(self, (semloc, confidence), request):
+  def _predict_street(self, (semloc, alter), request):
     clf_info = self._clf_infos.get((frozenset(semloc.items()), "street"))
     if clf_info == None:
-      return defer.succeed((semloc, confidence))
+      return defer.succeed((semloc, alter))
 
-    (streets, confidence) = self._predict_geoloc(clf_info, request)
-    count = Counter(streets)
-    semloc["street"] = count.most_common(1)[0][0]
-    return defer.succeed((semloc, confidence))
+    (street, alter_street) = self._predict_geoloc(clf_info, request)
+    if street == None or alter_street == None:
+      return defer.succeed((semloc, alter))
+      
+    semloc["street"] = street
+    alter["street"] = alter_street
+    return defer.succeed((semloc, alter))
 
 
-  def _predict_building(self, (semloc, confidence), request):
+  def _predict_building(self, (semloc, alter), request):
     clf_info = self._clf_infos.get((frozenset(semloc.items()), "building"))
     if clf_info == None:
-      return defer.succeed((semloc, confidence))
+      return defer.succeed((semloc, alter))
     
-    (buildings, confidence) = self._predict_geoloc(clf_info, request)
-    count = Counter(buildings)
-    semloc["building"] = count.most_common(1)[0][0]
-    return defer.succeed((semloc, confidence))
+    (building, alter_building) = self._predict_geoloc(clf_info, request)
+    if building == None or alter_building == None:
+      return defer.succeed((semloc, alter))
+      
+    semloc["building"] = building
+    alter["building"] = alter_building
+    return defer.succeed((semloc, alter))
 
 
-  def _predict_floor(self, (semloc, confidence), request):
+  def _predict_floor(self, (semloc, alter), request):
     clf_info = self._clf_infos.get((frozenset(semloc.items()), "floor"))
     if clf_info == None:
-      return defer.succeed((semloc, confidence))
+      return defer.succeed((semloc, alter))
 
-    (floors, confidence) = self._predict_wifi(clf_info, request)
-    count = Counter(floors)
-    semloc["floor"] = count.most_common(1)[0][0]
-    return defer.succeed((semloc, confidence))
+    (floor, alter_floor) = self._predict_wifi(clf_info, request)
+    if floor == None or alter_floor == None:
+      return defer.succeed((semloc, alter))
+
+    semloc["floor"] = floor
+    alter["floor"] = alter_floor
+    return defer.succeed((semloc, alter))
 
 
-  def _predict_room(self, (semloc, confidence), request):
+  def _predict_room(self, (semloc, alter), request):
     clf_info = self._clf_infos.get((frozenset(semloc.items()), "room"))
     if clf_info == None:
-      return defer.succeed((semloc, confidence))
+      return defer.succeed((semloc, alter))
     
-    (rooms, confidence) = self._predict_wifi(clf_info, request)
-    count = Counter(rooms)
-    semloc["room"] = count.most_common(1)[0][0]
-    return defer.succeed((semloc, confidence))
+    (room, alter_room) = self._predict_wifi(clf_info, request)
+    if room == None or alter_room == None:
+      return defer.succeed((semloc, alter))
+      
+    semloc["room"] = room
+    alter["room"] = alter_room
+    return defer.succeed((semloc, alter))
 
 
   def _predict_geoloc(self, clf_info, request):
@@ -184,14 +207,15 @@ class Loc(object):
     geoloc = cur.fetchall()
 
     if len(geoloc) == 0:
-      return defer.succeed((semloc, confidence))
+      return (None, None)
 
     data = np.array(geoloc)
 
     locations = clf.predict(data)
-    confidence = 1
-
-    return (locations, confidence)
+    count = collections.Counter(locations)
+    location = count.most_common(1)[0][0]
+    alter = {loc: float(cnt)/len(locations) for loc, cnt in count.items()}
+    return (location, alter)
 
 
   def _predict_wifi(self, clf_info, request):
@@ -209,26 +233,25 @@ class Loc(object):
     wifi = cur.fetchall()
 
     if len(wifi) == 0:
-      return defer.succeed((semloc, confidence))
+      return (None, None)
 
     epochs = list(set(map(lambda x: x[0], wifi)))
     # sigs: {BSSID: RSSI}
+    # TODO use itertools gourpby
     sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
     data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
     data = np.array(data)
 
-    if len(data) == 0:
-      return defer.succeed((semloc, confidence))
-
     locations = clf.predict(data)
-    confidence = 1
+    count = collections.Counter(locations)
+    location = count.most_common(1)[0][0]
+    alter = {loc: float(cnt)/len(locations) for loc, cnt in count.items()}
+    return (location, alter)
 
-    return (locations, confidence)
 
-
-  def _aggr(self, (semloc, confidence)):
+  def _aggr(self, (semloc, alter)):
     sem = self._sem()
-    semlocinfo = {"semloc": semloc, "confidence": confidence, "sem": sem}
+    semlocinfo = {"semloc": semloc, "alter": alter, "sem": sem}
     return semlocinfo
 
 

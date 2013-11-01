@@ -88,6 +88,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
 
   private TextView mLocPrefixTextView;
   private TextView mCurSemLocTextView;
+  private Button mAddButton;
 
   private LocReporterService mService;
   private boolean mBound = false;
@@ -127,8 +128,8 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     mLocPrefixTextView = (TextView) findViewById(R.id.loc_prefix);
     mCurSemLocTextView = (TextView) findViewById(R.id.cur_sem_loc);
 
-    final Button addButton = (Button) findViewById(R.id.add_loc);
-    addButton.setOnClickListener(this);
+    mAddButton = (Button) findViewById(R.id.add_loc);
+    mAddButton.setOnClickListener(this);
     final Button semButton = (Button) findViewById(R.id.change_sem);
     semButton.setOnClickListener(this);
     final Button locButton = (Button) findViewById(R.id.localize);
@@ -136,6 +137,8 @@ public class LocReporterActivity extends Activity implements SemLocListener,
 
     Intent intent = new Intent(this, LocReporterService.class);
     bindService(intent, mServiceConn, Context.BIND_AUTO_CREATE);
+
+    refresh();
   }
 
   @Override
@@ -187,7 +190,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     mSelectedLoc = mArrayAdapter.getItem(position);
 
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setMessage("Change " + mCurSem + " to " + mSelectedLoc + "?");
+    builder.setMessage("Change your CURRENT " + mCurSem + " to " + mSelectedLoc + "?");
     builder.setCancelable(true);
     builder.setPositiveButton(R.string.ok, this);
     builder.setNegativeButton(R.string.cancel, this);
@@ -246,6 +249,13 @@ public class LocReporterActivity extends Activity implements SemLocListener,
    * Update UI
    */
   private void refresh() {
+    // update add location button text
+    mAddButton.setText("Add " + mCurSem);
+
+    if (mService == null) {
+      return;
+    }
+
     // update location text
     final JSONObject semloc = mService.curSemLocInfo().optJSONObject("semloc");
     if (semloc != null) {

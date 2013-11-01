@@ -190,7 +190,8 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     mSelectedLoc = mArrayAdapter.getItem(position);
 
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setMessage("Change your CURRENT " + mCurSem + " to " + mSelectedLoc + "?");
+    builder.setMessage("Change your CURRENT " + mCurSem + " to " + mSelectedLoc
+        + "?");
     builder.setCancelable(true);
     builder.setPositiveButton(R.string.ok, this);
     builder.setNegativeButton(R.string.cancel, this);
@@ -305,7 +306,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case R.id.menu_settings:
-      startActivity(new Intent(this, SettingsActivity.class));
+      startActivity(new Intent(this, LocReporterSettingsActivity.class));
       return true;
     default:
       return super.onOptionsItemSelected(item);

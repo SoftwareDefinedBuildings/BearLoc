@@ -14,6 +14,9 @@
     <string name="pref_auto_report_summ">Automatically report location when possible</string>
     <string name="pref_auto_report">Automatic Report</string>
     
+    <string name="pref_server_category_summ">Server settings</string>
+    <string name="pref_server_category">Server</string>
+    
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     

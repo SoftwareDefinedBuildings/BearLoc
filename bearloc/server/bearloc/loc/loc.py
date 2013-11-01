@@ -90,7 +90,7 @@ class Loc(object):
       if self._predict(locepoch, (semloc, alter), sem) == False:
         break
 
-    semlocinfo = self._aggr((semloc, alter))
+    semlocinfo = self._aggr(semloc, alter)
     
     return defer.succeed(semlocinfo)
 
@@ -165,7 +165,7 @@ class Loc(object):
     return (location, alter)
 
 
-  def _aggr(self, (semloc, alter)):
+  def _aggr(self, semloc, alter):
     sem = self._sem()
     semlocinfo = {"semloc": semloc, "alter": alter, "sem": sem}
     return semlocinfo

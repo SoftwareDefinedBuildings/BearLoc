@@ -59,13 +59,12 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 
 public class BearLocService extends Service implements SemLocService,
     OnSampleEventListener {
 
   private static final int DATA_SEND_ITVL = 300; // millisecond
-  private static final String mServerHost = "kaifei.info";
-  private static final int mServerPort = 10080;
 
   private IBinder mBinder;
 
@@ -252,8 +251,14 @@ public class BearLocService extends Service implements SemLocService,
   private static URL getHttpURL(Context context, String path) {
     URL url = null;
     try {
+      String serverHost = PreferenceManager
+          .getDefaultSharedPreferences(context).getString("pref_server_addr",
+              context.getString(R.string.default_server_addr));
+      int serverPort = Integer.parseInt(PreferenceManager
+          .getDefaultSharedPreferences(context).getString("pref_server_port",
+              context.getString(R.string.default_server_port)));
       // TODO handle the exception of using IP address
-      final URI uri = new URI("http", null, mServerHost, mServerPort, path,
+      final URI uri = new URI("http", null, serverHost, serverPort, path,
           null, null);
       url = uri.toURL();
     } catch (URISyntaxException e) {

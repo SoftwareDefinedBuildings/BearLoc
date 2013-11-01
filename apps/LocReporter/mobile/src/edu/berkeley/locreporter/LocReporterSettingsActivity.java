@@ -45,9 +45,10 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
-public class SettingsActivity extends PreferenceActivity {
+public class LocReporterSettingsActivity extends PreferenceActivity {
 
   final public static String ACTION_PREF_GENERAL = "edu.berkeley.locreporter.PREF_GENERAL";
+  final public static String ACTION_PREF_SERVER = "edu.berkeley.bearloc.PREF_SERVER";
 
   // Only call addPreferencesFromResource() before Honeycomb
   @SuppressWarnings("deprecation")
@@ -59,6 +60,8 @@ public class SettingsActivity extends PreferenceActivity {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
       if (action != null && action.equals(ACTION_PREF_GENERAL)) {
         addPreferencesFromResource(R.xml.settings_general);
+      } else if (action != null && action.equals(ACTION_PREF_SERVER)) {
+        addPreferencesFromResource(edu.berkeley.bearloc.R.xml.settings_server);
       } else {
         // Load the legacy preferences headers
         addPreferencesFromResource(R.xml.pref_headers_legacy);
@@ -81,6 +84,8 @@ public class SettingsActivity extends PreferenceActivity {
 
       String settings = getArguments().getString("settings");
       if ("general".equals(settings)) {
+        addPreferencesFromResource(R.xml.settings_general);
+      } else if ("server".equals(settings)) {
         addPreferencesFromResource(R.xml.settings_general);
       }
     }

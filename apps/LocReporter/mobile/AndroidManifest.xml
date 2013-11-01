@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="edu.berkeley.locreporter.SettingsActivity"
+            android:name="edu.berkeley.locreporter.LocReporterSettingsActivity"
             android:label="@string/settings_title"
             android:screenOrientation="portrait" >
             <intent-filter>

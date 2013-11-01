@@ -228,9 +228,7 @@ class Loc(object):
 
   def _aggr(self, (semloc, confidence)):
     sem = self._sem()
-
     semlocinfo = {"semloc": semloc, "confidence": confidence, "sem": sem}
-
     return semlocinfo
 
 
@@ -239,7 +237,6 @@ class Loc(object):
     # hardcoded here
     sem = self._tree()
     sem["country"]["state"]["city"]["street"]["building"]["floor"]["room"]
-
     return sem
 
 
@@ -274,49 +271,42 @@ class Loc(object):
   def _train_country(self, condsemlocs):
     condsems = ()
     new_condsemlocs = self._model(condsems, condsemlocs, "country", "geoloc")
-
     return defer.succeed(new_condsemlocs)
 
 
   def _train_state(self, condsemlocs):
     condsems = ("country", )
     new_condsemlocs = self._model(condsems, condsemlocs, "state", "geoloc")
-
     return defer.succeed(new_condsemlocs)
 
 
   def _train_city(self, condsemlocs):
     condsems = ("country", "state")
     new_condsemlocs = self._model(condsems, condsemlocs, "city", "geoloc")
-
     return defer.succeed(new_condsemlocs)
 
 
   def _train_street(self, condsemlocs):
     condsems = ("country", "state", "city")
     new_condsemlocs = self._model(condsems, condsemlocs, "street", "geoloc")
-
     return defer.succeed(new_condsemlocs)
 
 
   def _train_building(self, condsemlocs):
     condsems = ("country", "state", "city", "street")
     new_condsemlocs = self._model(condsems, condsemlocs, "building", "geoloc")
-
     return defer.succeed(new_condsemlocs)
 
 
   def _train_floor(self, condsemlocs):
     condsems = ("country", "state", "city", "street", "building")
     new_condsemlocs = self._model(condsems, condsemlocs, "floor", "wifi")
-
     return defer.succeed(new_condsemlocs)
 
 
   def _train_room(self, condsemlocs):
     condsems = ("country", "state", "city", "street", "building", "floor")
     new_condsemlocs = self._model(condsems, condsemlocs, "room", "wifi")
-
     return defer.succeed(new_condsemlocs)
 
 
@@ -374,22 +364,31 @@ class Loc(object):
     geoloc = cur.fetchall()
 
     if len(geoloc) == 0 or len(locations) == 0:
-      return (None, None) 
-      
-    # filter epochs that do not have condsemloc logged
-    epochs = list(set(map(lambda x: x[0], geoloc)))
-    timediffs = [abs(epoch - min(locations, key=lambda x: abs(x[0] - epoch))[0]) for epoch in epochs]
-    epochs = [epochs[i] for i in range(0, len(timediffs)) if timediffs[i] <=  self._geoloc_epoch_thld]
-   
-    # TODO this is not optimal
-    data = [(g[1], g[2]) for epoch in epochs for g in geoloc if g[0]==epoch]
+      return (None, None)
+
+    # sort wifi and locations based on epoch
+    getepoch_f = lambda x: x[0]
+    geoloc.sort(key=getepoch_f)
+    locations.sort(key=getepoch_f)
     
-    classes = [min(locations, key=lambda x: abs(x[0] - epoch))[1] for epoch in epochs]
+    data = []
+    classes = []  # locations corresponding to data
+    locepochs = [location[0] for location in locations]
+    for epoch, lon, lat in geoloc:
+      bisect_idx = bisect.bisect_left(locepochs, epoch)
+      low_idx = bisect_idx-1 if bisect_idx > 0 else 0
+      (epochdiff, cls) = min( \
+                          [(abs(epoch - location[0]), location[1]) \
+                           for location in locations[low_idx:bisect_idx+1]], \
+                         key=lambda x: x[0])
+
+      if epochdiff <= self._geoloc_epoch_thld:
+        data.append((lon, lat))
+        classes.append(cls)
 
     data = np.array(data)
     classes = np.array(classes)
 
-    # TODO only update when there are enough new data
     if len(data) == 0 or len(classes) == 0:
       return (None, None) 
     
@@ -420,20 +419,18 @@ class Loc(object):
                 for epoch, group in itertools.groupby(wifi, key=getepoch_f)]
     
     sigs = []
-    epochs = []
     classes = []  # locations corresponding to sigs
     locepochs = [location[0] for location in locations]
     for epoch, sig in wifisigs:
       bisect_idx = bisect.bisect_left(locepochs, epoch)
       low_idx = bisect_idx-1 if bisect_idx > 0 else 0
-      (epochdiff, epoch, cls) = min( \
-                                 [(abs(epoch - location[0]), location[0], location[1]) \
-                                  for location in locations[low_idx:bisect_idx+1]], \
-                                key=lambda x: x[0])
+      (epochdiff, cls) = min( \
+                          [(abs(epoch - location[0]), location[1]) \
+                           for location in locations[low_idx:bisect_idx+1]], \
+                         key=lambda x: x[0])
 
       if epochdiff <= self._wifi_epoch_thld:
         sigs.append(sig)
-        epochs.append(epoch)
         classes.append(cls)
 
     bssids = tuple(set(map(lambda x: x[1], wifi)))
@@ -442,7 +439,6 @@ class Loc(object):
     data = np.array(data)
     classes = np.array(classes)
 
-    # TODO only update when there are enough new data
     if len(data) == 0 or len(classes) == 0:
       return (None, None, None)
     

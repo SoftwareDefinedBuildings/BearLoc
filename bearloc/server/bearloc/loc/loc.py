@@ -54,14 +54,20 @@ class Loc(object):
   def __init__(self, db):
     self._db = db
     self._train_interval = 10*60 # in second
-    self._train_history = 30*24*60*60 # in second = 30 days
-    reactor.callLater(0, self._train)
+    self._train_history = 30*24*60*60*1000 # in ms = 30 days
+    reactor.callLater(0, self._train_all)
     
     self._clf_infos = {} # classifiers {(semloc, semantic): {"clf": clf, ...}}
 
-    self._geoloc_epoch_thld = 60*60*1000 # in ms, 1 hour
+    self._geoloc_train_epoch_thld = 60*60*1000 # in ms, 1 hour
+    self._geoloc_predict_epoch_thld = 60*60*1000 # in ms, 1 hour
     self._wifi_minrssi = -150
-    self._wifi_epoch_thld = 1500 # ms
+    self._wifi_train_epoch_thld = 2000 # ms
+    self._wifi_predict_epoch_thld = 5000 # ms
+
+    # semantics list should be compatible with semantic tree in loc.py
+    # hardcoded here
+    self._sems = ("country", "state", "city", "street", "building", "floor", "room")
 
 
   def localize(self, request):
@@ -75,132 +81,44 @@ class Loc(object):
     return d
 
 
-  @defer.inlineCallbacks
+  # Maybe it is good to make this block to ensure fast response
   def _localize(self, request):
+    locepoch = request['epoch']
     semloc = {}
     alter = {}
-    (semloc, alter) = yield self._predict_country((semloc, alter), request)
-    print semloc, alter
-    (semloc, alter) = yield self._predict_state((semloc, alter), request)
-    (semloc, alter) = yield self._predict_city((semloc, alter), request)
-    (semloc, alter) = yield self._predict_street((semloc, alter), request)
-    (semloc, alter) = yield self._predict_building((semloc, alter), request)
-    (semloc, alter) = yield self._predict_floor((semloc, alter), request)
-    (semloc, alter) = yield self._predict_room((semloc, alter), request)
+    for sem in self._sems:
+      if self._predict(locepoch, (semloc, alter), sem) == False:
+        break
 
-    semlocinfo = yield self._aggr((semloc, alter))
+    semlocinfo = self._aggr((semloc, alter))
     
-    defer.returnValue(semlocinfo)
+    return defer.succeed(semlocinfo)
 
 
-  def _predict_country(self, (semloc, alter), request):
-    clf_info = self._clf_infos.get((frozenset(semloc.items()), "country"))
-    if clf_info == None:
-      return defer.succeed((semloc, alter))
+  def _predict(self, locepoch, (semloc, alter), targetsem):
+    clf_info = self._clf_infos.get((frozenset(semloc.items()), targetsem))
+    if clf_info != None:
+      if targetsem not in ("floor", "room"):
+        (loc, alter_locs) = self._predict_geoloc(locepoch, clf_info)
+      else:
+        (loc, alter_locs) = self._predict_wifi(locepoch, clf_info)
 
-    (country, alter_country) = self._predict_geoloc(clf_info, request)
-    if country == None or alter_country == None:
-      return defer.succeed((semloc, alter))
-      
-    semloc["country"] = country
-    alter["country"] = alter_country
-    return defer.succeed((semloc, alter))
+      if loc != None and alter_locs != None:
+        semloc[targetsem] = loc
+        alter[targetsem] = alter_locs
+        return True
 
-
-  def _predict_state(self, (semloc, alter), request):
-    clf_info = self._clf_infos.get((frozenset(semloc.items()), "state"))
-    if clf_info == None:
-      return defer.succeed((semloc, alter))
-
-    (state, alter_state) = self._predict_geoloc(clf_info, request)
-    if state == None or alter_state == None:
-      return defer.succeed((semloc, alter))
-      
-    semloc["state"] = state
-    alter["state"] = alter_state
-    return defer.succeed((semloc, alter))
+    return False
 
 
-  def _predict_city(self, (semloc, alter), request):
-    clf_info = self._clf_infos.get((frozenset(semloc.items()), "city"))
-    if clf_info == None:
-      return defer.succeed((semloc, alter))
-
-    (city, alter_city) = self._predict_geoloc(clf_info, request)
-    if city == None or alter_city == None:
-      return defer.succeed((semloc, alter))
-      
-    semloc["city"] = city
-    alter["city"] = alter_city
-    return defer.succeed((semloc, alter))
-
-
-  def _predict_street(self, (semloc, alter), request):
-    clf_info = self._clf_infos.get((frozenset(semloc.items()), "street"))
-    if clf_info == None:
-      return defer.succeed((semloc, alter))
-
-    (street, alter_street) = self._predict_geoloc(clf_info, request)
-    if street == None or alter_street == None:
-      return defer.succeed((semloc, alter))
-      
-    semloc["street"] = street
-    alter["street"] = alter_street
-    return defer.succeed((semloc, alter))
-
-
-  def _predict_building(self, (semloc, alter), request):
-    clf_info = self._clf_infos.get((frozenset(semloc.items()), "building"))
-    if clf_info == None:
-      return defer.succeed((semloc, alter))
-    
-    (building, alter_building) = self._predict_geoloc(clf_info, request)
-    if building == None or alter_building == None:
-      return defer.succeed((semloc, alter))
-      
-    semloc["building"] = building
-    alter["building"] = alter_building
-    return defer.succeed((semloc, alter))
-
-
-  def _predict_floor(self, (semloc, alter), request):
-    clf_info = self._clf_infos.get((frozenset(semloc.items()), "floor"))
-    if clf_info == None:
-      return defer.succeed((semloc, alter))
-
-    (floor, alter_floor) = self._predict_wifi(clf_info, request)
-    if floor == None or alter_floor == None:
-      return defer.succeed((semloc, alter))
-
-    semloc["floor"] = floor
-    alter["floor"] = alter_floor
-    return defer.succeed((semloc, alter))
-
-
-  def _predict_room(self, (semloc, alter), request):
-    clf_info = self._clf_infos.get((frozenset(semloc.items()), "room"))
-    if clf_info == None:
-      return defer.succeed((semloc, alter))
-    
-    (room, alter_room) = self._predict_wifi(clf_info, request)
-    if room == None or alter_room == None:
-      return defer.succeed((semloc, alter))
-      
-    semloc["room"] = room
-    alter["room"] = alter_room
-    return defer.succeed((semloc, alter))
-
-
-  def _predict_geoloc(self, clf_info, request):
+  def _predict_geoloc(self, locepoch, clf_info):
     clf = clf_info["clf"]
-
-    locepoch = request['epoch']
-    thld = 60*60 # in second, 1 hour
 
     cur = self._db.cursor()
     # extract attributes and store in db
     operation = "SELECT longitude, latitude FROM " + "geoloc" + \
-                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld*1000) + \
+                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + \
+                str(self._geoloc_predict_epoch_thld) + \
                 " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
                 " LIMIT 1"
     cur.execute(operation)
@@ -218,17 +136,15 @@ class Loc(object):
     return (location, alter)
 
 
-  def _predict_wifi(self, clf_info, request):
+  def _predict_wifi(self, locepoch, clf_info):
     bssids = clf_info["bssids"]
     clf = clf_info["clf"]
-
-    locepoch = request['epoch']
-    thld = 5000 # ms
 
     cur = self._db.cursor()
     # extract attributes and store in db
     operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + str(thld)
+                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + \
+                str(self._wifi_predict_epoch_thld)
     cur.execute(operation)
     wifi = cur.fetchall()
 
@@ -271,72 +187,29 @@ class Loc(object):
 
 
   @defer.inlineCallbacks
-  def _train(self):
+  def _train_all(self):
     """Train model for all semantic."""
     # TODO online/incremental training
     log.msg("Started Loc training")
 
     condsemlocs = [{}]
-    condsemlocs = yield self._train_country(condsemlocs)
-    condsemlocs = yield self._train_state(condsemlocs)
-    condsemlocs = yield self._train_city(condsemlocs)
-    condsemlocs = yield self._train_street(condsemlocs)
-    condsemlocs = yield self._train_building(condsemlocs)
-    condsemlocs = yield self._train_floor(condsemlocs)
-    yield self._train_room(condsemlocs)
+    for sem in self._sems:
+      condsemlocs = yield self._train(condsemlocs, sem)
+      if len(condsemlocs) == 0:
+        break
 
     # Only schedule next training task when this one finishes
-    reactor.callLater(self._train_interval, self._train)
+    reactor.callLater(self._train_interval, self._train_all)
     
     log.msg("Stopped Loc training")
-  
-
-  def _train_country(self, condsemlocs):
-    condsems = ()
-    new_condsemlocs = self._model(condsems, condsemlocs, "country", "geoloc")
-    return defer.succeed(new_condsemlocs)
 
 
-  def _train_state(self, condsemlocs):
-    condsems = ("country", )
-    new_condsemlocs = self._model(condsems, condsemlocs, "state", "geoloc")
-    return defer.succeed(new_condsemlocs)
-
-
-  def _train_city(self, condsemlocs):
-    condsems = ("country", "state")
-    new_condsemlocs = self._model(condsems, condsemlocs, "city", "geoloc")
-    return defer.succeed(new_condsemlocs)
-
-
-  def _train_street(self, condsemlocs):
-    condsems = ("country", "state", "city")
-    new_condsemlocs = self._model(condsems, condsemlocs, "street", "geoloc")
-    return defer.succeed(new_condsemlocs)
-
-
-  def _train_building(self, condsemlocs):
-    condsems = ("country", "state", "city", "street")
-    new_condsemlocs = self._model(condsems, condsemlocs, "building", "geoloc")
-    return defer.succeed(new_condsemlocs)
-
-
-  def _train_floor(self, condsemlocs):
-    condsems = ("country", "state", "city", "street", "building")
-    new_condsemlocs = self._model(condsems, condsemlocs, "floor", "wifi")
-    return defer.succeed(new_condsemlocs)
-
-
-  def _train_room(self, condsemlocs):
-    condsems = ("country", "state", "city", "street", "building", "floor")
-    new_condsemlocs = self._model(condsems, condsemlocs, "room", "wifi")
-    return defer.succeed(new_condsemlocs)
-
-
-  def _model(self, condsems, condsemlocs, sem, type):
+  def _train(self, condsemlocs, targetsem):
     """Build model for sem under conditional sems and semlocs.
 
     return new conditional semlocs for lower level."""
+    condsems = self._sems[0:self._sems.index(targetsem)]
+
     new_condsemlocs = []
 
     for condsemloc in condsemlocs:
@@ -344,14 +217,13 @@ class Loc(object):
         continue
 
       cur = self._db.cursor()
-    
       # extract locations stored in db
-      operation = "SELECT DISTINCT epoch, " + sem + " FROM " + "semloc"
+      operation = "SELECT DISTINCT epoch, " + targetsem + " FROM " + "semloc"
       conds = [condsem+"='"+condsemloc[condsem]+"'" for condsem in condsems]
       if conds:
-        operation += " WHERE " + " AND ".join(conds) + " AND " + sem + " IS NOT NULL"
+        operation += " WHERE " + " AND ".join(conds) + " AND " + targetsem + " IS NOT NULL"
       else:
-        operation += " WHERE " + sem + " IS NOT NULL"
+        operation += " WHERE " + targetsem + " IS NOT NULL"
       cur.execute(operation)
       locations = cur.fetchall()
 
@@ -359,19 +231,19 @@ class Loc(object):
         continue 
         
       clf = None
-      if type == "geoloc":
+      if targetsem not in ("floor", "room"):
         (clf, locations) = self._train_geoloc(locations)
         if clf != None:
-          self._clf_infos[(frozenset(condsemloc.items()), sem)] = {"clf": clf}
-      elif type == "wifi":
+          self._clf_infos[(frozenset(condsemloc.items()), targetsem)] = {"clf": clf}
+      else:
         (clf, locations, bssids) = self._train_wifi(locations)
         if clf != None:
-          self._clf_infos[(frozenset(condsemloc.items()), sem)] = {"clf": clf, "bssids": bssids}
+          self._clf_infos[(frozenset(condsemloc.items()), targetsem)] = {"clf": clf, "bssids": bssids}
 
-      if clf:
+      if clf != None:
         for location in set(locations):
           new_condsemloc = condsemloc.copy()
-          new_condsemloc[sem] = location
+          new_condsemloc[targetsem] = location
           new_condsemlocs.append(new_condsemloc)
 
     return new_condsemlocs
@@ -405,7 +277,7 @@ class Loc(object):
                            for location in locations[low_idx:bisect_idx+1]], \
                          key=lambda x: x[0])
 
-      if epochdiff <= self._geoloc_epoch_thld:
+      if epochdiff <= self._geoloc_train_epoch_thld:
         data.append((lon, lat))
         classes.append(cls)
 
@@ -426,7 +298,7 @@ class Loc(object):
     curepoch = int(round(time.time() * 1000))
     # extract attributes and store in db
     operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history*1000)
+                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history)
     cur.execute(operation)
     wifi = cur.fetchall()
 
@@ -452,7 +324,7 @@ class Loc(object):
                            for location in locations[low_idx:bisect_idx+1]], \
                          key=lambda x: x[0])
 
-      if epochdiff <= self._wifi_epoch_thld:
+      if epochdiff <= self._wifi_train_epoch_thld:
         sigs.append(sig)
         classes.append(cls)
 

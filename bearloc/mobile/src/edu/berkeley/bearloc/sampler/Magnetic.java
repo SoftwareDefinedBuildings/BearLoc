@@ -62,7 +62,7 @@ public class Magnetic implements Sampler, SensorEventListener {
     }
   };
 
-  public Magnetic(Context context, SamplerListener listener) {
+  public Magnetic(final Context context, final SamplerListener listener) {
     mListener = listener;
     mHandler = new Handler();
     mSensorManager = (SensorManager) context
@@ -71,7 +71,7 @@ public class Magnetic implements Sampler, SensorEventListener {
   }
 
   @Override
-  public boolean start(Integer period, Integer num) {
+  public boolean start(final Integer period, final Integer num) {
     if (mBusy == false && mMag != null) {
       mBusy = true;
       nSampleNum = 0;
@@ -94,13 +94,13 @@ public class Magnetic implements Sampler, SensorEventListener {
   }
 
   @Override
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {
+  public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
     // TODO Auto-generated method stub
 
   }
 
   @Override
-  public void onSensorChanged(SensorEvent event) {
+  public void onSensorChanged(final SensorEvent event) {
     if (event == null) {
       return;
     }

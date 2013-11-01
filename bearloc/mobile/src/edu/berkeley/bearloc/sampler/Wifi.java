@@ -70,14 +70,14 @@ public class Wifi implements Sampler {
     }
   };
 
-  public Wifi(Context context, SamplerListener listener) {
+  public Wifi(final Context context, final SamplerListener listener) {
     mListener = listener;
     mHandler = new Handler();
     mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
   }
 
   @Override
-  public boolean start(Integer period, Integer num) {
+  public boolean start(final Integer period, final Integer num) {
     if (mBusy == false && mWifiManager != null) {
       mBusy = true;
       nSampleNum = 0;
@@ -111,7 +111,7 @@ public class Wifi implements Sampler {
 
     nSampleNum++;
     if (nSampleNum < mSampleCap) {
-      mHandler.postDelayed(mWifiScanTask, WIFI_SAMPLE_ITVL);
+      mHandler.postDelayed(mWifiScanTask, Wifi.WIFI_SAMPLE_ITVL);
     } else {
       pause();
     }

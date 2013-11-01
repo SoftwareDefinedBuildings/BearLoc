@@ -64,7 +64,7 @@ public class GeoLoc implements Sampler, LocationListener {
     }
   };
 
-  public GeoLoc(Context context, SamplerListener listener) {
+  public GeoLoc(final Context context, final SamplerListener listener) {
     mListener = listener;
     mHandler = new Handler();
     mLocationManager = (LocationManager) context
@@ -72,20 +72,20 @@ public class GeoLoc implements Sampler, LocationListener {
   }
 
   @Override
-  public boolean start(Integer period, Integer num) {
+  public boolean start(final Integer period, final Integer num) {
     if (mBusy == false && mLocationManager != null) {
       try {
         mBusy = true;
         nSampleNum = 0;
         mSampleCap = num;
         mLocationManager.requestLocationUpdates(
-            LocationManager.NETWORK_PROVIDER, LOCATION_UPDATE_ITVL,
-            LOCATION_UPDATE_DIST, this);
+            LocationManager.NETWORK_PROVIDER, GeoLoc.LOCATION_UPDATE_ITVL,
+            GeoLoc.LOCATION_UPDATE_DIST, this);
         mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-            LOCATION_UPDATE_ITVL, LOCATION_UPDATE_DIST, this);
+            GeoLoc.LOCATION_UPDATE_ITVL, GeoLoc.LOCATION_UPDATE_DIST, this);
         mHandler.postDelayed(mPauseTask, period);
         return true;
-      } catch (IllegalArgumentException e) {
+      } catch (final IllegalArgumentException e) {
         e.printStackTrace();
         return false;
       }
@@ -103,7 +103,7 @@ public class GeoLoc implements Sampler, LocationListener {
   }
 
   @Override
-  public void onLocationChanged(Location location) {
+  public void onLocationChanged(final Location location) {
     if (location == null) {
       return;
     }
@@ -119,19 +119,20 @@ public class GeoLoc implements Sampler, LocationListener {
   }
 
   @Override
-  public void onProviderDisabled(String provider) {
+  public void onProviderDisabled(final String provider) {
     // TODO Auto-generated method stub
 
   }
 
   @Override
-  public void onProviderEnabled(String provider) {
+  public void onProviderEnabled(final String provider) {
     // TODO Auto-generated method stub
 
   }
 
   @Override
-  public void onStatusChanged(String provider, int status, Bundle extras) {
+  public void onStatusChanged(final String provider, final int status,
+      final Bundle extras) {
     // TODO Auto-generated method stub
 
   }

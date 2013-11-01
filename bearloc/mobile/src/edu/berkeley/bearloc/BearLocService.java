@@ -51,7 +51,6 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -60,6 +59,7 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
 
 public class BearLocService extends Service implements SemLocService,
     OnSampleEventListener {
@@ -112,7 +112,7 @@ public class BearLocService extends Service implements SemLocService,
   }
 
   @Override
-  public IBinder onBind(Intent intent) {
+  public IBinder onBind(final Intent intent) {
     return mBinder;
   }
 
@@ -133,26 +133,26 @@ public class BearLocService extends Service implements SemLocService,
   private void sendLocRequest() {
     try {
       final String path = "/localize";
-      final URL url = getHttpURL(this, path);
+      final URL url = BearLocService.getHttpURL(this, path);
 
       final JSONObject request = new JSONObject();
       request.put("epoch", System.currentTimeMillis());
 
       new BearLocHttpPostTask(new onHttpPostRespondedListener() {
         @Override
-        public void onHttpPostResponded(JSONObject response) {
+        public void onHttpPostResponded(final JSONObject response) {
           if (response == null) {
             return;
           }
 
-          for (SemLocListener listener : mListeners) {
+          for (final SemLocListener listener : mListeners) {
             if (listener != null) {
               try {
                 // Generate new copy of response as it calls back to several
                 // listeners
                 listener.onSemLocInfoReturned(new JSONObject(response
                     .toString()));
-              } catch (JSONException e) {
+              } catch (final JSONException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
               }
@@ -161,7 +161,7 @@ public class BearLocService extends Service implements SemLocService,
           mListeners.clear();
         }
       }).execute(url, request.toString());
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -173,7 +173,7 @@ public class BearLocService extends Service implements SemLocService,
     try {
       meta.put("epoch", System.currentTimeMillis());
       meta.put("sysnano", System.nanoTime());
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -188,14 +188,14 @@ public class BearLocService extends Service implements SemLocService,
   public boolean meta(final JSONObject semloc, final MetaListener listener) {
     try {
       final String path = "/meta";
-      final URL url = getHttpURL(this, path);
+      final URL url = BearLocService.getHttpURL(this, path);
 
       final JSONObject request = new JSONObject();
       request.put("semloc", semloc);
 
       new BearLocHttpPostTask(new onHttpPostRespondedListener() {
         @Override
-        public void onHttpPostResponded(JSONObject response) {
+        public void onHttpPostResponded(final JSONObject response) {
           if (response == null) {
             return;
           }
@@ -207,7 +207,7 @@ public class BearLocService extends Service implements SemLocService,
       }).execute(url, request.toString());
 
       return true;
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -217,7 +217,7 @@ public class BearLocService extends Service implements SemLocService,
 
   private void sendData() {
     final String path = "/report";
-    final URL url = getHttpURL(this, path);
+    final URL url = BearLocService.getHttpURL(this, path);
 
     final JSONObject report = mFormat.dump(mCache.get());
     mCache.clear();
@@ -231,40 +231,40 @@ public class BearLocService extends Service implements SemLocService,
   }
 
   @Override
-  public void onSampleEvent(String type, Object data) {
+  public void onSampleEvent(final String type, final Object data) {
     final JSONObject meta = new JSONObject();
     try {
       meta.put("epoch", System.currentTimeMillis());
       meta.put("sysnano", System.nanoTime());
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
     mCache.put(type, data, meta);
 
     if (mDataSendItvl == null) {
-      mDataSendItvl = DATA_SEND_ITVL;
+      mDataSendItvl = BearLocService.DATA_SEND_ITVL;
       mHandler.postDelayed(mSendDataTask, mDataSendItvl);
     }
   }
 
-  private static URL getHttpURL(Context context, String path) {
+  private static URL getHttpURL(final Context context, final String path) {
     URL url = null;
     try {
-      String serverHost = PreferenceManager
-          .getDefaultSharedPreferences(context).getString("pref_server_addr",
-              context.getString(R.string.default_server_addr));
-      int serverPort = Integer.parseInt(PreferenceManager
+      final String serverHost = PreferenceManager.getDefaultSharedPreferences(
+          context).getString("pref_server_addr",
+          context.getString(R.string.default_server_addr));
+      final int serverPort = Integer.parseInt(PreferenceManager
           .getDefaultSharedPreferences(context).getString("pref_server_port",
               context.getString(R.string.default_server_port)));
       // TODO handle the exception of using IP address
-      final URI uri = new URI("http", null, serverHost, serverPort, path,
-          null, null);
+      final URI uri = new URI("http", null, serverHost, serverPort, path, null,
+          null);
       url = uri.toURL();
-    } catch (URISyntaxException e) {
+    } catch (final URISyntaxException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
-    } catch (MalformedURLException e) {
+    } catch (final MalformedURLException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -276,9 +276,9 @@ public class BearLocService extends Service implements SemLocService,
   private static class BearLocHttpPostTask extends
       AsyncTask<Object, Void, JSONObject> {
 
-    private onHttpPostRespondedListener listener;
+    private final onHttpPostRespondedListener listener;
 
-    public BearLocHttpPostTask(onHttpPostRespondedListener listener) {
+    public BearLocHttpPostTask(final onHttpPostRespondedListener listener) {
       this.listener = listener;
     }
 
@@ -306,9 +306,9 @@ public class BearLocService extends Service implements SemLocService,
     }
 
     @Override
-    protected JSONObject doInBackground(Object... params) {
+    protected JSONObject doInBackground(final Object... params) {
       final URL url = (URL) params[0];
-      String entity = (String) params[1];
+      final String entity = (String) params[1];
 
       // TODO reuse the connection
       HttpURLConnection connection = null;
@@ -327,10 +327,10 @@ public class BearLocService extends Service implements SemLocService,
         reader.close();
 
         return new JSONObject(sb.toString());
-      } catch (IOException e) {
+      } catch (final IOException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
-      } catch (JSONException e) {
+      } catch (final JSONException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
       } finally {
@@ -343,7 +343,7 @@ public class BearLocService extends Service implements SemLocService,
     }
 
     @Override
-    protected void onPostExecute(JSONObject response) {
+    protected void onPostExecute(final JSONObject response) {
       if (!isCancelled() && listener != null) {
         listener.onHttpPostResponded(response);
       }

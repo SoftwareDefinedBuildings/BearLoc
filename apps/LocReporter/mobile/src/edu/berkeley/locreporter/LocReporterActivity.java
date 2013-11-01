@@ -42,14 +42,6 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import edu.berkeley.locreporter.LocReporterService.LocReporterBinder;
-import edu.berkeley.locreporter.R;
-import edu.berkeley.bearloc.MetaListener;
-import edu.berkeley.bearloc.SemLocListener;
-
-import android.os.Bundle;
-import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
@@ -57,6 +49,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -70,6 +65,9 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import edu.berkeley.bearloc.MetaListener;
+import edu.berkeley.bearloc.SemLocListener;
+import edu.berkeley.locreporter.LocReporterService.LocReporterBinder;
 
 public class LocReporterActivity extends Activity implements SemLocListener,
     MetaListener, OnClickListener, OnItemClickListener,
@@ -93,10 +91,11 @@ public class LocReporterActivity extends Activity implements SemLocListener,
   private LocReporterService mService;
   private boolean mBound = false;
 
-  private ServiceConnection mServiceConn = new ServiceConnection() {
+  private final ServiceConnection mServiceConn = new ServiceConnection() {
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-      LocReporterBinder binder = (LocReporterBinder) service;
+    public void onServiceConnected(final ComponentName name,
+        final IBinder service) {
+      final LocReporterBinder binder = (LocReporterBinder) service;
       mService = binder.getService();
       mService.setSemLocListener(LocReporterActivity.this);
       mService.setMetaListener(LocReporterActivity.this);
@@ -104,13 +103,13 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     }
 
     @Override
-    public void onServiceDisconnected(ComponentName name) {
+    public void onServiceDisconnected(final ComponentName name) {
       mBound = false;
     }
   };
 
   @Override
-  protected void onCreate(Bundle savedInstanceState) {
+  protected void onCreate(final Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
 
@@ -135,7 +134,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     final Button locButton = (Button) findViewById(R.id.localize);
     locButton.setOnClickListener(this);
 
-    Intent intent = new Intent(this, LocReporterService.class);
+    final Intent intent = new Intent(this, LocReporterService.class);
     bindService(intent, mServiceConn, Context.BIND_AUTO_CREATE);
 
     refresh();
@@ -152,7 +151,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
   }
 
   @Override
-  public void onClick(View v) {
+  public void onClick(final View v) {
     AlertDialog.Builder builder;
     switch (v.getId()) {
     case R.id.add_loc:
@@ -185,8 +184,8 @@ public class LocReporterActivity extends Activity implements SemLocListener,
   }
 
   @Override
-  public void onItemClick(AdapterView<?> parent, View view, int position,
-      long id) {
+  public void onItemClick(final AdapterView<?> parent, final View view,
+      final int position, final long id) {
     mSelectedLoc = mArrayAdapter.getItem(position);
 
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -201,7 +200,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
   }
 
   @Override
-  public void onClick(DialogInterface dialog, int which) {
+  public void onClick(final DialogInterface dialog, final int which) {
     if (dialog == mAddDialog) {
       switch (which) {
       case DialogInterface.BUTTON_POSITIVE:
@@ -240,7 +239,8 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     mService.changeSemLoc(mCurSem, loc);
 
     // move semantic downward if it is not at lowest level
-    int curSemIdx = Arrays.asList(LocReporterService.Sems).indexOf(mCurSem);
+    final int curSemIdx = Arrays.asList(LocReporterService.Sems).indexOf(
+        mCurSem);
     if (curSemIdx < LocReporterService.Sems.length - 1) {
       mCurSem = LocReporterService.Sems[curSemIdx + 1];
     }
@@ -267,15 +267,15 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     }
 
     // update locations of current semantic on ListView
-    JSONArray locArray = mService.curMeta().optJSONArray(mCurSem);
+    final JSONArray locArray = mService.curMeta().optJSONArray(mCurSem);
     if (locArray != null) {
-      List<String> stringArray = new ArrayList<String>();
+      final List<String> stringArray = new ArrayList<String>();
       for (int i = 0; i < locArray.length(); i++) {
         stringArray.add(locArray.optString(i));
       }
       Collections.sort(stringArray);
       mArrayAdapter.clear();
-      Iterator<String> iterator = stringArray.iterator();
+      final Iterator<String> iterator = stringArray.iterator();
       while (iterator.hasNext()) {
         mArrayAdapter.add(iterator.next());
       }
@@ -283,27 +283,27 @@ public class LocReporterActivity extends Activity implements SemLocListener,
   }
 
   @Override
-  public void onSemLocInfoReturned(JSONObject semLocInfo) {
+  public void onSemLocInfoReturned(final JSONObject semLocInfo) {
     refresh();
     Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT).show();
   }
 
   @Override
-  public void onMetaReturned(JSONObject meta) {
+  public void onMetaReturned(final JSONObject meta) {
     refresh();
     Toast.makeText(this, R.string.meta_updated, Toast.LENGTH_SHORT).show();
   }
 
   @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
+  public boolean onCreateOptionsMenu(final Menu menu) {
     super.onCreateOptionsMenu(menu);
-    MenuInflater inflater = getMenuInflater();
+    final MenuInflater inflater = getMenuInflater();
     inflater.inflate(R.menu.menu, menu);
     return true;
   }
 
   @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
+  public boolean onOptionsItemSelected(final MenuItem item) {
     switch (item.getItemId()) {
     case R.id.menu_settings:
       startActivity(new Intent(this, LocReporterSettingsActivity.class));

@@ -41,7 +41,6 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.location.Location;
 import android.net.wifi.ScanResult;
-
 import edu.berkeley.bearloc.sampler.Acc;
 import edu.berkeley.bearloc.sampler.Audio;
 import edu.berkeley.bearloc.sampler.GeoLoc;
@@ -59,7 +58,7 @@ import edu.berkeley.bearloc.sampler.Wifi;
 
 public class BearLocSampler {
 
-  private OnSampleEventListener mListener;
+  private final OnSampleEventListener mListener;
 
   private final Wifi mWifi;
   private final Audio mAudio;
@@ -86,9 +85,9 @@ public class BearLocSampler {
 
     mWifi = new Wifi(context, new Wifi.SamplerListener() {
       @Override
-      public void onWifiEvent(List<ScanResult> results) {
+      public void onWifiEvent(final List<ScanResult> results) {
         final String type = "wifi";
-        for (ScanResult result : results) {
+        for (final ScanResult result : results) {
           mListener.onSampleEvent(type, result);
         }
       }
@@ -96,7 +95,7 @@ public class BearLocSampler {
 
     mAudio = new Audio(new Audio.SamplerListener() {
       @Override
-      public void onAudioEvent(JSONObject audio) {
+      public void onAudioEvent(final JSONObject audio) {
         final String type = "audio";
         mListener.onSampleEvent(type, audio);
       }
@@ -104,7 +103,7 @@ public class BearLocSampler {
 
     mGeoLoc = new GeoLoc(context, new GeoLoc.SamplerListener() {
       @Override
-      public void onGeoLocEvent(Location location) {
+      public void onGeoLocEvent(final Location location) {
         final String type = "geoloc";
         mListener.onSampleEvent(type, location);
       }
@@ -112,7 +111,7 @@ public class BearLocSampler {
 
     mAcc = new Acc(context, new Acc.SamplerListener() {
       @Override
-      public void onAccEvent(SensorEvent event) {
+      public void onAccEvent(final SensorEvent event) {
         final String type = "acc";
         mListener.onSampleEvent(type, event);
       }
@@ -120,7 +119,7 @@ public class BearLocSampler {
 
     mLAcc = new LinearAcc(context, new LinearAcc.SamplerListener() {
       @Override
-      public void onLinearAccEvent(SensorEvent event) {
+      public void onLinearAccEvent(final SensorEvent event) {
         final String type = "lacc";
         mListener.onSampleEvent(type, event);
       }
@@ -128,7 +127,7 @@ public class BearLocSampler {
 
     mGravity = new Gravity(context, new Gravity.SamplerListener() {
       @Override
-      public void onGravityEvent(SensorEvent event) {
+      public void onGravityEvent(final SensorEvent event) {
         final String type = "gravity";
         mListener.onSampleEvent(type, event);
       }
@@ -136,7 +135,7 @@ public class BearLocSampler {
 
     mGyro = new Gyro(context, new Gyro.SamplerListener() {
       @Override
-      public void onGyroEvent(SensorEvent event) {
+      public void onGyroEvent(final SensorEvent event) {
         final String type = "gyro";
         mListener.onSampleEvent(type, event);
       }
@@ -144,7 +143,7 @@ public class BearLocSampler {
 
     mRotation = new Rotation(context, new Rotation.SamplerListener() {
       @Override
-      public void onRotationEvent(SensorEvent event) {
+      public void onRotationEvent(final SensorEvent event) {
         final String type = "rotation";
         mListener.onSampleEvent(type, event);
       }
@@ -152,7 +151,7 @@ public class BearLocSampler {
 
     mMag = new Magnetic(context, new Magnetic.SamplerListener() {
       @Override
-      public void onMagneticEvent(SensorEvent event) {
+      public void onMagneticEvent(final SensorEvent event) {
         final String type = "magnetic";
         mListener.onSampleEvent(type, event);
       }
@@ -160,7 +159,7 @@ public class BearLocSampler {
 
     mLight = new Light(context, new Light.SamplerListener() {
       @Override
-      public void onLightEvent(SensorEvent event) {
+      public void onLightEvent(final SensorEvent event) {
         final String type = "light";
         mListener.onSampleEvent(type, event);
       }
@@ -168,7 +167,7 @@ public class BearLocSampler {
 
     mTemp = new Temp(context, new Temp.SamplerListener() {
       @Override
-      public void onTempEvent(SensorEvent event) {
+      public void onTempEvent(final SensorEvent event) {
         final String type = "temp";
         mListener.onSampleEvent(type, event);
       }
@@ -177,7 +176,7 @@ public class BearLocSampler {
     mPressure = new Pressure(context, new Pressure.SamplerListener() {
 
       @Override
-      public void onPressureEvent(SensorEvent event) {
+      public void onPressureEvent(final SensorEvent event) {
         final String type = "pressure";
         mListener.onSampleEvent(type, event);
       }
@@ -185,7 +184,7 @@ public class BearLocSampler {
 
     mProximity = new Proximity(context, new Proximity.SamplerListener() {
       @Override
-      public void onProximityEvent(SensorEvent event) {
+      public void onProximityEvent(final SensorEvent event) {
         final String type = "proximity";
         mListener.onSampleEvent(type, event);
       }
@@ -193,7 +192,7 @@ public class BearLocSampler {
 
     mHumidity = new Humidity(context, new Humidity.SamplerListener() {
       @Override
-      public void onHumidityEvent(SensorEvent event) {
+      public void onHumidityEvent(final SensorEvent event) {
         final String type = "humidity";
         mListener.onSampleEvent(type, event);
       }

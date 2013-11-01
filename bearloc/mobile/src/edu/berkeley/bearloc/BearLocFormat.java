@@ -37,11 +37,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.berkeley.bearloc.util.DeviceUUID;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Sensor;
@@ -53,15 +53,16 @@ import android.media.MediaRecorder.AudioSource;
 import android.net.wifi.ScanResult;
 import android.os.Build;
 import android.util.Pair;
+import edu.berkeley.bearloc.util.DeviceUUID;
 
 public class BearLocFormat {
 
   private final JSONObject mDeviceInfo;
   private final JSONObject mSensorInfo;
 
-  public BearLocFormat(Context context) {
-    mDeviceInfo = getDeviceInfo(context);
-    mSensorInfo = getSensorInfo(context);
+  public BearLocFormat(final Context context) {
+    mDeviceInfo = BearLocFormat.getDeviceInfo(context);
+    mSensorInfo = BearLocFormat.getSensorInfo(context);
   }
 
   public JSONObject dump(
@@ -69,7 +70,7 @@ public class BearLocFormat {
     final JSONObject dumpObj = new JSONObject();
     // add "device" and data
     try {
-      Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = dataMap
+      final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = dataMap
           .entrySet().iterator();
       while (it.hasNext()) {
         final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it
@@ -78,10 +79,10 @@ public class BearLocFormat {
         final List<Pair<Object, JSONObject>> list = entry.getValue();
 
         final JSONArray eventArr = new JSONArray();
-        for (Pair<Object, JSONObject> event : list) {
+        for (final Pair<Object, JSONObject> event : list) {
           final Object data = event.first;
           final JSONObject meta = event.second;
-          final JSONArray formated = format(type, data, meta);
+          final JSONArray formated = BearLocFormat.format(type, data, meta);
           for (int i = 0; i < formated.length(); i++) {
             eventArr.put(formated.get(i));
           }
@@ -96,7 +97,7 @@ public class BearLocFormat {
         dumpObj.put("device", mDeviceInfo);
         dumpObj.put("meta", mSensorInfo);
       }
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -104,14 +105,14 @@ public class BearLocFormat {
     return dumpObj;
   }
 
-  private static JSONObject getDeviceInfo(Context context) {
+  private static JSONObject getDeviceInfo(final Context context) {
     final JSONObject deviceInfo = new JSONObject();
     try {
       // Device Info
       deviceInfo.put("uuid", DeviceUUID.getDeviceUUID(context));
       deviceInfo.put("make", Build.MANUFACTURER);
       deviceInfo.put("model", Build.MODEL);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -121,16 +122,16 @@ public class BearLocFormat {
 
   // Only call getMinDelay() before Gingerbread
   @SuppressLint("NewApi")
-  private static JSONObject getSensorInfo(Context context) {
+  private static JSONObject getSensorInfo(final Context context) {
     final JSONObject sensorInfo = new JSONObject();
     try {
       // Sensor Info
-      SensorManager sensorMgr = (SensorManager) context
+      final SensorManager sensorMgr = (SensorManager) context
           .getSystemService(Context.SENSOR_SERVICE);
-      List<Sensor> sensorList = sensorMgr.getSensorList(Sensor.TYPE_ALL);
-      Iterator<Sensor> iterator = sensorList.iterator();
+      final List<Sensor> sensorList = sensorMgr.getSensorList(Sensor.TYPE_ALL);
+      final Iterator<Sensor> iterator = sensorList.iterator();
       while (iterator.hasNext()) {
-        Sensor sensor = iterator.next();
+        final Sensor sensor = iterator.next();
 
         String type = null;
         switch (sensor.getType()) {
@@ -172,7 +173,7 @@ public class BearLocFormat {
         }
 
         if (type != null) {
-          JSONObject meta = new JSONObject();
+          final JSONObject meta = new JSONObject();
           meta.put("vendor", sensor.getVendor());
           meta.put("name", sensor.getName());
           meta.put("power", sensor.getPower());
@@ -188,7 +189,7 @@ public class BearLocFormat {
 
         // TODO add audio, wifi, and bluetooth info
       }
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -199,35 +200,35 @@ public class BearLocFormat {
   private static JSONArray format(final String type, final Object data,
       final JSONObject meta) {
     if ("semloc".equals(type)) {
-      return formatSemLoc(data, meta);
+      return BearLocFormat.formatSemLoc(data, meta);
     } else if ("wifi".equals(type)) {
-      return formatWifi(data, meta);
+      return BearLocFormat.formatWifi(data, meta);
     } else if ("audio".equals(type)) {
-      return formatAudio(data, meta);
+      return BearLocFormat.formatAudio(data, meta);
     } else if ("geoloc".equals(type)) {
-      return formatGeoLoc(data, meta);
+      return BearLocFormat.formatGeoLoc(data, meta);
     } else if ("acc".equals(type)) {
-      return formatAcc(data, meta);
+      return BearLocFormat.formatAcc(data, meta);
     } else if ("lacc".equals(type)) {
-      return formatLinearAcc(data, meta);
+      return BearLocFormat.formatLinearAcc(data, meta);
     } else if ("gravity".equals(type)) {
-      return formatGravity(data, meta);
+      return BearLocFormat.formatGravity(data, meta);
     } else if ("gyro".equals(type)) {
-      return formatGyro(data, meta);
+      return BearLocFormat.formatGyro(data, meta);
     } else if ("rotation".equals(type)) {
-      return formatRotation(data, meta);
+      return BearLocFormat.formatRotation(data, meta);
     } else if ("magnetic".equals(type)) {
-      return formatMagnetic(data, meta);
+      return BearLocFormat.formatMagnetic(data, meta);
     } else if ("light".equals(type)) {
-      return formatLight(data, meta);
+      return BearLocFormat.formatLight(data, meta);
     } else if ("temp".equals(type)) {
-      return formatTemp(data, meta);
+      return BearLocFormat.formatTemp(data, meta);
     } else if ("pressure".equals(type)) {
-      return formatPressure(data, meta);
+      return BearLocFormat.formatPressure(data, meta);
     } else if ("proximity".equals(type)) {
-      return formatProximity(data, meta);
+      return BearLocFormat.formatProximity(data, meta);
     } else if ("humidity".equals(type)) {
-      return formatHumidity(data, meta);
+      return BearLocFormat.formatHumidity(data, meta);
     }
 
     return null;
@@ -249,7 +250,7 @@ public class BearLocFormat {
       event.put("room", from.optString("room", null));
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -271,7 +272,7 @@ public class BearLocFormat {
       event.put("RSSI", from.level);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -299,7 +300,7 @@ public class BearLocFormat {
       event.put("nframes", nframes);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -323,7 +324,7 @@ public class BearLocFormat {
       event.put("speed", from.getSpeed());
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -346,7 +347,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -370,7 +371,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -394,7 +395,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -417,7 +418,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -447,7 +448,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -471,7 +472,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -492,7 +493,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -513,7 +514,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -535,7 +536,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -557,7 +558,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -579,7 +580,7 @@ public class BearLocFormat {
       event.put("accuracy", from.accuracy);
 
       to.put(event);
-    } catch (JSONException e) {
+    } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }

@@ -35,12 +35,12 @@
 
 package edu.berkeley.bearloc.util;
 
+import java.io.UnsupportedEncodingException;
+import java.util.UUID;
+
 import android.content.Context;
 import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
-
-import java.io.UnsupportedEncodingException;
-import java.util.UUID;
 
 public class DeviceUUID {
   private static UUID uuid;
@@ -74,8 +74,8 @@ public class DeviceUUID {
    * @return a UUID that may be used to uniquely identify your device for most
    *         purposes.
    */
-  public static UUID getDeviceUUID(Context context) {
-    if (uuid == null) {
+  public static UUID getDeviceUUID(final Context context) {
+    if (DeviceUUID.uuid == null) {
       synchronized (DeviceUUID.class) {
         final String androidId = Secure.getString(context.getContentResolver(),
             Secure.ANDROID_ID);
@@ -85,19 +85,21 @@ public class DeviceUUID {
         // number which we store to a prefs file
         try {
           if (!"9774d56d682e549c".equals(androidId)) {
-            uuid = UUID.nameUUIDFromBytes(androidId.getBytes("utf8"));
+            DeviceUUID.uuid = UUID
+                .nameUUIDFromBytes(androidId.getBytes("utf8"));
           } else {
             final String deviceId = ((TelephonyManager) context
                 .getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-            uuid = deviceId != null ? UUID.nameUUIDFromBytes(deviceId
-                .getBytes("utf8")) : UUID.randomUUID();
+            DeviceUUID.uuid = deviceId != null ? UUID
+                .nameUUIDFromBytes(deviceId.getBytes("utf8")) : UUID
+                .randomUUID();
           }
-        } catch (UnsupportedEncodingException e) {
+        } catch (final UnsupportedEncodingException e) {
           throw new RuntimeException(e);
         }
       }
     }
 
-    return uuid;
+    return DeviceUUID.uuid;
   }
 }

@@ -36,11 +36,10 @@ package edu.berkeley.bearloc;
 import org.json.JSONObject;
 
 public interface SemLocService {
-  public abstract boolean localize(final SemLocListener listener);
+  public abstract boolean localize(SemLocListener listener);
 
   // report semloc data
-  public abstract boolean report(final JSONObject semloc);
+  public abstract boolean report(JSONObject semloc);
 
-  public abstract boolean meta(final JSONObject semloc,
-      final MetaListener listener);
+  public abstract boolean meta(JSONObject semloc, MetaListener listener);
 }

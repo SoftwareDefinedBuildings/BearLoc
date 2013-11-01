@@ -35,8 +35,6 @@ package edu.berkeley.locreporter;
 
 import java.util.List;
 
-import edu.berkeley.locreporter.R;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
@@ -53,14 +51,16 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
   // Only call addPreferencesFromResource() before Honeycomb
   @SuppressWarnings("deprecation")
   @Override
-  protected void onCreate(Bundle savedInstanceState) {
+  protected void onCreate(final Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    String action = getIntent().getAction();
+    final String action = getIntent().getAction();
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-      if (action != null && action.equals(ACTION_PREF_GENERAL)) {
+      if (action != null
+          && action.equals(LocReporterSettingsActivity.ACTION_PREF_GENERAL)) {
         addPreferencesFromResource(R.xml.settings_general);
-      } else if (action != null && action.equals(ACTION_PREF_SERVER)) {
+      } else if (action != null
+          && action.equals(LocReporterSettingsActivity.ACTION_PREF_SERVER)) {
         addPreferencesFromResource(edu.berkeley.bearloc.R.xml.settings_server);
       } else {
         // Load the legacy preferences headers
@@ -72,17 +72,17 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
   // Called only on Honeycomb and later
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @Override
-  public void onBuildHeaders(List<Header> target) {
+  public void onBuildHeaders(final List<Header> target) {
     loadHeadersFromResource(R.xml.pref_headers, target);
   }
 
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   public static class SettingsFragment extends PreferenceFragment {
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(final Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
 
-      String settings = getArguments().getString("settings");
+      final String settings = getArguments().getString("settings");
       if ("general".equals(settings)) {
         addPreferencesFromResource(R.xml.settings_general);
       } else if ("server".equals(settings)) {
@@ -91,7 +91,7 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
     }
   }
 
-  public static Boolean getAutoReport(Context context) {
+  public static Boolean getAutoReport(final Context context) {
     return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
         "pref_auto_report", false);
   }

@@ -67,7 +67,7 @@ public class Temp implements Sampler, SensorEventListener {
   // get null for mRotation if not available
   @SuppressLint("InlinedApi")
   @SuppressWarnings("deprecation")
-  public Temp(Context context, SamplerListener listener) {
+  public Temp(final Context context, final SamplerListener listener) {
     mListener = listener;
     mHandler = new Handler();
     mSensorManager = (SensorManager) context
@@ -81,7 +81,7 @@ public class Temp implements Sampler, SensorEventListener {
   }
 
   @Override
-  public boolean start(Integer period, Integer num) {
+  public boolean start(final Integer period, final Integer num) {
     if (mBusy == false && mTemp != null) {
       mBusy = true;
       nSampleNum = 0;
@@ -104,13 +104,13 @@ public class Temp implements Sampler, SensorEventListener {
   }
 
   @Override
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {
+  public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
     // TODO Auto-generated method stub
 
   }
 
   @Override
-  public void onSensorChanged(SensorEvent event) {
+  public void onSensorChanged(final SensorEvent event) {
     if (event == null) {
       return;
     }

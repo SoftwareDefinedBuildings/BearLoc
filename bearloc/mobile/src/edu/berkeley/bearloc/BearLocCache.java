@@ -39,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import org.json.JSONObject;
 
 import android.content.Context;
@@ -47,7 +48,7 @@ import android.util.Pair;
 public class BearLocCache {
   private final Map<String, List<Pair<Object, JSONObject>>> mDataMap;
 
-  public BearLocCache(Context context) {
+  public BearLocCache(final Context context) {
     mDataMap = new HashMap<String, List<Pair<Object, JSONObject>>>();
   }
 
@@ -65,11 +66,11 @@ public class BearLocCache {
   }
 
   public void clear() {
-    Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = mDataMap
+    final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = mDataMap
         .entrySet().iterator();
     while (it.hasNext()) {
-      Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it.next();
-      List<Pair<Object, JSONObject>> events = entry.getValue();
+      final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it.next();
+      final List<Pair<Object, JSONObject>> events = entry.getValue();
       events.clear();
     }
   }

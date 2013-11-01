@@ -70,10 +70,11 @@ public class Audio implements Sampler {
     @Override
     public void run() {
       try {
-        final int bufferSize = AudioRecord.getMinBufferSize(AUDIO_SAMPLE_RATE,
-            AUDIO_CHANNEL, AUDIO_FORMAT);
-        mRecorder = new AudioRecord(AUDIO_SOURCE, AUDIO_SAMPLE_RATE,
-            AUDIO_CHANNEL, AUDIO_FORMAT, bufferSize);
+        final int bufferSize = AudioRecord.getMinBufferSize(
+            Audio.AUDIO_SAMPLE_RATE, Audio.AUDIO_CHANNEL, Audio.AUDIO_FORMAT);
+        mRecorder = new AudioRecord(Audio.AUDIO_SOURCE,
+            Audio.AUDIO_SAMPLE_RATE, Audio.AUDIO_CHANNEL, Audio.AUDIO_FORMAT,
+            bufferSize);
 
         mStartEpoch = System.currentTimeMillis();
         mRecorder.startRecording();
@@ -82,7 +83,7 @@ public class Audio implements Sampler {
           final byte[] buffer = new byte[bufferSize];
           // blocking read, which returns when buffer.length bytes are recorded
           mRecorder.read(buffer, 0, buffer.length); // Bytes
-          for (byte data : buffer) {
+          for (final byte data : buffer) {
             mRaw.put(data);
           }
         }
@@ -91,7 +92,7 @@ public class Audio implements Sampler {
         mRecorder.release();
 
         mListener.onAudioEvent(dump());
-      } catch (Exception e) {
+      } catch (final Exception e) {
         e.printStackTrace();
       }
     }
@@ -106,11 +107,11 @@ public class Audio implements Sampler {
       try {
         audioEvent.put("raw", mRaw);
         audioEvent.put("epoch", mStartEpoch);
-        audioEvent.put("source", AUDIO_SOURCE);
-        audioEvent.put("channel", AUDIO_CHANNEL);
-        audioEvent.put("sampwidth", AUDIO_FORMAT);
-        audioEvent.put("framerate", AUDIO_SAMPLE_RATE);
-      } catch (JSONException e) {
+        audioEvent.put("source", Audio.AUDIO_SOURCE);
+        audioEvent.put("channel", Audio.AUDIO_CHANNEL);
+        audioEvent.put("sampwidth", Audio.AUDIO_FORMAT);
+        audioEvent.put("framerate", Audio.AUDIO_SAMPLE_RATE);
+      } catch (final JSONException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
@@ -119,7 +120,7 @@ public class Audio implements Sampler {
     }
   }
 
-  public Audio(SamplerListener listener) {
+  public Audio(final SamplerListener listener) {
     mListener = listener;
     mHandler = new Handler();
   }
@@ -132,7 +133,7 @@ public class Audio implements Sampler {
   };
 
   @Override
-  public boolean start(Integer period, Integer num) {
+  public boolean start(final Integer period, Integer num) {
     num = null; // num is not used in Audio
     if (mBusy == false) {
       mBusy = true;
@@ -151,7 +152,7 @@ public class Audio implements Sampler {
       mAudioRecordThread.terminate();
       try {
         mAudioRecordThread.join();
-      } catch (InterruptedException e) {
+      } catch (final InterruptedException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
       }

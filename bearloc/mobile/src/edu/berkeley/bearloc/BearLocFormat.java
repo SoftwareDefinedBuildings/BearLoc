@@ -105,7 +105,7 @@ public class BearLocFormat {
     return dumpObj;
   }
 
-  private static JSONObject getDeviceInfo(final Context context) {
+  public static JSONObject getDeviceInfo(final Context context) {
     final JSONObject deviceInfo = new JSONObject();
     try {
       // Device Info

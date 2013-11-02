@@ -83,25 +83,29 @@ class Loc(object):
 
   # Maybe it is good to make this block to ensure fast response
   def _localize(self, request):
-    locepoch = request['epoch']
+    device = request.get('device')
+    uuid = device.get('uuid') if device != None else None
+    locepoch = request.get('epoch')
+    
     semloc = {}
     alter = {}
-    for sem in self._sems:
-      if self._predict(locepoch, (semloc, alter), sem) == False:
-        break
+    if uuid != None and locepoch != None :
+      for sem in self._sems:
+        if self._predict(uuid, locepoch, (semloc, alter), sem) == False:
+          break
 
     semlocinfo = self._aggr(semloc, alter)
     
     return defer.succeed(semlocinfo)
 
 
-  def _predict(self, locepoch, (semloc, alter), targetsem):
+  def _predict(self, uuid, locepoch, (semloc, alter), targetsem):
     clf_info = self._clf_infos.get((frozenset(semloc.items()), targetsem))
     if clf_info != None:
       if targetsem not in ("floor", "room"):
-        (loc, alter_locs) = self._predict_geoloc(locepoch, clf_info)
+        (loc, alter_locs) = self._predict_geoloc(uuid, locepoch, clf_info)
       else:
-        (loc, alter_locs) = self._predict_wifi(locepoch, clf_info)
+        (loc, alter_locs) = self._predict_wifi(uuid, locepoch, clf_info)
 
       if loc != None and alter_locs != None:
         semloc[targetsem] = loc
@@ -111,13 +115,14 @@ class Loc(object):
     return False
 
 
-  def _predict_geoloc(self, locepoch, clf_info):
+  def _predict_geoloc(self, uuid, locepoch, clf_info):
     clf = clf_info["clf"]
 
     cur = self._db.cursor()
     # extract attributes and store in db
     operation = "SELECT longitude, latitude FROM " + "geoloc" + \
-                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + \
+                " WHERE uuid='" + str(uuid) + "'" + \
+                " AND ABS(epoch-" + str(locepoch) + ") <= " + \
                 str(self._geoloc_predict_epoch_thld) + \
                 " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
                 " LIMIT 1"
@@ -136,14 +141,15 @@ class Loc(object):
     return (location, alter)
 
 
-  def _predict_wifi(self, locepoch, clf_info):
+  def _predict_wifi(self, uuid, locepoch, clf_info):
     bssids = clf_info["bssids"]
     clf = clf_info["clf"]
 
     cur = self._db.cursor()
     # extract attributes and store in db
     operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                " WHERE ABS(epoch-" + str(locepoch) + ") <= " + \
+                " WHERE uuid='" + str(uuid) + "'" + \
+                " AND ABS(epoch-" + str(locepoch) + ") <= " + \
                 str(self._wifi_predict_epoch_thld)
     cur.execute(operation)
     wifi = cur.fetchall()

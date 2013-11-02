@@ -137,6 +137,7 @@ public class BearLocService extends Service implements SemLocService,
 
       final JSONObject request = new JSONObject();
       request.put("epoch", System.currentTimeMillis());
+      request.put("device", BearLocFormat.getDeviceInfo(this));
 
       new BearLocHttpPostTask(new onHttpPostRespondedListener() {
         @Override

@@ -47,6 +47,7 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
 
   final public static String ACTION_PREF_GENERAL = "edu.berkeley.locreporter.PREF_GENERAL";
   final public static String ACTION_PREF_SERVER = "edu.berkeley.bearloc.PREF_SERVER";
+  final public static String ACTION_PREF_SAMPLER = "edu.berkeley.bearloc.PREF_SAMPLER";
 
   // Only call addPreferencesFromResource() before Honeycomb
   @SuppressWarnings("deprecation")
@@ -62,6 +63,9 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
       } else if (action != null
           && action.equals(LocReporterSettingsActivity.ACTION_PREF_SERVER)) {
         addPreferencesFromResource(edu.berkeley.bearloc.R.xml.settings_server);
+      } else if (action != null
+          && action.equals(LocReporterSettingsActivity.ACTION_PREF_SAMPLER)) {
+        addPreferencesFromResource(edu.berkeley.bearloc.R.xml.settings_sampler);
       } else {
         // Load the legacy preferences headers
         addPreferencesFromResource(R.xml.pref_headers_legacy);
@@ -87,6 +91,8 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
         addPreferencesFromResource(R.xml.settings_general);
       } else if ("server".equals(settings)) {
         addPreferencesFromResource(R.xml.settings_general);
+      } else if ("sampler".equals(settings)) {
+        addPreferencesFromResource(R.xml.settings_sampler);
       }
     }
   }

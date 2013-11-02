@@ -9,11 +9,19 @@
             android:targetClass="edu.berkeley.locreporter.LocReporterSettingsActivity"
             android:targetPackage="edu.berkeley.locreporter" />
     </Preference>
-     <Preference
+    <Preference
         android:summary="@string/pref_server_category_summ"
         android:title="@string/pref_server_category" >
         <intent
             android:action="edu.berkeley.bearloc.PREF_SERVER"
+            android:targetClass="edu.berkeley.locreporter.LocReporterSettingsActivity"
+            android:targetPackage="edu.berkeley.locreporter" />
+    </Preference>
+    <Preference
+        android:summary="@string/pref_sampler_category_summ"
+        android:title="@string/pref_sampler_category" >
+        <intent
+            android:action="edu.berkeley.bearloc.PREF_SAMPLER"
             android:targetClass="edu.berkeley.locreporter.LocReporterSettingsActivity"
             android:targetPackage="edu.berkeley.locreporter" />
     </Preference>

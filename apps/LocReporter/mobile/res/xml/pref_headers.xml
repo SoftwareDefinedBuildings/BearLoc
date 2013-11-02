@@ -17,5 +17,13 @@
             android:name="settings"
             android:value="server" />
     </header>
+    <header
+        android:fragment="edu.berkeley.locreporter.LocReporterSettingsActivity$SettingsFragment"
+        android:summary="@string/pref_sampler_category_summ"
+        android:title="@string/pref_sampler_category" >
+        <extra
+            android:name="settings"
+            android:value="sampler" />
+    </header>
 
 </preference-headers>

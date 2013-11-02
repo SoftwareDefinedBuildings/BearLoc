@@ -39,15 +39,17 @@ import android.content.Context;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
+import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Wifi implements Sampler {
 
-  private static final long WIFI_SAMPLE_ITVL = 1000L; // millisecond
+  private final long mSampleItvl; // millisecond
 
   private boolean mBusy;
-  private Integer mSampleCap;
-  private Integer nSampleNum;
+  private int mSampleCap;
+  private int nSampleNum;
 
+  private final Context mContext;
   private final SamplerListener mListener;
   private final Handler mHandler;
   private final WifiManager mWifiManager;
@@ -71,14 +73,23 @@ public class Wifi implements Sampler {
   };
 
   public Wifi(final Context context, final SamplerListener listener) {
+    mContext = context;
     mListener = listener;
     mHandler = new Handler();
     mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+    mSampleItvl = SamplerSettings.getWifiDelay(mContext);
+
+    if (mWifiManager == null) {
+      SamplerSettings.setWifiEnable(mContext, false);
+    }
   }
 
   @Override
-  public boolean start(final Integer duration, final Integer num) {
-    if (mBusy == false && mWifiManager != null) {
+  public boolean start() {
+    if (mBusy == false && mWifiManager != null
+        && SamplerSettings.getWifiEnable(mContext) == true) {
+      final long duration = SamplerSettings.getWifiDuration(mContext);
+      final int num = SamplerSettings.getWifiCnt(mContext);
       mBusy = true;
       nSampleNum = 0;
       mSampleCap = num;
@@ -111,7 +122,7 @@ public class Wifi implements Sampler {
 
     nSampleNum++;
     if (nSampleNum < mSampleCap) {
-      mHandler.postDelayed(mWifiScanTask, Wifi.WIFI_SAMPLE_ITVL);
+      mHandler.postDelayed(mWifiScanTask, mSampleItvl);
     } else {
       pause();
     }

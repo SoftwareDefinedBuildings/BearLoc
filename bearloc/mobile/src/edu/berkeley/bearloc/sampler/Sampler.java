@@ -35,5 +35,5 @@ package edu.berkeley.bearloc.sampler;
 
 public interface Sampler {
   // duration in millisecond
-  public abstract boolean start(Integer duration, Integer num);
+  public abstract boolean start();
 }

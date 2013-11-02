@@ -41,13 +41,15 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Handler;
+import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Temp implements Sampler, SensorEventListener {
 
   private boolean mBusy;
-  private Integer mSampleCap;
-  private Integer nSampleNum;
+  private int mSampleCap;
+  private int nSampleNum;
 
+  private final Context mContext;
   private final SamplerListener mListener;
   private final Handler mHandler;
   private final SensorManager mSensorManager;
@@ -68,6 +70,7 @@ public class Temp implements Sampler, SensorEventListener {
   @SuppressLint("InlinedApi")
   @SuppressWarnings("deprecation")
   public Temp(final Context context, final SamplerListener listener) {
+    mContext = context;
     mListener = listener;
     mHandler = new Handler();
     mSensorManager = (SensorManager) context
@@ -78,17 +81,24 @@ public class Temp implements Sampler, SensorEventListener {
     } else {
       mTemp = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
     }
+
+    if (mTemp == null) {
+      SamplerSettings.setTempEnable(mContext, false);
+    }
   }
 
   @Override
-  public boolean start(final Integer period, final Integer num) {
-    if (mBusy == false && mTemp != null) {
+  public boolean start() {
+    if (mBusy == false && mTemp != null
+        && SamplerSettings.getTempEnable(mContext) == true) {
+      final long duration = SamplerSettings.getTempDuration(mContext);
+      final int num = SamplerSettings.getTempCnt(mContext);
       mBusy = true;
       nSampleNum = 0;
       mSampleCap = num;
       mSensorManager.registerListener(this, mTemp,
           SensorManager.SENSOR_DELAY_NORMAL);
-      mHandler.postDelayed(mPauseTask, period);
+      mHandler.postDelayed(mPauseTask, duration);
       return true;
     } else {
       return false;

@@ -41,13 +41,15 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Handler;
+import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Gravity implements Sampler, SensorEventListener {
 
   private boolean mBusy;
-  private Integer mSampleCap;
-  private Integer nSampleNum;
+  private int mSampleCap;
+  private int nSampleNum;
 
+  private final Context mContext;
   private final SamplerListener mListener;
   private final Handler mHandler;
   private final SensorManager mSensorManager;
@@ -67,6 +69,7 @@ public class Gravity implements Sampler, SensorEventListener {
   // get null for mGravity if not available
   @SuppressLint("InlinedApi")
   public Gravity(final Context context, final SamplerListener listener) {
+    mContext = context;
     mListener = listener;
     mHandler = new Handler();
     mSensorManager = (SensorManager) context
@@ -76,11 +79,18 @@ public class Gravity implements Sampler, SensorEventListener {
     } else {
       mGravity = null;
     }
+
+    if (mGravity == null) {
+      SamplerSettings.setGravityEnable(mContext, false);
+    }
   }
 
   @Override
-  public boolean start(final Integer duration, final Integer num) {
-    if (mBusy == false && mGravity != null) {
+  public boolean start() {
+    if (mBusy == false && mGravity != null
+        && SamplerSettings.getGravityEnable(mContext) == true) {
+      final long duration = SamplerSettings.getGravityDuration(mContext);
+      final int num = SamplerSettings.getGravityCnt(mContext);
       mBusy = true;
       nSampleNum = 0;
       mSampleCap = num;

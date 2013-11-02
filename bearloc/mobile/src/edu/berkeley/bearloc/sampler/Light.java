@@ -39,13 +39,15 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
+import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Light implements Sampler, SensorEventListener {
 
   private boolean mBusy;
-  private Integer mSampleCap;
-  private Integer mSampleNum;
+  private int mSampleCap;
+  private int mSampleNum;
 
+  private final Context mContext;
   private final SamplerListener mListener;
   private final Handler mHandler;
   private final SensorManager mSensorManager;
@@ -63,16 +65,24 @@ public class Light implements Sampler, SensorEventListener {
   };
 
   public Light(final Context context, final SamplerListener listener) {
+    mContext = context;
     mListener = listener;
     mHandler = new Handler();
     mSensorManager = (SensorManager) context
         .getSystemService(Context.SENSOR_SERVICE);
     mLight = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+
+    if (mLight == null) {
+      SamplerSettings.setLightEnable(mContext, false);
+    }
   }
 
   @Override
-  public boolean start(final Integer duration, final Integer num) {
-    if (mBusy == false && mLight != null) {
+  public boolean start() {
+    if (mBusy == false && mLight != null
+        && SamplerSettings.getLightEnable(mContext) == true) {
+      final long duration = SamplerSettings.getLightDuration(mContext);
+      final int num = SamplerSettings.getLightCnt(mContext);
       mBusy = true;
       mSampleNum = 0;
       mSampleCap = num;

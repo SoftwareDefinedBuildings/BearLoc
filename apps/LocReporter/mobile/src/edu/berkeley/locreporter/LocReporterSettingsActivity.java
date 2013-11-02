@@ -59,13 +59,13 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
       if (action != null
           && action.equals(LocReporterSettingsActivity.ACTION_PREF_GENERAL)) {
-        addPreferencesFromResource(R.xml.settings_general);
+        addPreferencesFromResource(R.xml.general_settings);
       } else if (action != null
           && action.equals(LocReporterSettingsActivity.ACTION_PREF_SERVER)) {
-        addPreferencesFromResource(edu.berkeley.bearloc.R.xml.settings_server);
+        addPreferencesFromResource(edu.berkeley.bearloc.R.xml.server_settings);
       } else if (action != null
           && action.equals(LocReporterSettingsActivity.ACTION_PREF_SAMPLER)) {
-        addPreferencesFromResource(edu.berkeley.bearloc.R.xml.settings_sampler);
+        addPreferencesFromResource(edu.berkeley.bearloc.R.xml.sampler_settings);
       } else {
         // Load the legacy preferences headers
         addPreferencesFromResource(R.xml.pref_headers_legacy);
@@ -88,11 +88,11 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
 
       final String settings = getArguments().getString("settings");
       if ("general".equals(settings)) {
-        addPreferencesFromResource(R.xml.settings_general);
+        addPreferencesFromResource(R.xml.general_settings);
       } else if ("server".equals(settings)) {
-        addPreferencesFromResource(R.xml.settings_general);
+        addPreferencesFromResource(R.xml.server_settings);
       } else if ("sampler".equals(settings)) {
-        addPreferencesFromResource(R.xml.settings_sampler);
+        addPreferencesFromResource(R.xml.sampler_settings);
       }
     }
   }

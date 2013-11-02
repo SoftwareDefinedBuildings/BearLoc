@@ -37,20 +37,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.media.AudioFormat;
+import android.content.Context;
 import android.media.AudioRecord;
-import android.media.MediaRecorder;
 import android.os.Handler;
+import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Audio implements Sampler {
 
-  private static final int AUDIO_SOURCE = MediaRecorder.AudioSource.CAMCORDER;
-  private static final int AUDIO_SAMPLE_RATE = 11025; // Hz
-  private static final int AUDIO_CHANNEL = AudioFormat.CHANNEL_IN_MONO;
-  private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+  private final int mSrc;
+  private final int mSampleRate;
+  private final int mChannel;
+  private final int mFormat;
 
   private boolean mBusy;
 
+  private final Context mContext;
   private final SamplerListener mListener;
   private final Handler mHandler;
 
@@ -70,10 +71,9 @@ public class Audio implements Sampler {
     @Override
     public void run() {
       try {
-        final int bufferSize = AudioRecord.getMinBufferSize(
-            Audio.AUDIO_SAMPLE_RATE, Audio.AUDIO_CHANNEL, Audio.AUDIO_FORMAT);
-        mRecorder = new AudioRecord(Audio.AUDIO_SOURCE,
-            Audio.AUDIO_SAMPLE_RATE, Audio.AUDIO_CHANNEL, Audio.AUDIO_FORMAT,
+        final int bufferSize = AudioRecord.getMinBufferSize(mSampleRate,
+            mChannel, mFormat);
+        mRecorder = new AudioRecord(mSrc, mSampleRate, mChannel, mFormat,
             bufferSize);
 
         mStartEpoch = System.currentTimeMillis();
@@ -107,10 +107,10 @@ public class Audio implements Sampler {
       try {
         audioEvent.put("raw", mRaw);
         audioEvent.put("epoch", mStartEpoch);
-        audioEvent.put("source", Audio.AUDIO_SOURCE);
-        audioEvent.put("channel", Audio.AUDIO_CHANNEL);
-        audioEvent.put("sampwidth", Audio.AUDIO_FORMAT);
-        audioEvent.put("framerate", Audio.AUDIO_SAMPLE_RATE);
+        audioEvent.put("source", mSrc);
+        audioEvent.put("channel", mChannel);
+        audioEvent.put("sampwidth", mFormat);
+        audioEvent.put("framerate", mSampleRate);
       } catch (final JSONException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
@@ -120,9 +120,22 @@ public class Audio implements Sampler {
     }
   }
 
-  public Audio(final SamplerListener listener) {
+  public Audio(final Context context, final SamplerListener listener) {
+    mContext = context;
     mListener = listener;
     mHandler = new Handler();
+
+    mSrc = SamplerSettings.getAudioSrc(mContext);
+    mSampleRate = SamplerSettings.getAudioSampleRate(mContext);
+    mChannel = SamplerSettings.getAudioChannel(mContext);
+    mFormat = SamplerSettings.getAudioFormat(mContext);
+
+    // TODO change settings rather than disable it
+    final int bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel,
+        mFormat);
+    if (bufferSize <= 0) {
+      SamplerSettings.setAudioEnable(mContext, false);
+    }
   }
 
   private final Runnable mPauseTask = new Runnable() {
@@ -133,9 +146,9 @@ public class Audio implements Sampler {
   };
 
   @Override
-  public boolean start(final Integer duration, Integer num) {
-    num = null; // num is not used in Audio
-    if (mBusy == false) {
+  public boolean start() {
+    if (mBusy == false && SamplerSettings.getAudioEnable(mContext) == true) {
+      final long duration = SamplerSettings.getAudioDuration(mContext);
       mBusy = true;
       mAudioRecordThread = new AudioRecordThread();
       mAudioRecordThread.start();

@@ -41,13 +41,15 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Handler;
+import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Humidity implements Sampler, SensorEventListener {
 
   private boolean mBusy;
-  private Integer mSampleCap;
-  private Integer nSampleNum;
+  private int mSampleCap;
+  private int nSampleNum;
 
+  private final Context mContext;
   private final SamplerListener mListener;
   private final Handler mHandler;
   private final SensorManager mSensorManager;
@@ -67,6 +69,7 @@ public class Humidity implements Sampler, SensorEventListener {
   // get null for mHumidity if not available
   @SuppressLint("InlinedApi")
   public Humidity(final Context context, final SamplerListener listener) {
+    mContext = context;
     mListener = listener;
     mHandler = new Handler();
     mSensorManager = (SensorManager) context
@@ -77,11 +80,18 @@ public class Humidity implements Sampler, SensorEventListener {
     } else {
       mHumidity = null;
     }
+
+    if (mHumidity == null) {
+      SamplerSettings.setHumidityEnable(mContext, false);
+    }
   }
 
   @Override
-  public boolean start(final Integer duration, final Integer num) {
-    if (mBusy == false && mHumidity != null) {
+  public boolean start() {
+    if (mBusy == false && mHumidity != null
+        && SamplerSettings.getHumidityEnable(mContext) == true) {
+      final long duration = SamplerSettings.getHumidityDuration(mContext);
+      final int num = SamplerSettings.getHumidityCnt(mContext);
       mBusy = true;
       nSampleNum = 0;
       mSampleCap = num;

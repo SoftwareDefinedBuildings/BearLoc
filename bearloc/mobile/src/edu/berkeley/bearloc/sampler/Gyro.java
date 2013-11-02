@@ -39,13 +39,15 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
+import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Gyro implements Sampler, SensorEventListener {
 
   private boolean mBusy;
-  private Integer mSampleCap;
-  private Integer nSampleNum;
+  private int mSampleCap;
+  private int nSampleNum;
 
+  private final Context mContext;
   private final SamplerListener mListener;
   private final Handler mHandler;
   private final SensorManager mSensorManager;
@@ -63,16 +65,24 @@ public class Gyro implements Sampler, SensorEventListener {
   };
 
   public Gyro(final Context context, final SamplerListener listener) {
+    mContext = context;
     mListener = listener;
     mHandler = new Handler();
     mSensorManager = (SensorManager) context
         .getSystemService(Context.SENSOR_SERVICE);
     mGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+    if (mGyro == null) {
+      SamplerSettings.setGyroEnable(mContext, false);
+    }
   }
 
   @Override
-  public boolean start(final Integer duration, final Integer num) {
-    if (mBusy == false && mGyro != null) {
+  public boolean start() {
+    if (mBusy == false && mGyro != null
+        && SamplerSettings.getGyroEnable(mContext) == true) {
+      final long duration = SamplerSettings.getGyroDuration(mContext);
+      final int num = SamplerSettings.getGyroCnt(mContext);
       mBusy = true;
       nSampleNum = 0;
       mSampleCap = num;

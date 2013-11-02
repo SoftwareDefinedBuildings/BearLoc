@@ -39,13 +39,15 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
+import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Pressure implements Sampler, SensorEventListener {
 
   private boolean mBusy;
-  private Integer mSampleCap;
-  private Integer nSampleNum;
+  private int mSampleCap;
+  private int nSampleNum;
 
+  private final Context mContext;
   private final SamplerListener mListener;
   private final Handler mHandler;
   private final SensorManager mSensorManager;
@@ -63,16 +65,24 @@ public class Pressure implements Sampler, SensorEventListener {
   };
 
   public Pressure(final Context context, final SamplerListener listener) {
+    mContext = context;
     mListener = listener;
     mHandler = new Handler();
     mSensorManager = (SensorManager) context
         .getSystemService(Context.SENSOR_SERVICE);
     mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+
+    if (mPressure == null) {
+      SamplerSettings.setPressureEnable(mContext, false);
+    }
   }
 
   @Override
-  public boolean start(final Integer duration, final Integer num) {
-    if (mBusy == false && mPressure != null) {
+  public boolean start() {
+    if (mBusy == false && mPressure != null
+        && SamplerSettings.getPressureEnable(mContext) == true) {
+      final long duration = SamplerSettings.getPressureDuration(mContext);
+      final int num = SamplerSettings.getPressureCnt(mContext);
       mBusy = true;
       nSampleNum = 0;
       mSampleCap = num;

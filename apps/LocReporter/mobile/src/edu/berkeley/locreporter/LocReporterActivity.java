@@ -114,7 +114,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     setContentView(R.layout.main);
 
     // Set default setting values
-    PreferenceManager.setDefaultValues(this, R.xml.settings_general, false);
+    PreferenceManager.setDefaultValues(this, R.xml.general_settings, false);
 
     mCurSem = LocReporterService.Sems[LocReporterService.Sems.length - 1];
 

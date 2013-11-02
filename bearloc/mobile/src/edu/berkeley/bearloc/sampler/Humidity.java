@@ -80,24 +80,24 @@ public class Humidity implements Sampler, SensorEventListener {
     } else {
       mHumidity = null;
     }
-
-    if (mHumidity == null) {
-      SamplerSettings.setHumidityEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mHumidity != null
-        && SamplerSettings.getHumidityEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getHumidityEnable(mContext) == true) {
+      if (mHumidity == null) {
+        SamplerSettings.setHumidityEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getHumidityDuration(mContext);
       final int num = SamplerSettings.getHumidityCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getHumidityDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mHumidity,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mHumidity, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

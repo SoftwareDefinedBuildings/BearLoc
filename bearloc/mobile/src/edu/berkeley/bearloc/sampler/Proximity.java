@@ -71,24 +71,24 @@ public class Proximity implements Sampler, SensorEventListener {
     mSensorManager = (SensorManager) context
         .getSystemService(Context.SENSOR_SERVICE);
     mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-
-    if (mProximity == null) {
-      SamplerSettings.setProximityEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mProximity != null
-        && SamplerSettings.getProximityEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getProximityEnable(mContext) == true) {
+      if (mProximity == null) {
+        SamplerSettings.setProximityEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getProximityDuration(mContext);
       final int num = SamplerSettings.getProximityCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getProximityDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mProximity,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mProximity, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

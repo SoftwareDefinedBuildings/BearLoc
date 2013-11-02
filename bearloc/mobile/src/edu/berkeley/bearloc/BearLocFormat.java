@@ -314,7 +314,7 @@ public class BearLocFormat {
 
     try {
       final JSONObject event = new JSONObject();
-      event.put("epoch", meta.getLong("epoch"));
+      event.put("epoch", from.getTime());
       event.put("accuracy", from.getAccuracy());
       event.put("altitude", from.getAltitude());
       event.put("bearing", from.getBearing());

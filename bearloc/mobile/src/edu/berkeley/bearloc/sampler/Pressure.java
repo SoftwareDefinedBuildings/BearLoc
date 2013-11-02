@@ -71,24 +71,24 @@ public class Pressure implements Sampler, SensorEventListener {
     mSensorManager = (SensorManager) context
         .getSystemService(Context.SENSOR_SERVICE);
     mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-
-    if (mPressure == null) {
-      SamplerSettings.setPressureEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mPressure != null
-        && SamplerSettings.getPressureEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getPressureEnable(mContext) == true) {
+      if (mPressure == null) {
+        SamplerSettings.setPressureEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getPressureDuration(mContext);
       final int num = SamplerSettings.getPressureCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getPressureDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mPressure,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mPressure, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

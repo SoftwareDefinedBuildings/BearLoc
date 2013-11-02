@@ -71,24 +71,24 @@ public class Light implements Sampler, SensorEventListener {
     mSensorManager = (SensorManager) context
         .getSystemService(Context.SENSOR_SERVICE);
     mLight = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-
-    if (mLight == null) {
-      SamplerSettings.setLightEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mLight != null
-        && SamplerSettings.getLightEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getLightEnable(mContext) == true) {
+      if (mLight == null) {
+        SamplerSettings.setLightEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getLightDuration(mContext);
       final int num = SamplerSettings.getLightCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getLightDelay(mContext);
       mSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mLight,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mLight, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

@@ -71,24 +71,24 @@ public class Magnetic implements Sampler, SensorEventListener {
     mSensorManager = (SensorManager) context
         .getSystemService(Context.SENSOR_SERVICE);
     mMag = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-
-    if (mMag == null) {
-      SamplerSettings.setMagneticEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mMag != null
-        && SamplerSettings.getMagneticEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getMagneticEnable(mContext) == true) {
+      if (mMag == null) {
+        SamplerSettings.setMagneticEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getMagneticDuration(mContext);
       final int num = SamplerSettings.getMagneticCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getMagneticDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mMag,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mMag, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

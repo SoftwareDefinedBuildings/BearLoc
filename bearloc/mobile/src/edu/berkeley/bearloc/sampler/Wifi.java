@@ -43,7 +43,7 @@ import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Wifi implements Sampler {
 
-  private final long mSampleItvl; // millisecond
+  private long mSampleItvl; // millisecond
 
   private boolean mBusy;
   private int mSampleCap;
@@ -77,24 +77,24 @@ public class Wifi implements Sampler {
     mListener = listener;
     mHandler = new Handler();
     mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-    mSampleItvl = SamplerSettings.getWifiDelay(mContext);
-
-    if (mWifiManager == null) {
-      SamplerSettings.setWifiEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mWifiManager != null
-        && SamplerSettings.getWifiEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getWifiEnable(mContext) == true) {
+      if (mWifiManager == null) {
+        SamplerSettings.setWifiEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getWifiDuration(mContext);
       final int num = SamplerSettings.getWifiCnt(mContext);
-      mBusy = true;
+      mSampleItvl = SamplerSettings.getWifiDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
       mHandler.postDelayed(mWifiScanTask, 0);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

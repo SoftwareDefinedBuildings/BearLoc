@@ -71,24 +71,24 @@ public class Gyro implements Sampler, SensorEventListener {
     mSensorManager = (SensorManager) context
         .getSystemService(Context.SENSOR_SERVICE);
     mGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
-    if (mGyro == null) {
-      SamplerSettings.setGyroEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mGyro != null
-        && SamplerSettings.getGyroEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getGyroEnable(mContext) == true) {
+      if (mGyro == null) {
+        SamplerSettings.setGyroEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getGyroDuration(mContext);
       final int num = SamplerSettings.getGyroCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getGyroDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mGyro,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mGyro, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

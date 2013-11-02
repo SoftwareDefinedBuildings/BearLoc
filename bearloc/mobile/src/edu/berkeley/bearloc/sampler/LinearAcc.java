@@ -79,24 +79,24 @@ public class LinearAcc implements Sampler, SensorEventListener {
     } else {
       mLAcc = null;
     }
-
-    if (mLAcc == null) {
-      SamplerSettings.setLinearAccEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mLAcc != null
-        && SamplerSettings.getLinearAccEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getLinearAccEnable(mContext) == true) {
+      if (mLAcc == null) {
+        SamplerSettings.setLinearAccEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getLinearAccDuration(mContext);
       final int num = SamplerSettings.getLinearAccCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getLinearAccDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mLAcc,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mLAcc, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

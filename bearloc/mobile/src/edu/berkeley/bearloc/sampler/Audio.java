@@ -40,14 +40,15 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.media.AudioRecord;
 import android.os.Handler;
+import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Audio implements Sampler {
 
-  private final int mSrc;
-  private final int mSampleRate;
-  private final int mChannel;
-  private final int mFormat;
+  private int mSrc;
+  private int mSampleRate;
+  private int mChannel;
+  private int mFormat;
 
   private boolean mBusy;
 
@@ -124,18 +125,6 @@ public class Audio implements Sampler {
     mContext = context;
     mListener = listener;
     mHandler = new Handler();
-
-    mSrc = SamplerSettings.getAudioSrc(mContext);
-    mSampleRate = SamplerSettings.getAudioSampleRate(mContext);
-    mChannel = SamplerSettings.getAudioChannel(mContext);
-    mFormat = SamplerSettings.getAudioFormat(mContext);
-
-    // TODO change settings rather than disable it
-    final int bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel,
-        mFormat);
-    if (bufferSize <= 0) {
-      SamplerSettings.setAudioEnable(mContext, false);
-    }
   }
 
   private final Runnable mPauseTask = new Runnable() {
@@ -148,11 +137,15 @@ public class Audio implements Sampler {
   @Override
   public boolean start() {
     if (mBusy == false && SamplerSettings.getAudioEnable(mContext) == true) {
+      if (validate() == false) {
+        return false;
+      }
+
       final long duration = SamplerSettings.getAudioDuration(mContext);
-      mBusy = true;
       mAudioRecordThread = new AudioRecordThread();
       mAudioRecordThread.start();
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;
@@ -171,5 +164,37 @@ public class Audio implements Sampler {
       }
       mHandler.removeCallbacks(mPauseTask);
     }
+  }
+
+  private boolean validate() {
+    // TODO use listener to do it
+    mSrc = SamplerSettings.getAudioSrc(mContext);
+    mSampleRate = SamplerSettings.getAudioSampleRate(mContext);
+    mChannel = SamplerSettings.getAudioChannel(mContext);
+    mFormat = SamplerSettings.getAudioFormat(mContext);
+
+    int bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel,
+        mFormat);
+
+    if (bufferSize <= 0) {
+      mSampleRate = Integer.parseInt(mContext
+          .getString(R.string.default_audio_sample_rate_value));
+      mChannel = Integer.parseInt(mContext
+          .getString(R.string.default_audio_channel_value));
+      mFormat = Integer.parseInt(mContext
+          .getString(R.string.default_audio_format_value));
+
+      bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel, mFormat);
+      if (bufferSize <= 0) {
+        SamplerSettings.setAudioEnable(mContext, false);
+        return false;
+      }
+
+      SamplerSettings.setAudioSampleRate(mContext, mSampleRate);
+      SamplerSettings.setAudioChannel(mContext, mChannel);
+      SamplerSettings.setAudioFormat(mContext, mFormat);
+    }
+
+    return true;
   }
 }

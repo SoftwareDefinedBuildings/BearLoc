@@ -79,24 +79,24 @@ public class Gravity implements Sampler, SensorEventListener {
     } else {
       mGravity = null;
     }
-
-    if (mGravity == null) {
-      SamplerSettings.setGravityEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mGravity != null
-        && SamplerSettings.getGravityEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getGravityEnable(mContext) == true) {
+      if (mGravity == null) {
+        SamplerSettings.setGravityEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getGravityDuration(mContext);
       final int num = SamplerSettings.getGravityCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getGravityDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mGravity,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mGravity, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

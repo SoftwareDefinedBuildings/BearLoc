@@ -79,24 +79,24 @@ public class Rotation implements Sampler, SensorEventListener {
     } else {
       mRotation = null;
     }
-
-    if (mRotation == null) {
-      SamplerSettings.setRotationEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mRotation != null
-        && SamplerSettings.getRotationEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getRotationEnable(mContext) == true) {
+      if (mRotation == null) {
+        SamplerSettings.setRotationEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getRotationDuration(mContext);
       final int num = SamplerSettings.getRotationCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getRotationDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mRotation,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mRotation, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

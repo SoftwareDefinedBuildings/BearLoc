@@ -81,24 +81,24 @@ public class Temp implements Sampler, SensorEventListener {
     } else {
       mTemp = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
     }
-
-    if (mTemp == null) {
-      SamplerSettings.setTempEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mTemp != null
-        && SamplerSettings.getTempEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getTempEnable(mContext) == true) {
+      if (mTemp == null) {
+        SamplerSettings.setTempEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getTempDuration(mContext);
       final int num = SamplerSettings.getTempCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getTempDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mTemp,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mTemp, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

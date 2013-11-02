@@ -71,24 +71,24 @@ public class Acc implements Sampler, SensorEventListener {
     mSensorManager = (SensorManager) context
         .getSystemService(Context.SENSOR_SERVICE);
     mAcc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
-    if (mAcc == null) {
-      SamplerSettings.setAccEnable(mContext, false);
-    }
   }
 
   @Override
   public boolean start() {
-    if (mBusy == false && mAcc != null
-        && SamplerSettings.getAccEnable(mContext) == true) {
+    if (mBusy == false && SamplerSettings.getAccEnable(mContext) == true) {
+      if (mAcc == null) {
+        SamplerSettings.setAccEnable(mContext, false);
+        return false;
+      }
+
       final long duration = SamplerSettings.getAccDuration(mContext);
       final int num = SamplerSettings.getAccCnt(mContext);
-      mBusy = true;
+      final int delay = SamplerSettings.getAccDelay(mContext);
       nSampleNum = 0;
       mSampleCap = num;
-      mSensorManager.registerListener(this, mAcc,
-          SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mAcc, delay);
       mHandler.postDelayed(mPauseTask, duration);
+      mBusy = true;
       return true;
     } else {
       return false;

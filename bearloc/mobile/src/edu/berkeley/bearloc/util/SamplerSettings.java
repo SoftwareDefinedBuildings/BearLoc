@@ -1158,22 +1158,22 @@ public class SamplerSettings {
     editor.commit();
   }
 
-  public static int getWifiDelay(final Context context) {
+  public static long getWifiDelay(final Context context) {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
         .getString(R.string.default_wifi_delay_value);
-    final int delay = Integer.parseInt(prefs.getString("pref_wifi_delay_key",
+    final long delay = Long.parseLong(prefs.getString("pref_wifi_delay_key",
         defaultValue));
 
     return delay;
   }
 
-  public static void setWifiDelay(final Context context, final int delay) {
+  public static void setWifiDelay(final Context context, final long delay) {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_wifi_delay_key", Integer.toString(delay));
+    editor.putString("pref_wifi_delay_key", Long.toString(delay));
     editor.commit();
   }
 }

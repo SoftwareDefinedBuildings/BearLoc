@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="pref_sensor_delay_entries">
+        <item>Normal (200 ms)</item>
+        <item>UI (60 ms)</item>
+        <item>Game (20 ms)</item>
+        <item>Fastest (0 ms)</item>
+    </string-array>
+    <string-array name="pref_sensor_delay_values">
+        <item>@string/SENSOR_DELAY_NORMAL</item>
+        <item>@string/SENSOR_DELAY_UI</item>
+        <item>@string/SENSOR_DELAY_GAME</item>
+        <item>@string/SENSOR_DELAY_FASTEST</item>
+    </string-array>
+    <string-array name="pref_audio_src_entries">
+        <item>Camera Microphone</item>
+        <item>Main Microphone</item>
+    </string-array>
+    <string-array name="pref_audio_src_values">
+        <item>@string/CAMCORDER</item>
+        <item>@string/MIC</item>
+    </string-array>
+    <string-array name="pref_audio_sample_rate_entries">
+        <item>@string/Rate44100</item>
+        <item>@string/Rate22050</item>
+        <item>@string/Rate16000</item>
+        <item>@string/Rate11025</item>
+        <item>@string/Rate8000</item>
+    </string-array>
+    <string-array name="pref_audio_sample_rate_values">
+        <item>@string/Rate44100</item>
+        <item>@string/Rate22050</item>
+        <item>@string/Rate16000</item>
+        <item>@string/Rate11025</item>
+        <item>@string/Rate8000</item>
+    </string-array>
+    <string-array name="pref_audio_channel_entries">
+        <item>Mono</item>
+        <item>Stereo</item>
+    </string-array>
+    <string-array name="pref_audio_channel_values">
+        <item>@string/CHANNEL_IN_MONO</item>
+        <item>@string/CHANNEL_IN_STEREO</item>
+    </string-array>
+    <string-array name="pref_audio_format_entries">
+        <item>PCM 16 bits per sample</item>
+        <item>PCM 8 bits per sample</item>
+    </string-array>
+    <string-array name="pref_audio_format_values">
+        <item>@string/ENCODING_PCM_16BIT</item>
+        <item>@string/ENCODING_PCM_8BIT</item>
+    </string-array>
+
+</resources>

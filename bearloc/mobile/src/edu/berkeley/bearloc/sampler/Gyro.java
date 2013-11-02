@@ -71,14 +71,14 @@ public class Gyro implements Sampler, SensorEventListener {
   }
 
   @Override
-  public boolean start(final Integer period, final Integer num) {
+  public boolean start(final Integer duration, final Integer num) {
     if (mBusy == false && mGyro != null) {
       mBusy = true;
       nSampleNum = 0;
       mSampleCap = num;
       mSensorManager.registerListener(this, mGyro,
           SensorManager.SENSOR_DELAY_NORMAL);
-      mHandler.postDelayed(mPauseTask, period);
+      mHandler.postDelayed(mPauseTask, duration);
       return true;
     } else {
       return false;

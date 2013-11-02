@@ -79,14 +79,14 @@ public class LinearAcc implements Sampler, SensorEventListener {
   }
 
   @Override
-  public boolean start(final Integer period, final Integer num) {
+  public boolean start(final Integer duration, final Integer num) {
     if (mBusy == false && mLAcc != null) {
       mBusy = true;
       nSampleNum = 0;
       mSampleCap = num;
       mSensorManager.registerListener(this, mLAcc,
           SensorManager.SENSOR_DELAY_NORMAL);
-      mHandler.postDelayed(mPauseTask, period);
+      mHandler.postDelayed(mPauseTask, duration);
       return true;
     } else {
       return false;

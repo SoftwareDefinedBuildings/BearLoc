@@ -72,18 +72,19 @@ public class GeoLoc implements Sampler, LocationListener {
   }
 
   @Override
-  public boolean start(final Integer period, final Integer num) {
+  public boolean start(final Integer duration, final Integer num) {
     if (mBusy == false && mLocationManager != null) {
       try {
         mBusy = true;
         nSampleNum = 0;
         mSampleCap = num;
+        // TODO get last know geoloc
         mLocationManager.requestLocationUpdates(
             LocationManager.NETWORK_PROVIDER, GeoLoc.LOCATION_UPDATE_ITVL,
             GeoLoc.LOCATION_UPDATE_DIST, this);
         mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
             GeoLoc.LOCATION_UPDATE_ITVL, GeoLoc.LOCATION_UPDATE_DIST, this);
-        mHandler.postDelayed(mPauseTask, period);
+        mHandler.postDelayed(mPauseTask, duration);
         return true;
       } catch (final IllegalArgumentException e) {
         e.printStackTrace();

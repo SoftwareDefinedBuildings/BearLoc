@@ -77,13 +77,13 @@ public class Wifi implements Sampler {
   }
 
   @Override
-  public boolean start(final Integer period, final Integer num) {
+  public boolean start(final Integer duration, final Integer num) {
     if (mBusy == false && mWifiManager != null) {
       mBusy = true;
       nSampleNum = 0;
       mSampleCap = num;
       mHandler.postDelayed(mWifiScanTask, 0);
-      mHandler.postDelayed(mPauseTask, period);
+      mHandler.postDelayed(mPauseTask, duration);
       return true;
     } else {
       return false;

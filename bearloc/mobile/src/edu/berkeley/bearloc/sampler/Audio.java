@@ -133,13 +133,13 @@ public class Audio implements Sampler {
   };
 
   @Override
-  public boolean start(final Integer period, Integer num) {
+  public boolean start(final Integer duration, Integer num) {
     num = null; // num is not used in Audio
     if (mBusy == false) {
       mBusy = true;
       mAudioRecordThread = new AudioRecordThread();
       mAudioRecordThread.start();
-      mHandler.postDelayed(mPauseTask, period);
+      mHandler.postDelayed(mPauseTask, duration);
       return true;
     } else {
       return false;

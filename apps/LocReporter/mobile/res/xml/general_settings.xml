@@ -3,7 +3,7 @@
 
     <CheckBoxPreference
         android:defaultValue="false"
-        android:key="pref_auto_report"
+        android:key="@string/default_auto_report"
         android:summary="@string/pref_auto_report_summ"
         android:title="@string/pref_auto_report" />
 

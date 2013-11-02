@@ -9,7 +9,7 @@ clean:
 	rm -rf report.log*
 
 stop:
-	if [ -a twistd.pid ] ; \
+	if [ -e twistd.pid ] ; \
 	then \
 		kill `cat twistd.pid`; \
 	fi;

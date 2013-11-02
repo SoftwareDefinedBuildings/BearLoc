@@ -1,13 +1,35 @@
-BOSS
+BearLoc
 ===============
 # How to run the server
-In terminal, go to ./server, and execute
+In terminal, go to ./bearloc/server, and execute
 
     make run
 
 . To kill the server, run
 
     make stop
+
+
+
+# Dependencies
+* numpy
+* scipy
+* zope.interface
+* twisted
+* scikit-learn
+
+# To install Dependencies
+
+## In Ubuntu
+* `sudo apt-get install python-scipy`
+* `sudo apt-get install build-essential python-dev`
+* `sudo apt-get install python-pip`
+* `sudo pip install twisted`
+* `sudo pip install numpy`
+* `sudo pip install scikit-learn`
+* `sudo pip install zope.interface`
+
+
 
 <!--
 The -B is just to avoid generating .py[co] files on import.

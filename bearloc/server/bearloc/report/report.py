@@ -54,6 +54,7 @@ class Report(object):
   def report(self, report):
     """Store reported location and corresponding data.
     """
+    # Check whether the report is from old version app
     if "semloc" in report and len(report["semloc"]) > 0 and "location" in report["semloc"][0]:
       return defer.fail(Exception("Old Version"))
 
@@ -314,7 +315,7 @@ class Report(object):
               meta.get("resolution", None))
   
       operation = "INSERT OR REPLACE INTO " + "sensormeta" + \
-                " VALUES (?,?,?,?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -333,7 +334,7 @@ class Report(object):
               event.get("freq", None))
   
       operation = "INSERT OR REPLACE INTO " + "wifi" + \
-                " VALUES (?,?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -402,7 +403,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "acc" + \
-                " VALUES (?,?,?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -422,7 +423,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "lacc" + \
-                " VALUES (?,?,?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -442,7 +443,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "gravity" + \
-                " VALUES (?,?,?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -462,7 +463,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "gyro" + \
-                " VALUES (?,?,?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -484,7 +485,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "rotation" + \
-                " VALUES (?,?,?,?,?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -504,7 +505,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "magnetic" + \
-                " VALUES (?,?,?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -522,7 +523,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "light" + \
-                " VALUES (?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -540,7 +541,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "temp" + \
-                " VALUES (?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -558,7 +559,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "pressure" + \
-                " VALUES (?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -576,7 +577,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "proximity" + \
-                " VALUES (?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -594,7 +595,7 @@ class Report(object):
               event.get("accuracy", None))
   
       operation = "INSERT OR REPLACE INTO " + "humidity" + \
-                " VALUES (?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()
@@ -615,7 +616,7 @@ class Report(object):
               event.get("room", None))
   
       operation = "INSERT OR REPLACE INTO " + "semloc" + \
-                " VALUES (?,?,?,?,?,?,?,?,?);"
+                  " VALUES (?,?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()

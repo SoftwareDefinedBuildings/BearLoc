@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory
+        android:key="bearloc_pref_acc_settings_key"
+        android:title="@string/bearloc_pref_acc_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_acc_enable"
+            android:key="bearloc_pref_acc_enable_key"
+            android:summary="@string/bearloc_pref_acc_enable_summ"
+            android:title="@string/bearloc_pref_acc_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_acc_duration"
+            android:dependency="bearloc_pref_acc_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_acc_duration_key"
+            android:summary="@string/bearloc_pref_acc_duration_summ"
+            android:title="@string/bearloc_pref_acc_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_acc_cnt"
+            android:dependency="bearloc_pref_acc_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_acc_cnt_key"
+            android:summary="@string/bearloc_pref_acc_cnt_summ"
+            android:title="@string/bearloc_pref_acc_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_acc_delay_value"
+            android:dependency="bearloc_pref_acc_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_acc_delay_key"
+            android:summary="@string/bearloc_pref_acc_delay_summ"
+            android:title="@string/bearloc_pref_acc_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_temp_settings_key"
+        android:title="@string/bearloc_pref_temp_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_temp_enable"
+            android:key="bearloc_pref_temp_enable_key"
+            android:summary="@string/bearloc_pref_temp_enable_summ"
+            android:title="@string/bearloc_pref_temp_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_temp_duration"
+            android:dependency="bearloc_pref_temp_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_temp_duration_key"
+            android:summary="@string/bearloc_pref_temp_duration_summ"
+            android:title="@string/bearloc_pref_temp_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_temp_cnt"
+            android:dependency="bearloc_pref_temp_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_temp_cnt_key"
+            android:summary="@string/bearloc_pref_temp_cnt_summ"
+            android:title="@string/bearloc_pref_temp_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_temp_delay_value"
+            android:dependency="bearloc_pref_temp_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_temp_delay_key"
+            android:summary="@string/bearloc_pref_temp_delay_summ"
+            android:title="@string/bearloc_pref_temp_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_pressure_settings_key"
+        android:title="@string/bearloc_pref_pressure_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_pressure_enable"
+            android:key="bearloc_pref_pressure_enable_key"
+            android:summary="@string/bearloc_pref_pressure_enable_summ"
+            android:title="@string/bearloc_pref_pressure_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_pressure_duration"
+            android:dependency="bearloc_pref_pressure_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_pressure_duration_key"
+            android:summary="@string/bearloc_pref_pressure_duration_summ"
+            android:title="@string/bearloc_pref_pressure_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_pressure_cnt"
+            android:dependency="bearloc_pref_pressure_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_pressure_cnt_key"
+            android:summary="@string/bearloc_pref_pressure_cnt_summ"
+            android:title="@string/bearloc_pref_pressure_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_pressure_delay_value"
+            android:dependency="bearloc_pref_pressure_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_pressure_delay_key"
+            android:summary="@string/bearloc_pref_pressure_delay_summ"
+            android:title="@string/bearloc_pref_pressure_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_audio_settings_key"
+        android:title="@string/bearloc_pref_audio_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_audio_enable"
+            android:key="bearloc_pref_audio_enable_key"
+            android:summary="@string/bearloc_pref_audio_enable_summ"
+            android:title="@string/bearloc_pref_audio_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_audio_duration"
+            android:dependency="bearloc_pref_audio_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_audio_duration_key"
+            android:summary="@string/bearloc_pref_audio_duration_summ"
+            android:title="@string/bearloc_pref_audio_duration" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_audio_src_value"
+            android:dependency="bearloc_pref_audio_enable_key"
+            android:entries="@array/bearloc_pref_audio_src_entries"
+            android:entryValues="@array/bearloc_pref_audio_src_values"
+            android:key="bearloc_pref_audio_src_key"
+            android:summary="@string/bearloc_pref_audio_src_summ"
+            android:title="@string/bearloc_pref_audio_src" />
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_audio_sample_rate_value"
+            android:dependency="bearloc_pref_audio_enable_key"
+            android:entries="@array/bearloc_pref_audio_sample_rate_entries"
+            android:entryValues="@array/bearloc_pref_audio_sample_rate_values"
+            android:key="bearloc_pref_audio_sample_rate_key"
+            android:summary="@string/bearloc_pref_audio_sample_rate_summ"
+            android:title="@string/bearloc_pref_audio_sample_rate" />
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_audio_channel_value"
+            android:dependency="bearloc_pref_audio_enable_key"
+            android:entries="@array/bearloc_pref_audio_channel_entries"
+            android:entryValues="@array/bearloc_pref_audio_channel_api_values"
+            android:key="bearloc_pref_audio_channel_key"
+            android:summary="@string/bearloc_pref_audio_channel_summ"
+            android:title="@string/bearloc_pref_audio_channel" />
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_audio_format_value"
+            android:dependency="bearloc_pref_audio_enable_key"
+            android:entries="@array/bearloc_pref_audio_format_entries"
+            android:entryValues="@array/bearloc_pref_audio_format_api_values"
+            android:key="bearloc_pref_audio_format_key"
+            android:summary="@string/bearloc_pref_audio_format_summ"
+            android:title="@string/bearloc_pref_audio_format" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_humidity_settings_key"
+        android:title="@string/bearloc_pref_humidity_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_humidity_enable"
+            android:key="bearloc_pref_humidity_enable_key"
+            android:summary="@string/bearloc_pref_humidity_enable_summ"
+            android:title="@string/bearloc_pref_humidity_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_humidity_duration"
+            android:dependency="bearloc_pref_humidity_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_humidity_duration_key"
+            android:summary="@string/bearloc_pref_humidity_duration_summ"
+            android:title="@string/bearloc_pref_humidity_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_humidity_cnt"
+            android:dependency="bearloc_pref_humidity_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_humidity_cnt_key"
+            android:summary="@string/bearloc_pref_humidity_cnt_summ"
+            android:title="@string/bearloc_pref_humidity_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_humidity_delay_value"
+            android:dependency="bearloc_pref_humidity_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_humidity_delay_key"
+            android:summary="@string/bearloc_pref_humidity_delay_summ"
+            android:title="@string/bearloc_pref_humidity_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_light_settings_key"
+        android:title="@string/bearloc_pref_light_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_light_enable"
+            android:key="bearloc_pref_light_enable_key"
+            android:summary="@string/bearloc_pref_light_enable_summ"
+            android:title="@string/bearloc_pref_light_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_light_duration"
+            android:dependency="bearloc_pref_light_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_light_duration_key"
+            android:summary="@string/bearloc_pref_light_duration_summ"
+            android:title="@string/bearloc_pref_light_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_light_cnt"
+            android:dependency="bearloc_pref_light_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_light_cnt_key"
+            android:summary="@string/bearloc_pref_light_cnt_summ"
+            android:title="@string/bearloc_pref_light_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_light_delay_value"
+            android:dependency="bearloc_pref_light_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_light_delay_key"
+            android:summary="@string/bearloc_pref_light_delay_summ"
+            android:title="@string/bearloc_pref_light_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_lacc_settings_key"
+        android:title="@string/bearloc_pref_lacc_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_lacc_enable"
+            android:key="bearloc_pref_lacc_enable_key"
+            android:summary="@string/bearloc_pref_lacc_enable_summ"
+            android:title="@string/bearloc_pref_lacc_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_lacc_duration"
+            android:dependency="bearloc_pref_lacc_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_lacc_duration_key"
+            android:summary="@string/bearloc_pref_lacc_duration_summ"
+            android:title="@string/bearloc_pref_lacc_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_lacc_cnt"
+            android:dependency="bearloc_pref_lacc_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_lacc_cnt_key"
+            android:summary="@string/bearloc_pref_lacc_cnt_summ"
+            android:title="@string/bearloc_pref_lacc_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_lacc_delay_value"
+            android:dependency="bearloc_pref_lacc_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_lacc_delay_key"
+            android:summary="@string/bearloc_pref_lacc_delay_summ"
+            android:title="@string/bearloc_pref_lacc_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_magnetic_settings_key"
+        android:title="@string/bearloc_pref_magnetic_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_magnetic_enable"
+            android:key="bearloc_pref_magnetic_enable_key"
+            android:summary="@string/bearloc_pref_magnetic_enable_summ"
+            android:title="@string/bearloc_pref_magnetic_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_magnetic_duration"
+            android:dependency="bearloc_pref_magnetic_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_magnetic_duration_key"
+            android:summary="@string/bearloc_pref_magnetic_duration_summ"
+            android:title="@string/bearloc_pref_magnetic_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_magnetic_cnt"
+            android:dependency="bearloc_pref_magnetic_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_magnetic_cnt_key"
+            android:summary="@string/bearloc_pref_magnetic_cnt_summ"
+            android:title="@string/bearloc_pref_magnetic_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_magnetic_delay_value"
+            android:dependency="bearloc_pref_magnetic_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_magnetic_delay_key"
+            android:summary="@string/bearloc_pref_magnetic_delay_summ"
+            android:title="@string/bearloc_pref_magnetic_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_geoloc_settings_key"
+        android:title="@string/bearloc_pref_geoloc_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_geoloc_enable"
+            android:key="bearloc_pref_geoloc_enable_key"
+            android:summary="@string/bearloc_pref_geoloc_enable_summ"
+            android:title="@string/bearloc_pref_geoloc_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_geoloc_duration"
+            android:dependency="bearloc_pref_geoloc_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_geoloc_duration_key"
+            android:summary="@string/bearloc_pref_geoloc_duration_summ"
+            android:title="@string/bearloc_pref_geoloc_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_geoloc_cnt"
+            android:dependency="bearloc_pref_geoloc_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_geoloc_cnt_key"
+            android:summary="@string/bearloc_pref_geoloc_cnt_summ"
+            android:title="@string/bearloc_pref_geoloc_cnt" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_geoloc_min_delay"
+            android:dependency="bearloc_pref_geoloc_enable_key"
+            android:key="bearloc_pref_geoloc_min_delay_key"
+            android:summary="@string/bearloc_pref_geoloc_min_delay_summ"
+            android:title="@string/bearloc_pref_geoloc_min_delay" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_geoloc_min_dist"
+            android:dependency="bearloc_pref_geoloc_enable_key"
+            android:key="bearloc_pref_geoloc_min_dist_key"
+            android:summary="@string/bearloc_pref_geoloc_min_dist_summ"
+            android:title="@string/bearloc_pref_geoloc_min_dist" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_gravity_settings_key"
+        android:title="@string/bearloc_pref_gravity_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_gravity_enable"
+            android:key="bearloc_pref_gravity_enable_key"
+            android:summary="@string/bearloc_pref_gravity_enable_summ"
+            android:title="@string/bearloc_pref_gravity_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_gravity_duration"
+            android:dependency="bearloc_pref_gravity_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_gravity_duration_key"
+            android:summary="@string/bearloc_pref_gravity_duration_summ"
+            android:title="@string/bearloc_pref_gravity_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_gravity_cnt"
+            android:dependency="bearloc_pref_gravity_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_gravity_cnt_key"
+            android:summary="@string/bearloc_pref_gravity_cnt_summ"
+            android:title="@string/bearloc_pref_gravity_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_gravity_delay_value"
+            android:dependency="bearloc_pref_gravity_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_gravity_delay_key"
+            android:summary="@string/bearloc_pref_gravity_delay_summ"
+            android:title="@string/bearloc_pref_gravity_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_gyro_settings_key"
+        android:title="@string/bearloc_pref_gyro_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_gyro_enable"
+            android:key="bearloc_pref_gyro_enable_key"
+            android:summary="@string/bearloc_pref_gyro_enable_summ"
+            android:title="@string/bearloc_pref_gyro_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_gyro_duration"
+            android:dependency="bearloc_pref_gyro_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_gyro_duration_key"
+            android:summary="@string/bearloc_pref_gyro_duration_summ"
+            android:title="@string/bearloc_pref_gyro_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_gyro_cnt"
+            android:dependency="bearloc_pref_gyro_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_gyro_cnt_key"
+            android:summary="@string/bearloc_pref_gyro_cnt_summ"
+            android:title="@string/bearloc_pref_gyro_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_gyro_delay_value"
+            android:dependency="bearloc_pref_gyro_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_gyro_delay_key"
+            android:summary="@string/bearloc_pref_gyro_delay_summ"
+            android:title="@string/bearloc_pref_gyro_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_proximity_settings_key"
+        android:title="@string/bearloc_pref_proximity_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_proximity_enable"
+            android:key="bearloc_pref_proximity_enable_key"
+            android:summary="@string/bearloc_pref_proximity_enable_summ"
+            android:title="@string/bearloc_pref_proximity_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_proximity_duration"
+            android:dependency="bearloc_pref_proximity_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_proximity_duration_key"
+            android:summary="@string/bearloc_pref_proximity_duration_summ"
+            android:title="@string/bearloc_pref_proximity_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_proximity_cnt"
+            android:dependency="bearloc_pref_proximity_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_proximity_cnt_key"
+            android:summary="@string/bearloc_pref_proximity_cnt_summ"
+            android:title="@string/bearloc_pref_proximity_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_proximity_delay_value"
+            android:dependency="bearloc_pref_proximity_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_proximity_delay_key"
+            android:summary="@string/bearloc_pref_proximity_delay_summ"
+            android:title="@string/bearloc_pref_proximity_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_rotation_settings_key"
+        android:title="@string/bearloc_pref_rotation_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_rotation_enable"
+            android:key="bearloc_pref_rotation_enable_key"
+            android:summary="@string/bearloc_pref_rotation_enable_summ"
+            android:title="@string/bearloc_pref_rotation_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_rotation_duration"
+            android:dependency="bearloc_pref_rotation_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_rotation_duration_key"
+            android:summary="@string/bearloc_pref_rotation_duration_summ"
+            android:title="@string/bearloc_pref_rotation_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_rotation_cnt"
+            android:dependency="bearloc_pref_rotation_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_rotation_cnt_key"
+            android:summary="@string/bearloc_pref_rotation_cnt_summ"
+            android:title="@string/bearloc_pref_rotation_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_rotation_delay_value"
+            android:dependency="bearloc_pref_rotation_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_api_values"
+            android:key="bearloc_pref_rotation_delay_key"
+            android:summary="@string/bearloc_pref_rotation_delay_summ"
+            android:title="@string/bearloc_pref_rotation_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="bearloc_pref_wifi_settings_key"
+        android:title="@string/bearloc_pref_wifi_title" >
+        <CheckBoxPreference
+            android:defaultValue="@string/bearloc_default_wifi_enable"
+            android:key="bearloc_pref_wifi_enable_key"
+            android:summary="@string/bearloc_pref_wifi_enable_summ"
+            android:title="@string/bearloc_pref_wifi_enable" />
+
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_wifi_duration"
+            android:dependency="bearloc_pref_wifi_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_wifi_duration_key"
+            android:summary="@string/bearloc_pref_wifi_duration_summ"
+            android:title="@string/bearloc_pref_wifi_duration" />
+        <EditTextPreference
+            android:defaultValue="@string/bearloc_default_wifi_cnt"
+            android:dependency="bearloc_pref_wifi_enable_key"
+            android:inputType="number"
+            android:key="bearloc_pref_wifi_cnt_key"
+            android:summary="@string/bearloc_pref_wifi_cnt_summ"
+            android:title="@string/bearloc_pref_wifi_cnt" />
+
+        <ListPreference
+            android:defaultValue="@string/bearloc_default_wifi_delay_value"
+            android:dependency="bearloc_pref_wifi_enable_key"
+            android:entries="@array/bearloc_pref_sensor_delay_entries"
+            android:entryValues="@array/bearloc_pref_sensor_delay_values"
+            android:key="bearloc_pref_wifi_delay_key"
+            android:summary="@string/bearloc_pref_wifi_delay_summ"
+            android:title="@string/bearloc_pref_wifi_delay" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

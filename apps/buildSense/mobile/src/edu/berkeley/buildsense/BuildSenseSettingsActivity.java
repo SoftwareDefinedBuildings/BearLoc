@@ -31,7 +31,7 @@
  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
  */
 
-package edu.berkeley.locreporter;
+package edu.berkeley.buildsense;
 
 import java.util.List;
 
@@ -44,11 +44,13 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
-public class LocReporterSettingsActivity extends PreferenceActivity {
+public class BuildSenseSettingsActivity extends PreferenceActivity {
 
-  final public static String ACTION_PREF_GENERAL = "edu.berkeley.locreporter.PREF_GENERAL";
-  final public static String ACTION_PREF_SERVER = "edu.berkeley.bearloc.PREF_SERVER";
-  final public static String ACTION_PREF_SAMPLER = "edu.berkeley.bearloc.PREF_SAMPLER";
+  final public static String ACTION_PREF_GENERAL = "edu.berkeley.buildsense.PREF_GENERAL";
+  final public static String ACTION_PREF_SERVER_HEADER = "edu.berkeley.buildsense.PREF_SERVER_HEADER";
+  final public static String ACTION_BUILDSENSE_PREF_SERVER = "edu.berkeley.buildsense.PREF_SERVER";
+  final public static String ACTION_BEARLOC_PREF_SERVER = "edu.berkeley.bearloc.PREF_SERVER";
+  final public static String ACTION_BEARLOC_PREF_SAMPLER = "edu.berkeley.bearloc.PREF_SAMPLER";
 
   // Only call addPreferencesFromResource() before Honeycomb
   @SuppressWarnings("deprecation")
@@ -59,13 +61,23 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
     final String action = getIntent().getAction();
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
       if (action != null
-          && action.equals(LocReporterSettingsActivity.ACTION_PREF_GENERAL)) {
+          && action.equals(BuildSenseSettingsActivity.ACTION_PREF_GENERAL)) {
         addPreferencesFromResource(R.xml.general_settings);
       } else if (action != null
-          && action.equals(LocReporterSettingsActivity.ACTION_PREF_SERVER)) {
+          && action
+              .equals(BuildSenseSettingsActivity.ACTION_PREF_SERVER_HEADER)) {
+        addPreferencesFromResource(R.xml.server_pref_headers_legacy);
+      } else if (action != null
+          && action
+              .equals(BuildSenseSettingsActivity.ACTION_BUILDSENSE_PREF_SERVER)) {
+        addPreferencesFromResource(R.xml.server_settings);
+      } else if (action != null
+          && action
+              .equals(BuildSenseSettingsActivity.ACTION_BEARLOC_PREF_SERVER)) {
         addPreferencesFromResource(R.xml.bearloc_server_settings);
       } else if (action != null
-          && action.equals(LocReporterSettingsActivity.ACTION_PREF_SAMPLER)) {
+          && action
+              .equals(BuildSenseSettingsActivity.ACTION_BEARLOC_PREF_SAMPLER)) {
         addPreferencesFromResource(R.xml.bearloc_sampler_settings);
       } else {
         // Load the legacy preferences headers
@@ -90,7 +102,11 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
       final String settings = getArguments().getString("settings");
       if ("general".equals(settings)) {
         addPreferencesFromResource(R.xml.general_settings);
-      } else if ("server".equals(settings)) {
+      } else if ("server_header".equals(settings)) {
+        addPreferencesFromResource(R.xml.server_pref_headers_legacy);
+      } else if ("buildsense_header".equals(settings)) {
+        addPreferencesFromResource(R.xml.server_settings);
+      } else if ("bearloc_header".equals(settings)) {
         addPreferencesFromResource(R.xml.bearloc_server_settings);
       } else if ("sampler".equals(settings)) {
         addPreferencesFromResource(R.xml.bearloc_sampler_settings);

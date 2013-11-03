@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <Preference
+        android:summary="@string/buildsense_pref_server_category_summ"
+        android:title="@string/buildsense_pref_server_category" >
+        <intent
+            android:action="edu.berkeley.buildsense.PREF_SERVER"
+            android:targetClass="edu.berkeley.buildsense.BuildSenseSettingsActivity"
+            android:targetPackage="edu.berkeley.buildsense" />
+    </Preference>
+    <Preference
+        android:summary="@string/bearloc_pref_server_category_summ"
+        android:title="@string/bearloc_pref_server_category" >
+        <intent
+            android:action="edu.berkeley.bearloc.PREF_SERVER"
+            android:targetClass="edu.berkeley.buildsense.BuildSenseSettingsActivity"
+            android:targetPackage="edu.berkeley.buildsense" />
+    </Preference>
+
+</PreferenceScreen>

@@ -178,11 +178,11 @@ public class Audio implements Sampler {
 
     if (bufferSize <= 0) {
       mSampleRate = Integer.parseInt(mContext
-          .getString(R.string.default_audio_sample_rate_value));
+          .getString(R.string.bearloc_default_audio_sample_rate_value));
       mChannel = Integer.parseInt(mContext
-          .getString(R.string.default_audio_channel_value));
+          .getString(R.string.bearloc_default_audio_channel_value));
       mFormat = Integer.parseInt(mContext
-          .getString(R.string.default_audio_format_value));
+          .getString(R.string.bearloc_default_audio_format_value));
 
       bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel, mFormat);
       if (bufferSize <= 0) {

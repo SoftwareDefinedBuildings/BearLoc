@@ -14,9 +14,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_acc_enable));
-    final boolean enable = prefs
-        .getBoolean("pref_acc_enable_key", defaultValue);
+        .getString(R.string.bearloc_default_acc_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_acc_enable_key",
+        defaultValue);
 
     return enable;
   }
@@ -25,7 +25,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_acc_enable_key", enable);
+    editor.putBoolean("bearloc_pref_acc_enable_key", enable);
     editor.commit();
   }
 
@@ -33,9 +33,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_acc_duration);
+        .getString(R.string.bearloc_default_acc_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_acc_duration_key", defaultValue));
+        "bearloc_pref_acc_duration_key", defaultValue));
 
     return duration;
   }
@@ -44,16 +44,17 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_acc_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_acc_duration_key", Long.toString(duration));
     editor.commit();
   }
 
   public static int getAccCnt(final Context context) {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
-    final String defaultValue = context.getString(R.string.default_acc_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_acc_cnt_key",
-        defaultValue));
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_acc_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_acc_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -62,7 +63,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_acc_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_acc_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -70,9 +71,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_acc_delay_value);
-    final int delay = Integer.parseInt(prefs.getString("pref_acc_delay_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_acc_delay_value);
+    final int delay = Integer.parseInt(prefs.getString(
+        "bearloc_pref_acc_delay_key", defaultValue));
 
     return delay;
   }
@@ -81,7 +82,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_acc_delay_key", Integer.toString(delay));
+    editor.putString("bearloc_pref_acc_delay_key", Integer.toString(delay));
     editor.commit();
   }
 
@@ -92,8 +93,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_temp_enable));
-    final boolean enable = prefs.getBoolean("pref_temp_enable_key",
+        .getString(R.string.bearloc_default_temp_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_temp_enable_key",
         defaultValue);
 
     return enable;
@@ -103,7 +104,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_temp_enable_key", enable);
+    editor.putBoolean("bearloc_pref_temp_enable_key", enable);
     editor.commit();
   }
 
@@ -111,9 +112,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_temp_duration);
+        .getString(R.string.bearloc_default_temp_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_temp_duration_key", defaultValue));
+        "bearloc_pref_temp_duration_key", defaultValue));
 
     return duration;
   }
@@ -122,16 +123,17 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_temp_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_temp_duration_key", Long.toString(duration));
     editor.commit();
   }
 
   public static int getTempCnt(final Context context) {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
-    final String defaultValue = context.getString(R.string.default_temp_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_temp_cnt_key",
-        defaultValue));
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_temp_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_temp_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -140,7 +142,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_temp_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_temp_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -148,9 +150,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_temp_delay_value);
-    final int delay = Integer.parseInt(prefs.getString("pref_temp_delay_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_temp_delay_value);
+    final int delay = Integer.parseInt(prefs.getString(
+        "bearloc_pref_temp_delay_key", defaultValue));
 
     return delay;
   }
@@ -159,7 +161,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_temp_delay_key", Integer.toString(delay));
+    editor.putString("bearloc_pref_temp_delay_key", Integer.toString(delay));
     editor.commit();
   }
 
@@ -170,8 +172,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_pressure_enable));
-    final boolean enable = prefs.getBoolean("pref_pressure_enable_key",
+        .getString(R.string.bearloc_default_pressure_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_pressure_enable_key",
         defaultValue);
 
     return enable;
@@ -182,7 +184,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_pressure_enable_key", enable);
+    editor.putBoolean("bearloc_pref_pressure_enable_key", enable);
     editor.commit();
   }
 
@@ -190,9 +192,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_pressure_duration);
+        .getString(R.string.bearloc_default_pressure_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_pressure_duration_key", defaultValue));
+        "bearloc_pref_pressure_duration_key", defaultValue));
 
     return duration;
   }
@@ -202,7 +204,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_pressure_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_pressure_duration_key",
+        Long.toString(duration));
     editor.commit();
   }
 
@@ -210,9 +213,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_pressure_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_pressure_cnt_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_pressure_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_pressure_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -221,7 +224,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_pressure_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_pressure_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -229,9 +232,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_pressure_delay_value);
+        .getString(R.string.bearloc_default_pressure_delay_value);
     final int delay = Integer.parseInt(prefs.getString(
-        "pref_pressure_delay_key", defaultValue));
+        "bearloc_pref_pressure_delay_key", defaultValue));
 
     return delay;
   }
@@ -240,7 +243,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_pressure_delay_key", Integer.toString(delay));
+    editor
+        .putString("bearloc_pref_pressure_delay_key", Integer.toString(delay));
     editor.commit();
   }
 
@@ -251,8 +255,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_audio_enable));
-    final boolean enable = prefs.getBoolean("pref_audio_enable_key",
+        .getString(R.string.bearloc_default_audio_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_audio_enable_key",
         defaultValue);
 
     return enable;
@@ -262,7 +266,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_audio_enable_key", enable);
+    editor.putBoolean("bearloc_pref_audio_enable_key", enable);
     editor.commit();
   }
 
@@ -270,9 +274,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_audio_duration);
+        .getString(R.string.bearloc_default_audio_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_audio_duration_key", defaultValue));
+        "bearloc_pref_audio_duration_key", defaultValue));
 
     return duration;
   }
@@ -281,7 +285,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_audio_duration_key", Long.toString(duration));
+    editor
+        .putString("bearloc_pref_audio_duration_key", Long.toString(duration));
     editor.commit();
   }
 
@@ -289,9 +294,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_audio_src_value);
-    final int src = Integer.parseInt(prefs.getString("pref_audio_src_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_audio_src_value);
+    final int src = Integer.parseInt(prefs.getString(
+        "bearloc_pref_audio_src_key", defaultValue));
 
     return src;
   }
@@ -300,7 +305,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_audio_src_key", Integer.toString(src));
+    editor.putString("bearloc_pref_audio_src_key", Integer.toString(src));
     editor.commit();
   }
 
@@ -308,9 +313,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_audio_sample_rate_value);
+        .getString(R.string.bearloc_default_audio_sample_rate_value);
     final int rate = Integer.parseInt(prefs.getString(
-        "pref_audio_sample_rate_key", defaultValue));
+        "bearloc_pref_audio_sample_rate_key", defaultValue));
 
     return rate;
   }
@@ -319,7 +324,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_audio_sample_rate_key", Integer.toString(rate));
+    editor.putString("bearloc_pref_audio_sample_rate_key",
+        Integer.toString(rate));
     editor.commit();
   }
 
@@ -327,9 +333,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_audio_channel_value);
+        .getString(R.string.bearloc_default_audio_channel_value);
     final int channel = Integer.parseInt(prefs.getString(
-        "pref_audio_channel_key", defaultValue));
+        "bearloc_pref_audio_channel_key", defaultValue));
 
     return channel;
   }
@@ -338,7 +344,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_audio_channel_key", Integer.toString(channel));
+    editor.putString("bearloc_pref_audio_channel_key",
+        Integer.toString(channel));
     editor.commit();
   }
 
@@ -346,9 +353,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_audio_format_value);
+        .getString(R.string.bearloc_default_audio_format_value);
     final int format = Integer.parseInt(prefs.getString(
-        "pref_audio_format_key", defaultValue));
+        "bearloc_pref_audio_format_key", defaultValue));
 
     return format;
   }
@@ -357,7 +364,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_audio_format_key", Integer.toString(format));
+    editor.putString("bearloc_pref_audio_format_key", Integer.toString(format));
     editor.commit();
   }
 
@@ -368,8 +375,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_humidity_enable));
-    final boolean enable = prefs.getBoolean("pref_humidity_enable_key",
+        .getString(R.string.bearloc_default_humidity_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_humidity_enable_key",
         defaultValue);
 
     return enable;
@@ -380,7 +387,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_humidity_enable_key", enable);
+    editor.putBoolean("bearloc_pref_humidity_enable_key", enable);
     editor.commit();
   }
 
@@ -388,9 +395,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_humidity_duration);
+        .getString(R.string.bearloc_default_humidity_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_humidity_duration_key", defaultValue));
+        "bearloc_pref_humidity_duration_key", defaultValue));
 
     return duration;
   }
@@ -400,7 +407,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_humidity_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_humidity_duration_key",
+        Long.toString(duration));
     editor.commit();
   }
 
@@ -408,9 +416,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_humidity_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_humidity_cnt_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_humidity_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_humidity_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -419,7 +427,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_humidity_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_humidity_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -427,9 +435,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_humidity_delay_value);
+        .getString(R.string.bearloc_default_humidity_delay_value);
     final int delay = Integer.parseInt(prefs.getString(
-        "pref_humidity_delay_key", defaultValue));
+        "bearloc_pref_humidity_delay_key", defaultValue));
 
     return delay;
   }
@@ -438,7 +446,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_humidity_delay_key", Integer.toString(delay));
+    editor
+        .putString("bearloc_pref_humidity_delay_key", Integer.toString(delay));
     editor.commit();
   }
 
@@ -449,8 +458,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_light_enable));
-    final boolean enable = prefs.getBoolean("pref_light_enable_key",
+        .getString(R.string.bearloc_default_light_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_light_enable_key",
         defaultValue);
 
     return enable;
@@ -460,7 +469,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_light_enable_key", enable);
+    editor.putBoolean("bearloc_pref_light_enable_key", enable);
     editor.commit();
   }
 
@@ -468,9 +477,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_light_duration);
-    final long duration = Long.parseLong(prefs.getString("pref_light_enable",
-        defaultValue));
+        .getString(R.string.bearloc_default_light_duration);
+    final long duration = Long.parseLong(prefs.getString(
+        "bearloc_pref_light_enable", defaultValue));
 
     return duration;
   }
@@ -479,16 +488,17 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_light_enable", Long.toString(duration));
+    editor.putString("bearloc_pref_light_enable", Long.toString(duration));
     editor.commit();
   }
 
   public static int getLightCnt(final Context context) {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
-    final String defaultValue = context.getString(R.string.default_light_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_light_cnt_key",
-        defaultValue));
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_light_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_light_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -497,7 +507,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_light_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_light_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -505,9 +515,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_light_delay_value);
-    final int delay = Integer.parseInt(prefs.getString("pref_light_delay_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_light_delay_value);
+    final int delay = Integer.parseInt(prefs.getString(
+        "bearloc_pref_light_delay_key", defaultValue));
 
     return delay;
   }
@@ -516,7 +526,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_light_delay_key", Integer.toString(delay));
+    editor.putString("bearloc_pref_light_delay_key", Integer.toString(delay));
     editor.commit();
   }
 
@@ -527,8 +537,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_lacc_enable));
-    final boolean enable = prefs.getBoolean("pref_lacc_enable_key",
+        .getString(R.string.bearloc_default_lacc_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_lacc_enable_key",
         defaultValue);
 
     return enable;
@@ -539,7 +549,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_lacc_enable_key", enable);
+    editor.putBoolean("bearloc_pref_lacc_enable_key", enable);
     editor.commit();
   }
 
@@ -547,9 +557,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_lacc_duration);
+        .getString(R.string.bearloc_default_lacc_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_lacc_duration_key", defaultValue));
+        "bearloc_pref_lacc_duration_key", defaultValue));
 
     return duration;
   }
@@ -559,16 +569,17 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_lacc_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_lacc_duration_key", Long.toString(duration));
     editor.commit();
   }
 
   public static int getLinearAccCnt(final Context context) {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
-    final String defaultValue = context.getString(R.string.default_lacc_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_lacc_cnt_key",
-        defaultValue));
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_lacc_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_lacc_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -577,7 +588,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_lacc_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_lacc_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -585,9 +596,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_lacc_delay_value);
-    final int delay = Integer.parseInt(prefs.getString("pref_lacc_delay_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_lacc_delay_value);
+    final int delay = Integer.parseInt(prefs.getString(
+        "bearloc_pref_lacc_delay_key", defaultValue));
 
     return delay;
   }
@@ -596,7 +607,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_lacc_delay_key", Integer.toString(delay));
+    editor.putString("bearloc_pref_lacc_delay_key", Integer.toString(delay));
     editor.commit();
   }
 
@@ -607,8 +618,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_magnetic_enable));
-    final boolean enable = prefs.getBoolean("pref_magnetic_enable_key",
+        .getString(R.string.bearloc_default_magnetic_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_magnetic_enable_key",
         defaultValue);
 
     return enable;
@@ -619,7 +630,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_magnetic_enable_key", enable);
+    editor.putBoolean("bearloc_pref_magnetic_enable_key", enable);
     editor.commit();
   }
 
@@ -627,9 +638,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_magnetic_duration);
+        .getString(R.string.bearloc_default_magnetic_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_magnetic_duration_key", defaultValue));
+        "bearloc_pref_magnetic_duration_key", defaultValue));
 
     return duration;
   }
@@ -639,7 +650,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_magnetic_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_magnetic_duration_key",
+        Long.toString(duration));
     editor.commit();
   }
 
@@ -647,9 +659,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_magnetic_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_magnetic_cnt_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_magnetic_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_magnetic_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -658,7 +670,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_magnetic_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_magnetic_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -666,9 +678,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_magnetic_delay_value);
+        .getString(R.string.bearloc_default_magnetic_delay_value);
     final int delay = Integer.parseInt(prefs.getString(
-        "pref_magnetic_delay_key", defaultValue));
+        "bearloc_pref_magnetic_delay_key", defaultValue));
 
     return delay;
   }
@@ -677,7 +689,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_magnetic_delay_key", Integer.toString(delay));
+    editor
+        .putString("bearloc_pref_magnetic_delay_key", Integer.toString(delay));
     editor.commit();
   }
 
@@ -688,8 +701,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_geoloc_enable));
-    final boolean enable = prefs.getBoolean("pref_geoloc_enable_key",
+        .getString(R.string.bearloc_default_geoloc_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_geoloc_enable_key",
         defaultValue);
 
     return enable;
@@ -699,7 +712,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_geoloc_enable_key", enable);
+    editor.putBoolean("bearloc_pref_geoloc_enable_key", enable);
     editor.commit();
   }
 
@@ -707,9 +720,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_geoloc_duration);
+        .getString(R.string.bearloc_default_geoloc_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_geoloc_duration_key", defaultValue));
+        "bearloc_pref_geoloc_duration_key", defaultValue));
 
     return duration;
   }
@@ -719,16 +732,18 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_geoloc_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_geoloc_duration_key",
+        Long.toString(duration));
     editor.commit();
   }
 
   public static int getGeoLocCnt(final Context context) {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
-    final String defaultValue = context.getString(R.string.default_geoloc_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_geoloc_cnt_key",
-        defaultValue));
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_geoloc_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_geoloc_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -737,7 +752,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_geoloc_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_geoloc_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -745,9 +760,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_geoloc_min_delay);
+        .getString(R.string.bearloc_default_geoloc_min_delay);
     final int delay = Integer.parseInt(prefs.getString(
-        "pref_geoloc_min_delay_key", defaultValue));
+        "bearloc_pref_geoloc_min_delay_key", defaultValue));
 
     return delay;
   }
@@ -756,7 +771,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_geoloc_min_delay_key", Integer.toString(delay));
+    editor.putString("bearloc_pref_geoloc_min_delay_key",
+        Integer.toString(delay));
     editor.commit();
   }
 
@@ -764,9 +780,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_geoloc_min_dist);
+        .getString(R.string.bearloc_default_geoloc_min_dist);
     final float dist = Float.parseFloat(prefs.getString(
-        "pref_geoloc_min_dist_key", defaultValue));
+        "bearloc_pref_geoloc_min_dist_key", defaultValue));
 
     return dist;
   }
@@ -775,7 +791,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_geoloc_min_dist_key", Float.toString(dist));
+    editor.putString("bearloc_pref_geoloc_min_dist_key", Float.toString(dist));
     editor.commit();
   }
 
@@ -786,8 +802,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_gravity_enable));
-    final boolean enable = prefs.getBoolean("pref_gravity_enable_key",
+        .getString(R.string.bearloc_default_gravity_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_gravity_enable_key",
         defaultValue);
 
     return enable;
@@ -798,7 +814,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_gravity_enable_key", enable);
+    editor.putBoolean("bearloc_pref_gravity_enable_key", enable);
     editor.commit();
   }
 
@@ -806,9 +822,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_gravity_duration);
+        .getString(R.string.bearloc_default_gravity_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_gravity_duration_key", defaultValue));
+        "bearloc_pref_gravity_duration_key", defaultValue));
 
     return duration;
   }
@@ -818,16 +834,18 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_gravity_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_gravity_duration_key",
+        Long.toString(duration));
     editor.commit();
   }
 
   public static int getGravityCnt(final Context context) {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
-    final String defaultValue = context.getString(R.string.default_gravity_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_gravity_cnt_key",
-        defaultValue));
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_gravity_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_gravity_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -836,7 +854,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_gravity_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_gravity_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -844,9 +862,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_gravity_delay_value);
+        .getString(R.string.bearloc_default_gravity_delay_value);
     final int delay = Integer.parseInt(prefs.getString(
-        "pref_gravity_delay_key", defaultValue));
+        "bearloc_pref_gravity_delay_key", defaultValue));
 
     return delay;
   }
@@ -855,7 +873,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_gravity_delay_key", Integer.toString(delay));
+    editor.putString("bearloc_pref_gravity_delay_key", Integer.toString(delay));
     editor.commit();
   }
 
@@ -866,8 +884,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_gyro_enable));
-    final boolean enable = prefs.getBoolean("pref_gyro_enable_key",
+        .getString(R.string.bearloc_default_gyro_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_gyro_enable_key",
         defaultValue);
 
     return enable;
@@ -877,7 +895,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_gyro_enable_key", enable);
+    editor.putBoolean("bearloc_pref_gyro_enable_key", enable);
     editor.commit();
   }
 
@@ -885,9 +903,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_gyro_duration);
+        .getString(R.string.bearloc_default_gyro_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_gyro_duration_key", defaultValue));
+        "bearloc_pref_gyro_duration_key", defaultValue));
 
     return duration;
   }
@@ -896,16 +914,17 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_gyro_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_gyro_duration_key", Long.toString(duration));
     editor.commit();
   }
 
   public static int getGyroCnt(final Context context) {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
-    final String defaultValue = context.getString(R.string.default_gyro_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_gyro_cnt_key",
-        defaultValue));
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_gyro_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_gyro_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -914,7 +933,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_gyro_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_gyro_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -922,9 +941,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_gyro_delay_value);
-    final int delay = Integer.parseInt(prefs.getString("pref_gyro_delay_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_gyro_delay_value);
+    final int delay = Integer.parseInt(prefs.getString(
+        "bearloc_pref_gyro_delay_key", defaultValue));
 
     return delay;
   }
@@ -933,7 +952,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_gyro_delay_key", Integer.toString(delay));
+    editor.putString("bearloc_pref_gyro_delay_key", Integer.toString(delay));
     editor.commit();
   }
 
@@ -944,9 +963,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_proximity_enable));
-    final boolean enable = prefs.getBoolean("pref_proximity_enable_key",
-        defaultValue);
+        .getString(R.string.bearloc_default_proximity_enable));
+    final boolean enable = prefs.getBoolean(
+        "bearloc_pref_proximity_enable_key", defaultValue);
 
     return enable;
   }
@@ -956,7 +975,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_proximity_enable_key", enable);
+    editor.putBoolean("bearloc_pref_proximity_enable_key", enable);
     editor.commit();
   }
 
@@ -964,9 +983,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_proximity_duration);
+        .getString(R.string.bearloc_default_proximity_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_proximity_duration_key", defaultValue));
+        "bearloc_pref_proximity_duration_key", defaultValue));
 
     return duration;
   }
@@ -976,7 +995,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_proximity_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_proximity_duration_key",
+        Long.toString(duration));
     editor.commit();
   }
 
@@ -984,9 +1004,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_proximity_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_proximity_cnt_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_proximity_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_proximity_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -995,7 +1015,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_proximity_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_proximity_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -1003,9 +1023,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_proximity_delay_value);
+        .getString(R.string.bearloc_default_proximity_delay_value);
     final int delay = Integer.parseInt(prefs.getString(
-        "pref_proximity_delay_key", defaultValue));
+        "bearloc_pref_proximity_delay_key", defaultValue));
 
     return delay;
   }
@@ -1014,7 +1034,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_proximity_delay_key", Integer.toString(delay));
+    editor.putString("bearloc_pref_proximity_delay_key",
+        Integer.toString(delay));
     editor.commit();
   }
 
@@ -1025,8 +1046,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_rotation_enable));
-    final boolean enable = prefs.getBoolean("pref_rotation_enable_key",
+        .getString(R.string.bearloc_default_rotation_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_rotation_enable_key",
         defaultValue);
 
     return enable;
@@ -1037,7 +1058,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_rotation_enable_key", enable);
+    editor.putBoolean("bearloc_pref_rotation_enable_key", enable);
     editor.commit();
   }
 
@@ -1045,9 +1066,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_rotation_duration);
+        .getString(R.string.bearloc_default_rotation_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_rotation_duration_key", defaultValue));
+        "bearloc_pref_rotation_duration_key", defaultValue));
 
     return duration;
   }
@@ -1057,7 +1078,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_rotation_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_rotation_duration_key",
+        Long.toString(duration));
     editor.commit();
   }
 
@@ -1065,9 +1087,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_rotation_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_rotation_cnt_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_rotation_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_rotation_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -1076,7 +1098,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_rotation_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_rotation_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -1084,9 +1106,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_rotation_delay_value);
+        .getString(R.string.bearloc_default_rotation_delay_value);
     final int delay = Integer.parseInt(prefs.getString(
-        "pref_rotation_delay_key", defaultValue));
+        "bearloc_pref_rotation_delay_key", defaultValue));
 
     return delay;
   }
@@ -1095,7 +1117,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_rotation_delay_key", Integer.toString(delay));
+    editor
+        .putString("bearloc_pref_rotation_delay_key", Integer.toString(delay));
     editor.commit();
   }
 
@@ -1106,8 +1129,8 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_wifi_enable));
-    final boolean enable = prefs.getBoolean("pref_wifi_enable_key",
+        .getString(R.string.bearloc_default_wifi_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_wifi_enable_key",
         defaultValue);
 
     return enable;
@@ -1117,7 +1140,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putBoolean("pref_wifi_enable_key", enable);
+    editor.putBoolean("bearloc_pref_wifi_enable_key", enable);
     editor.commit();
   }
 
@@ -1125,9 +1148,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_wifi_duration);
+        .getString(R.string.bearloc_default_wifi_duration);
     final long duration = Long.parseLong(prefs.getString(
-        "pref_wifi_duration_key", defaultValue));
+        "bearloc_pref_wifi_duration_key", defaultValue));
 
     return duration;
   }
@@ -1136,16 +1159,17 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_wifi_duration_key", Long.toString(duration));
+    editor.putString("bearloc_pref_wifi_duration_key", Long.toString(duration));
     editor.commit();
   }
 
   public static int getWifiCnt(final Context context) {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
-    final String defaultValue = context.getString(R.string.default_wifi_cnt);
-    final int cnt = Integer.parseInt(prefs.getString("pref_wifi_cnt_key",
-        defaultValue));
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_wifi_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_wifi_cnt_key", defaultValue));
 
     return cnt;
   }
@@ -1154,7 +1178,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_wifi_cnt_key", Integer.toString(cnt));
+    editor.putString("bearloc_pref_wifi_cnt_key", Integer.toString(cnt));
     editor.commit();
   }
 
@@ -1162,9 +1186,9 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final String defaultValue = context
-        .getString(R.string.default_wifi_delay_value);
-    final long delay = Long.parseLong(prefs.getString("pref_wifi_delay_key",
-        defaultValue));
+        .getString(R.string.bearloc_default_wifi_delay_value);
+    final long delay = Long.parseLong(prefs.getString(
+        "bearloc_pref_wifi_delay_key", defaultValue));
 
     return delay;
   }
@@ -1173,7 +1197,7 @@ public class SamplerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("pref_wifi_delay_key", Long.toString(delay));
+    editor.putString("bearloc_pref_wifi_delay_key", Long.toString(delay));
     editor.commit();
   }
 }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <Preference
+        android:summary="@string/pref_general_category_summ"
+        android:title="@string/pref_general_category" >
+        <intent
+            android:action="edu.berkeley.buildsense.PREF_GENERAL"
+            android:targetClass="edu.berkeley.buildsense.BuildSenseSettingsActivity"
+            android:targetPackage="edu.berkeley.buildsense" />
+    </Preference>
+    <Preference
+        android:summary="@string/pref_server_header_summ"
+        android:title="@string/pref_server_header" >
+        <intent
+            android:action="edu.berkeley.buildsense.PREF_SERVER_HEADER"
+            android:targetClass="edu.berkeley.buildsense.BuildSenseSettingsActivity"
+            android:targetPackage="edu.berkeley.buildsense" />
+    </Preference>
+    <Preference
+        android:summary="@string/pref_sampler_category_summ"
+        android:title="@string/pref_sampler_category" >
+        <intent
+            android:action="edu.berkeley.bearloc.PREF_SAMPLER"
+            android:targetClass="edu.berkeley.buildsense.BuildSenseSettingsActivity"
+            android:targetPackage="edu.berkeley.buildsense" />
+    </Preference>
+
+</PreferenceScreen>

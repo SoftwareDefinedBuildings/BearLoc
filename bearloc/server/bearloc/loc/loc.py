@@ -76,13 +76,14 @@ class Loc(object):
   
     Return {semloc: {semantic: loc} dict, alter: {semantic: {alternative location: confidence}}, sem: tree of semantic} 
     """
-    d = self._localize(request)
+    d = defer.Deferred()
+    reactor.callLater(0, self._localize, request, d)
 
     return d
 
 
   # Maybe it is good to make this block to ensure fast response
-  def _localize(self, request):
+  def _localize(self, request, d):
     device = request.get('device')
     uuid = device.get('uuid') if device != None else None
     locepoch = request.get('epoch')
@@ -96,7 +97,7 @@ class Loc(object):
 
     semlocinfo = self._aggr(semloc, alter)
     
-    return defer.succeed(semlocinfo)
+    d.callback(semlocinfo)
 
 
   def _predict(self, uuid, locepoch, (semloc, alter), targetsem):

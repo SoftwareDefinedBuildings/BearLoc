@@ -132,3 +132,6 @@ local.properties
 *.log
 *.log.*
 *.pid
+
+# MacOS system files
+.DS_Store

@@ -11,11 +11,19 @@
     </header>
     <header
         android:fragment="edu.berkeley.buildsense.BuildSenseSettingsActivity$SettingsFragment"
-        android:summary="@string/pref_server_header_summ"
-        android:title="@string/pref_server_header" >
+        android:summary="@string/buildsense_pref_server_category_summ"
+        android:title="@string/buildsense_pref_server_category" >
         <extra
             android:name="settings"
-            android:value="server_header" />
+            android:value="buildsense_server" />
+    </header>
+    <header
+        android:fragment="edu.berkeley.buildsense.BuildSenseSettingsActivity$SettingsFragment"
+        android:summary="@string/bearloc_pref_server_category_summ"
+        android:title="@string/bearloc_pref_server_category" >
+        <extra
+            android:name="settings"
+            android:value="bearloc_server" />
     </header>
     <header
         android:fragment="edu.berkeley.buildsense.BuildSenseSettingsActivity$SettingsFragment"

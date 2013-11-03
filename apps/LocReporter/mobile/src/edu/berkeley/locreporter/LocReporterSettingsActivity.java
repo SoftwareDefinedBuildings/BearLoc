@@ -78,6 +78,7 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @Override
   public void onBuildHeaders(final List<Header> target) {
+    super.onBuildHeaders(target);
     loadHeadersFromResource(R.xml.pref_headers, target);
   }
 

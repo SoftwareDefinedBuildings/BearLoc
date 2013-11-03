@@ -36,7 +36,7 @@ from bearloc.loc.interface import ILoc
 
 from twisted.internet import defer, reactor
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 from collections import defaultdict
 import numpy as np
 from sklearn import tree
@@ -46,10 +46,9 @@ import bisect
 import itertools
 
 
+@implementer(ILoc)
 class Loc(object):
   """Loc class"""
-  
-  implements(ILoc)
   
   def __init__(self, db):
     self._db = db

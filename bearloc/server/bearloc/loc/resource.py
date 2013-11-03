@@ -35,10 +35,12 @@ from bearloc.loc.interface import ILoc
 from twisted.web import resource, server
 from twisted.python import log, components
 from twisted.internet import defer
+from zope.interface import implementer
 import simplejson as json
 import httplib
 
 
+@implementer(resource.IResource)
 class LocResource(resource.Resource):
   """BearLoc Localize web-accessible resource"""
   

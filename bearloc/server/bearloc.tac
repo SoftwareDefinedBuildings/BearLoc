@@ -31,15 +31,15 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from twisted.application import internet, service
-from twisted.web import resource as twisted_resource, server
+from twisted.web import resource as resource, server
 
 from bearloc.service import BearLocService
-from bearloc import resource as bearloc_resource
+import bearloc.resource
 
 
 application = service.Application('bearloc')
 bearloc = BearLocService(db="bearloc.db", content=['report', 'localize', 'meta'])
 serviceCollection = service.IServiceCollection(application)
 # HTTP service
-site = server.Site(twisted_resource.IResource(bearloc))
+site = server.Site(resource.IResource(bearloc))
 internet.TCPServer(10080, site).setServiceParent(serviceCollection)

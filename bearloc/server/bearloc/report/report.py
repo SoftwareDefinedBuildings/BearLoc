@@ -33,7 +33,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 from bearloc.report.interface import IReport
 
 from twisted.internet import defer, reactor
-from zope.interface import implements
+from zope.interface import implementer
 import os
 import glob
 import shutil
@@ -42,10 +42,9 @@ import wave
 import array
 
 
+@implementer(IReport)
 class Report(object):
   """Report class"""
-  
-  implements(IReport)
   
   def __init__(self, db):
     self._db = db

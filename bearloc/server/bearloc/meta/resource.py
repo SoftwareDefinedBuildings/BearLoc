@@ -35,10 +35,12 @@ from bearloc.meta.interface import IMeta
 from twisted.web import resource, server
 from twisted.python import log, components
 from twisted.internet import defer
+from zope.interface import implementer
 import simplejson as json
 import httplib
 
 
+@implementer(resource.IResource)
 class MetaResource(resource.Resource):
   """BearLoc Metadata web-accessible resource"""
   

@@ -34,7 +34,7 @@ from bearloc.meta.interface import IMeta
 
 from twisted.internet import defer, reactor
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 from collections import defaultdict
 import numpy as np
 from sklearn import tree
@@ -42,10 +42,9 @@ from collections import Counter
 import time
 
 
+@implementer(IMeta)
 class Meta(object):
   """Meta class"""
-  
-  implements(IMeta)
   
   def __init__(self, db):
     self._db = db

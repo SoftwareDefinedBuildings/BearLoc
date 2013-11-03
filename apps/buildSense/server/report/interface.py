@@ -27,5 +27,16 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 """
-@author 
+@author Beidi Chen <beidichen1993@berkeley.edu>
 """
+
+from zope.interface import Interface
+
+
+class IReport(Interface):
+  """Interface of Loc and notes Report service"""
+
+  def report(report):
+    """
+    Return a deferred returning a boolean.
+    """

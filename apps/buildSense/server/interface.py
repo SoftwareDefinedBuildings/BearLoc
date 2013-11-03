@@ -27,5 +27,16 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 """
-@author
+@author Beidi Chen <beidichen1993@berkeley.edu>
 """
+
+from zope.interface import Interface
+
+
+class IbuildSenseService(Interface):
+  """Interface of buildSense service"""
+  
+  def content():
+    """
+    Return a list of strings.
+    """

@@ -27,16 +27,41 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 """
-@author
+@author Beidi Chen <beidichen1993@berkeley.edu>
 """
 
-from zope.interface import Interface
+from buildsense.interface import IbuildSenseService
+from buildsense.report.resource import ReportResource
+
+from twisted.web import resource, server
+from twisted.python import log, components
+from twisted.internet import defer
+import simplejson as json
+import httplib
 
 
-class IReport(Interface):
-  """Interface of Loc and notes Report service"""
+class BuildsenseResource(resource.Resource):
+  """buildsense web-accessible resource"""
+  
+  def __init__(self, service):
+    resource.Resource.__init__(self)
+    self._service = service
+    if 'report' in self._service.content():
+      self.putChild('report', ReportResource(self._service.report))
+  
 
-  def report(report):
-    """
-    Return a deferred returning a boolean.
-    """
+  def getChild(self, path, request):
+    if path == '':
+      return self
+    else:
+      return resource.Resource.getChild(self, path, request)
+
+
+  def render_GET(self, request):
+    request.setHeader('Content-type', 'application/json')
+    return json.dumps(self._service.content())
+
+
+components.registerAdapter(BuildsenseResource, 
+                           IbuildSenseService, 
+                           resource.IResource)

@@ -27,11 +27,10 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 """
-@author 
+@author Beidi Chen <beidichen1993@berkeley.edu>
 """
 
-from buildsense.interface import IbuildSenseService
-from buildsense.report.resource import ReportResource
+from buildsense.report.interface import IReport
 
 from twisted.web import resource, server
 from twisted.python import log, components
@@ -40,14 +39,13 @@ import simplejson as json
 import httplib
 
 
-class BuildsenseResource(resource.Resource):
-  """BearLoc web-accessible resource"""
+class ReportResource(resource.Resource):
+  """buildsense Report web-accessible resource"""
   
-  def __init__(self, service):
+  def __init__(self, report):
     resource.Resource.__init__(self)
-    self._service = service
-    if 'report' in self._service.content():
-      self.putChild('report', ReportResource(self._service.report))
+    self._report = report
+  
   
   def getChild(self, path, request):
     if path == '':
@@ -57,10 +55,49 @@ class BuildsenseResource(resource.Resource):
   
   
   def render_GET(self, request):
+    return  self.__doc__ + ": POST JSON to me!"
+  
+  
+  def render_POST(self, request):
+    """POST localization report"""
+    log.msg("Received report from " + request.getHost().host)
+    
     request.setHeader('Content-type', 'application/json')
-    return json.dumps(self._service.content())
+    try:
+      content = json.load(request.content)
+    except:
+      # TODO: handle bad request
+      return ""
+
+    d = self._report.report(content)
+    d.addCallback(self._succeed, request)
+    d.addErrback(self._fail, request)
+    
+    # cancel report deferred if the connection is lost before it fires
+    request.notifyFinish().addErrback(self._cancel, d, request)
+    
+    return server.NOT_DONE_YET
+  
+  
+  def _succeed(self, response, request):
+    request.setResponseCode(httplib.OK)
+    request.write(json.dumps(response))
+    request.finish()
+    log.msg(request.getHost().host + " reported")
 
 
-components.registerAdapter(BuildsenseResource, 
-                           IbuildSenseService, 
+  def _fail(self, err, request):
+    if err.check(defer.CancelledError):
+      log.msg(request.getHost().host + " report canceled")
+    else:
+      pass
+
+
+  def _cancel(self, err, deferred, request):
+    deferred.cancel()
+    log.msg(request.getHost().host + " lost connection")
+
+
+components.registerAdapter(ReportResource, 
+                           IReport, 
                            resource.IResource)

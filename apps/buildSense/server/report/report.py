@@ -27,7 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 """
-@author 
+@author Beidi Chen <beidichen1993@berkeley.edu>
 """
 
 from buildsense.report.interface import IReport
@@ -54,10 +54,6 @@ class Report(object):
   def report(self, report):
     """Store reported location and temperature data.
     """
-    if "semloc" in report and len(report["semloc"]) > 0:
-      if "note" in report and len(report["note"]) >0:
-        return defer.fail(Exception("Old Version"))
-
     reactor.callLater(0, self._insert, report)
 
     response = {'result': True}
@@ -77,7 +73,7 @@ class Report(object):
                   building TEXT, \
                   floor TEXT, \
                   room TEXT, \
-                  tem TEXT, \
+                  note TEXT, \
                   PRIMARY KEY (uuid, epoch));"
     cur = self._db.cursor()
     cur.executescript(operation)
@@ -87,23 +83,24 @@ class Report(object):
 
   def _insert(self, report):
     """Insert the report to database"""
-    self._insert_temp_semloc(report) if "semloc" and "note" in report else None
+    self._insert_temp_semloc(report) if "semloc" in report.get("report")[0] else None
 
 
   def _insert_temp_semloc(self, report):
     cur = self._db.cursor()
-    events = report.get("semloc") # list of semloc events
+    events = report.get("report")
     for event in events:
-      data = (report.get("device").get("uuid"),
+      loc = event.get("semloc")
+      data = (event.get("device").get("uuid"),
               event.get("epoch"),
-              event.get("country", None),
-              event.get("state", None),
-              event.get("city", None),
-              event.get("street", None),
-              event.get("building", None),
-              event.get("floor", None),
-              event.get("room", None),
-              report.get("note")) # temperature or others 
+              loc.get("country", None),
+              loc.get("state", None),
+              loc.get("city", None),
+              loc.get("street", None),
+              loc.get("building", None),
+              loc.get("floor", None),
+              loc.get("room", None),
+              event.get("note")) # temperature or others 
   
       operation = "INSERT OR REPLACE INTO " + "temp_semloc" + \
                 " VALUES (?,?,?,?,?,?,?,?,?,?);"

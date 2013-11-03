@@ -27,16 +27,28 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 """
-@author 
+@author Beidi Chen <beidichen1993@berkeley.edu>
 """
 
-from zope.interface import Interface
+from buildsense.interface import IbuildSenseService
+from buildsense.report.report import Report
 
+from twisted.application import service
+from twisted.internet import defer
+from zope.interface import implements
+import sqlite3
 
-class IbuildSenseService(Interface):
-  """Interface of buildSense service"""
+class BuildSenseService(service.Service):
+  """buildsense service"""
   
-  def content():
-    """
-    Return a list of strings.
-    """
+  implements(IbuildSenseService)
+  
+  def __init__(self, db, content):
+    self._db = sqlite3.connect(database = db)  # No need to use aync DB for now
+    self._content = content
+    
+    if 'report' in self._content:
+      self.report = Report(self._db) # Report.__init__() create and write all data tables 
+
+  def content(self):
+    return self._content

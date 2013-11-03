@@ -54,10 +54,6 @@ class Report(object):
   def report(self, report):
     """Store reported location and corresponding data.
     """
-    # Check whether the report is from old version app
-    if "semloc" in report and len(report["semloc"]) > 0 and "location" in report["semloc"][0]:
-      return defer.fail(Exception("Old Version"))
-
     reactor.callLater(0, self._insert, report)
     
     response = {'result': True}

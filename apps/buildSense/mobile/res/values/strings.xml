@@ -32,11 +32,15 @@
     <!-- Server address settings strings -->
     <string name="pref_server_addr_summ">buildSense server domain name or IP address</string>
     <string name="pref_server_addr">buildSense Server Address</string>
-    <string name="default_server_addr">kaifei.info</string>
+    <string name="default_server_addr">54.242.57.128</string>
 
     <!-- Server port settings strings -->
     <string name="pref_server_port_summ">Port of buildSense service</string>
     <string name="pref_server_port">buildSense Server Port</string>
     <string name="default_server_port">10081</string>
+
+    <!-- Overwrite bearloc strings -->
+    <string name="bearloc_default_server_addr">54.242.57.128</string>
+    <string name="bearloc_default_server_port">10080</string>
 
 </resources>

@@ -26,5 +26,9 @@
     <string name="pref_server_category">Server</string>
     <string name="pref_sampler_category_summ">Sampler settings</string>
     <string name="pref_sampler_category">Sampler</string>
+    
+    <!-- Overwrite bearloc strings -->
+    <string name="bearloc_default_server_addr">54.242.57.128</string>
+    <string name="bearloc_default_server_port">10080</string>
 
 </resources>

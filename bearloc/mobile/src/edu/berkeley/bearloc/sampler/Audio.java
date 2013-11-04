@@ -40,6 +40,7 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.media.AudioRecord;
 import android.os.Handler;
+import android.widget.Toast;
 import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.util.SamplerSettings;
 
@@ -187,6 +188,8 @@ public class Audio implements Sampler {
       bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel, mFormat);
       if (bufferSize <= 0) {
         SamplerSettings.setAudioEnable(mContext, false);
+        Toast.makeText(mContext, "Audio not enabled", Toast.LENGTH_SHORT)
+            .show();
         return false;
       }
 

@@ -356,7 +356,7 @@ class Loc(object):
         if epochdiff <= self._wifi_train_epoch_thld:
           sigs.append(sig)
           classes.append(cls)
-          bssids.extend(map(lambda x: x[1], wifis))
+          bssids.extend(sig.keys())
 
     if len(sigs) == 0 or len(classes) == 0:
       return (None, None, None)

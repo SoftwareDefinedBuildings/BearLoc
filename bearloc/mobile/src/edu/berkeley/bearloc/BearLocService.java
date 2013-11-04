@@ -48,6 +48,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.widget.Toast;
 import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
 import edu.berkeley.bearloc.util.JSONHttpPostTask;
 import edu.berkeley.bearloc.util.JSONHttpPostTask.onJSONHttpPostRespondedListener;
@@ -131,6 +132,8 @@ public class BearLocService extends Service implements SemLocService,
         @Override
         public void onJSONHttpPostResponded(final JSONObject response) {
           if (response == null) {
+            Toast.makeText(BearLocService.this, "Server not responding",
+                Toast.LENGTH_SHORT).show();
             return;
           }
 
@@ -186,6 +189,8 @@ public class BearLocService extends Service implements SemLocService,
         @Override
         public void onJSONHttpPostResponded(final JSONObject response) {
           if (response == null) {
+            Toast.makeText(BearLocService.this, "Server not responding",
+                Toast.LENGTH_SHORT).show();
             return;
           }
 
@@ -247,11 +252,12 @@ public class BearLocService extends Service implements SemLocService,
           null);
       url = uri.toURL();
     } catch (final URISyntaxException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
+      Toast.makeText(this, "URL Syntax Exception", Toast.LENGTH_SHORT).show();
     } catch (final MalformedURLException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
+      Toast.makeText(this, "Malformed URL Exception", Toast.LENGTH_SHORT)
+          .show();
     }
 
     return url;

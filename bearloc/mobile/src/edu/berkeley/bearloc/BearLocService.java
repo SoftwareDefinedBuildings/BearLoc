@@ -33,14 +33,6 @@
 
 package edu.berkeley.bearloc;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,13 +44,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
+import edu.berkeley.bearloc.util.JSONHttpPostTask;
+import edu.berkeley.bearloc.util.JSONHttpPostTask.onJSONHttpPostRespondedListener;
 import edu.berkeley.bearloc.util.ServerSettings;
 
 public class BearLocService extends Service implements SemLocService,
@@ -89,10 +81,6 @@ public class BearLocService extends Service implements SemLocService,
       sendData();
     }
   };
-
-  private static interface onHttpPostRespondedListener {
-    void onHttpPostResponded(JSONObject response);
-  }
 
   public class BearLocBinder extends Binder {
     public BearLocService getService() {
@@ -133,15 +121,15 @@ public class BearLocService extends Service implements SemLocService,
   private void sendLocRequest() {
     try {
       final String path = "/localize";
-      final URL url = BearLocService.getHttpURL(this, path);
+      final URL url = getHttpURL(path);
 
       final JSONObject request = new JSONObject();
       request.put("epoch", System.currentTimeMillis());
       request.put("device", BearLocFormat.getDeviceInfo(this));
 
-      new BearLocHttpPostTask(new onHttpPostRespondedListener() {
+      new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
         @Override
-        public void onHttpPostResponded(final JSONObject response) {
+        public void onJSONHttpPostResponded(final JSONObject response) {
           if (response == null) {
             return;
           }
@@ -161,7 +149,7 @@ public class BearLocService extends Service implements SemLocService,
           }
           mListeners.clear();
         }
-      }).execute(url, request.toString());
+      }).execute(url, request);
     } catch (final JSONException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -189,14 +177,14 @@ public class BearLocService extends Service implements SemLocService,
   public boolean meta(final JSONObject semloc, final MetaListener listener) {
     try {
       final String path = "/meta";
-      final URL url = BearLocService.getHttpURL(this, path);
+      final URL url = getHttpURL(path);
 
       final JSONObject request = new JSONObject();
       request.put("semloc", semloc);
 
-      new BearLocHttpPostTask(new onHttpPostRespondedListener() {
+      new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
         @Override
-        public void onHttpPostResponded(final JSONObject response) {
+        public void onJSONHttpPostResponded(final JSONObject response) {
           if (response == null) {
             return;
           }
@@ -205,7 +193,7 @@ public class BearLocService extends Service implements SemLocService,
             listener.onMetaReturned(response);
           }
         }
-      }).execute(url, request.toString());
+      }).execute(url, request);
 
       return true;
     } catch (final JSONException e) {
@@ -218,13 +206,13 @@ public class BearLocService extends Service implements SemLocService,
 
   private void sendData() {
     final String path = "/report";
-    final URL url = BearLocService.getHttpURL(this, path);
+    final URL url = getHttpURL(path);
 
     final JSONObject report = mFormat.dump(mCache.get());
     mCache.clear();
 
     if (report.length() > 0) {
-      new BearLocHttpPostTask(null).execute(url, report.toString());
+      new JSONHttpPostTask(null).execute(url, report);
       mHandler.postDelayed(mSendDataTask, mDataSendItvl);
     } else {
       mDataSendItvl = null;
@@ -249,11 +237,11 @@ public class BearLocService extends Service implements SemLocService,
     }
   }
 
-  private static URL getHttpURL(final Context context, final String path) {
+  private URL getHttpURL(final String path) {
     URL url = null;
     try {
-      final String serverHost = ServerSettings.getServerAddr(context);
-      final int serverPort = ServerSettings.getServerPort(context);
+      final String serverHost = ServerSettings.getServerAddr(this);
+      final int serverPort = ServerSettings.getServerPort(this);
       // TODO handle the exception of using IP address
       final URI uri = new URI("http", null, serverHost, serverPort, path, null,
           null);
@@ -267,83 +255,5 @@ public class BearLocService extends Service implements SemLocService,
     }
 
     return url;
-  }
-
-  // BearLoc HTTP Post Task posts with JSON Object and gets JSON Object returned
-  private static class BearLocHttpPostTask extends
-      AsyncTask<Object, Void, JSONObject> {
-
-    private final onHttpPostRespondedListener listener;
-
-    public BearLocHttpPostTask(final onHttpPostRespondedListener listener) {
-      this.listener = listener;
-    }
-
-    private InputStream httpPost(final HttpURLConnection connection,
-        final URL url, final String entity) throws IOException {
-      final int contentLength = entity.getBytes().length;
-      connection.setRequestMethod("POST");
-      connection.setRequestProperty("Content-Type", "application/json");
-      connection.setRequestProperty("Content-Length",
-          Integer.toString(contentLength));
-      connection.setFixedLengthStreamingMode(contentLength);
-      connection.setDoInput(true);
-      connection.setDoOutput(true);
-
-      final OutputStream out = new BufferedOutputStream(
-          connection.getOutputStream());
-      out.write(entity.getBytes());
-      out.flush();
-      out.close();
-
-      final InputStream in = new BufferedInputStream(
-          connection.getInputStream());
-
-      return in;
-    }
-
-    @Override
-    protected JSONObject doInBackground(final Object... params) {
-      final URL url = (URL) params[0];
-      final String entity = (String) params[1];
-
-      // TODO reuse the connection
-      HttpURLConnection connection = null;
-      try {
-        connection = (HttpURLConnection) url.openConnection();
-        final InputStream in = httpPost(connection, url, entity);
-
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(
-            in));
-
-        String line;
-        final StringBuilder sb = new StringBuilder();
-        while ((line = reader.readLine()) != null) {
-          sb.append(line + '\n');
-        }
-        reader.close();
-
-        return new JSONObject(sb.toString());
-      } catch (final IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      } catch (final JSONException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      } finally {
-        if (connection != null) {
-          connection.disconnect();
-        }
-      }
-
-      return null;
-    }
-
-    @Override
-    protected void onPostExecute(final JSONObject response) {
-      if (!isCancelled() && listener != null) {
-        listener.onHttpPostResponded(response);
-      }
-    }
   }
 }

@@ -117,4 +117,23 @@ public class BuildSenseSettingsActivity extends PreferenceActivity {
 
     return enable;
   }
+
+  public static String getServerAddr(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context.getString(R.string.default_server_addr);
+    final String addr = prefs.getString("pref_server_addr_key", defaultValue);
+
+    return addr;
+  }
+
+  public static Integer getServerPort(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context.getString(R.string.default_server_port);
+    final Integer port = Integer.valueOf(prefs.getString(
+        "pref_server_port_key", defaultValue));
+
+    return port;
+  }
 }

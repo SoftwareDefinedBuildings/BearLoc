@@ -15,6 +15,7 @@
     <string name="cancel">Cancel</string>
     <string name="loc_updated">Location Updated</string>
     <string name="meta_updated">Location Candidates Updated</string>
+    <string name="note">Notes about CURRENT environment</string>
 
     <!-- Settings strings -->
     <string name="pref_general_category_summ">General settings</string>

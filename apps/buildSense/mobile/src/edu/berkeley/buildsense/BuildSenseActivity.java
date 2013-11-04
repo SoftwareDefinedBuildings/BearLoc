@@ -52,6 +52,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -78,7 +79,9 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
   private AlertDialog mAddDialog;
   private AlertDialog mChangeSemDialog;
   private AlertDialog mSelectDialog;
+  private AlertDialog mNoteDialog;
   private EditText mAddLocEditText;
+  private EditText mNoteEditText;
   private String mSelectedLoc;
 
   private ListView mListView;
@@ -87,6 +90,7 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
   private TextView mLocPrefixTextView;
   private TextView mCurSemLocTextView;
   private Button mAddButton;
+  private Button mSemButton;
 
   private BuildSenseService mService;
   private boolean mBound = false;
@@ -129,8 +133,10 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
 
     mAddButton = (Button) findViewById(R.id.add_loc);
     mAddButton.setOnClickListener(this);
-    final Button semButton = (Button) findViewById(R.id.change_sem);
-    semButton.setOnClickListener(this);
+    mAddButton.setEnabled(false);
+    mSemButton = (Button) findViewById(R.id.change_sem);
+    mSemButton.setOnClickListener(this);
+    mSemButton.setEnabled(false);
     final Button locButton = (Button) findViewById(R.id.localize);
     locButton.setOnClickListener(this);
 
@@ -158,6 +164,7 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
       builder = new AlertDialog.Builder(this);
       builder.setMessage("Please input your CURRENT " + mCurSem + ".");
       mAddLocEditText = new EditText(this);
+      mAddLocEditText.setHint("CURRENT " + mCurSem);
       builder.setView(mAddLocEditText);
       builder.setCancelable(true);
       builder.setPositiveButton(R.string.ok, this);
@@ -186,17 +193,40 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
   @Override
   public void onItemClick(final AdapterView<?> parent, final View view,
       final int position, final long id) {
-    mSelectedLoc = mArrayAdapter.getItem(position);
+    // move semantic downward if it is not at lowest level
+    final int curSemIdx = Arrays.asList(BuildSenseService.Sems)
+        .indexOf(mCurSem);
+    // Check whether it is lowest level of semantic
+    if (curSemIdx < BuildSenseService.Sems.length - 1) {
+      mSelectedLoc = mArrayAdapter.getItem(position);
 
-    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setMessage("Change your CURRENT " + mCurSem + " to " + mSelectedLoc
-        + "?");
-    builder.setCancelable(true);
-    builder.setPositiveButton(R.string.ok, this);
-    builder.setNegativeButton(R.string.cancel, this);
+      final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setMessage("Change your CURRENT " + mCurSem + " to "
+          + mSelectedLoc + "?");
+      builder.setCancelable(true);
+      builder.setPositiveButton(R.string.ok, this);
+      builder.setNegativeButton(R.string.cancel, this);
 
-    mSelectDialog = builder.create();
-    mSelectDialog.show();
+      mSelectDialog = builder.create();
+      mSelectDialog.show();
+    } else {
+      mSelectedLoc = mArrayAdapter.getItem(position);
+
+      final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      final LayoutInflater inflater = getLayoutInflater();
+      final View dialogView = inflater.inflate(R.layout.note_dialog, null);
+      builder.setMessage("Take notes about your CURRENT " + mCurSem + ": "
+          + mSelectedLoc + ".");
+      builder.setView(dialogView);
+      builder.setCancelable(true);
+      builder.setPositiveButton(R.string.ok, this);
+      builder.setNegativeButton(R.string.cancel, this);
+
+      mNoteDialog = builder.create();
+      mNoteDialog.show();
+
+      mNoteEditText = (EditText) dialogView.findViewById(R.id.note);
+    }
   }
 
   @Override
@@ -221,6 +251,23 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
     } else if (dialog == mSelectDialog) {
       switch (which) {
       case DialogInterface.BUTTON_POSITIVE:
+        changeSemLoc(mSelectedLoc);
+        refresh();
+        break;
+      case DialogInterface.BUTTON_NEGATIVE:
+        break;
+      default:
+        break;
+      }
+    } else if (dialog == mNoteDialog) {
+      switch (which) {
+      case DialogInterface.BUTTON_POSITIVE:
+        if (mNoteEditText != null) {
+          final String note = mNoteEditText.getText().toString().trim();
+          if (note.length() > 0) {
+            mService.note(note);
+          }
+        }
         changeSemLoc(mSelectedLoc);
         refresh();
         break;
@@ -284,6 +331,8 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
 
   @Override
   public void onSemLocInfoReturned(final JSONObject semLocInfo) {
+    mAddButton.setEnabled(true);
+    mSemButton.setEnabled(true);
     refresh();
     Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT).show();
   }

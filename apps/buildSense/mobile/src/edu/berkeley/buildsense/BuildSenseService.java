@@ -33,7 +33,12 @@
 
 package edu.berkeley.buildsense;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
+import java.util.UUID;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -55,6 +60,8 @@ import edu.berkeley.bearloc.BearLocService;
 import edu.berkeley.bearloc.BearLocService.BearLocBinder;
 import edu.berkeley.bearloc.MetaListener;
 import edu.berkeley.bearloc.SemLocListener;
+import edu.berkeley.bearloc.util.DeviceUUID;
+import edu.berkeley.bearloc.util.JSONHttpPostTask;
 
 public class BuildSenseService extends Service implements SemLocListener,
     MetaListener, SensorEventListener {
@@ -158,6 +165,47 @@ public class BuildSenseService extends Service implements SemLocListener,
     return mBearLocService.localize(this);
   }
 
+  public void note(final String note) {
+    JSONObject report;
+    try {
+      report = new JSONObject();
+      final JSONArray reportArray = new JSONArray();
+      report.put("report", reportArray);
+
+      final JSONObject entry = new JSONObject();
+      final UUID uuid = DeviceUUID.getDeviceUUID(this);
+      final long epoch = System.currentTimeMillis();
+      entry.put("uuid", uuid);
+      entry.put("epoch", epoch);
+      entry.put("note", note);
+      entry.put("semloc", mCurSemLocInfo.optJSONObject("semloc"));
+
+      reportArray.put(entry);
+    } catch (final JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return;
+    }
+
+    try {
+      final String path = "/report";
+      final String serverHost = BuildSenseSettingsActivity.getServerAddr(this);
+      final int serverPort = BuildSenseSettingsActivity.getServerPort(this);
+      // TODO handle the exception of using IP address
+      final URI uri = new URI("http", null, serverHost, serverPort, path, null,
+          null);
+      final URL url = uri.toURL();
+
+      new JSONHttpPostTask(null).execute(url, report);
+    } catch (final URISyntaxException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (final MalformedURLException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
   /*
    * Application changes current semantic location
    */
@@ -241,8 +289,8 @@ public class BuildSenseService extends Service implements SemLocListener,
       if (mAcc != null
           && BuildSenseSettingsActivity.getAutoReport(this) == true) {
         // report in AUTO_REPORT_ITVL milliseconds
-        mHandler.postDelayed(mReportLocTask,
-            BuildSenseService.AUTO_REPORT_ITVL);
+        mHandler
+            .postDelayed(mReportLocTask, BuildSenseService.AUTO_REPORT_ITVL);
       }
     }
   }

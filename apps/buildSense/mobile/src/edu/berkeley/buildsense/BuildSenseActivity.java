@@ -60,10 +60,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import edu.berkeley.bearloc.MetaListener;
@@ -82,7 +84,9 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
   private AlertDialog mNoteDialog;
   private EditText mAddLocEditText;
   private EditText mNoteEditText;
+  private Spinner mNoteSpinner;
   private String mSelectedLoc;
+  private String mLastNote;
 
   private ListView mListView;
   private ArrayAdapter<String> mArrayAdapter;
@@ -215,7 +219,7 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
       final AlertDialog.Builder builder = new AlertDialog.Builder(this);
       final LayoutInflater inflater = getLayoutInflater();
       final View dialogView = inflater.inflate(R.layout.note_dialog, null);
-      builder.setMessage("Take notes about your CURRENT " + mCurSem + ": "
+      builder.setMessage("Report notes about your CURRENT " + mCurSem + ": "
           + mSelectedLoc + ".");
       builder.setView(dialogView);
       builder.setCancelable(true);
@@ -225,7 +229,26 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
       mNoteDialog = builder.create();
       mNoteDialog.show();
 
+      // Handle UI listeners
       mNoteEditText = (EditText) dialogView.findViewById(R.id.note);
+      mNoteEditText.setText(mLastNote);
+      mNoteSpinner = (Spinner) dialogView
+          .findViewById(R.id.note_candidates_spinner);
+      mNoteSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(final AdapterView<?> parent,
+            final View view, final int position, final long id) {
+          if (position > 0) {
+            final String note = mNoteSpinner.getSelectedItem().toString();
+            mNoteEditText.setText(note);
+          }
+        }
+
+        @Override
+        public void onNothingSelected(final AdapterView<?> arg0) {
+          // TODO Auto-generated method stub
+        }
+      });
     }
   }
 
@@ -266,6 +289,7 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
           final String note = mNoteEditText.getText().toString().trim();
           if (note.length() > 0) {
             mService.note(note);
+            mLastNote = note;
           }
         }
         changeSemLoc(mSelectedLoc);

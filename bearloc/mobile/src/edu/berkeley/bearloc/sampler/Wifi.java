@@ -40,6 +40,7 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.widget.Toast;
+import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Wifi implements Sampler {
@@ -85,7 +86,8 @@ public class Wifi implements Sampler {
     if (mBusy == false && SamplerSettings.getWifiEnable(mContext) == true) {
       if (mWifiManager == null) {
         SamplerSettings.setWifiEnable(mContext, false);
-        Toast.makeText(mContext, "Wifi not enabled", Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, R.string.bearloc_wifi_error,
+            Toast.LENGTH_SHORT).show();
         return false;
       }
 

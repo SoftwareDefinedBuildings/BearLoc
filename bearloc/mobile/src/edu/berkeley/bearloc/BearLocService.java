@@ -39,6 +39,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -132,8 +133,8 @@ public class BearLocService extends Service implements SemLocService,
         @Override
         public void onJSONHttpPostResponded(final JSONObject response) {
           if (response == null) {
-            Toast.makeText(BearLocService.this, "Server not responding",
-                Toast.LENGTH_SHORT).show();
+            Toast.makeText(BearLocService.this,
+                R.string.bearloc_server_no_respond, Toast.LENGTH_SHORT).show();
             return;
           }
 
@@ -154,6 +155,9 @@ public class BearLocService extends Service implements SemLocService,
         }
       }).execute(url, request);
     } catch (final JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (final RejectedExecutionException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -189,8 +193,8 @@ public class BearLocService extends Service implements SemLocService,
         @Override
         public void onJSONHttpPostResponded(final JSONObject response) {
           if (response == null) {
-            Toast.makeText(BearLocService.this, "Server not responding",
-                Toast.LENGTH_SHORT).show();
+            Toast.makeText(BearLocService.this,
+                R.string.bearloc_server_no_respond, Toast.LENGTH_SHORT).show();
             return;
           }
 
@@ -202,6 +206,9 @@ public class BearLocService extends Service implements SemLocService,
 
       return true;
     } catch (final JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (final RejectedExecutionException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
@@ -217,7 +224,21 @@ public class BearLocService extends Service implements SemLocService,
     mCache.clear();
 
     if (report.length() > 0) {
-      new JSONHttpPostTask(null).execute(url, report);
+      try {
+        new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
+          @Override
+          public void onJSONHttpPostResponded(final JSONObject response) {
+            if (response == null) {
+              Toast.makeText(BearLocService.this,
+                  R.string.bearloc_server_no_respond, Toast.LENGTH_SHORT)
+                  .show();
+            }
+          }
+        }).execute(url, report);
+      } catch (final RejectedExecutionException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
       mHandler.postDelayed(mSendDataTask, mDataSendItvl);
     } else {
       mDataSendItvl = null;
@@ -253,10 +274,11 @@ public class BearLocService extends Service implements SemLocService,
       url = uri.toURL();
     } catch (final URISyntaxException e) {
       e.printStackTrace();
-      Toast.makeText(this, "URL Syntax Exception", Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.bearloc_url_error, Toast.LENGTH_SHORT)
+          .show();
     } catch (final MalformedURLException e) {
       e.printStackTrace();
-      Toast.makeText(this, "Malformed URL Exception", Toast.LENGTH_SHORT)
+      Toast.makeText(this, R.string.bearloc_url_error, Toast.LENGTH_SHORT)
           .show();
     }
 

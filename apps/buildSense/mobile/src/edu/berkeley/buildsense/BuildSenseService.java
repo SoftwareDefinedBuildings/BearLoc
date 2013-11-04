@@ -39,6 +39,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -56,12 +57,14 @@ import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.widget.Toast;
 import edu.berkeley.bearloc.BearLocService;
 import edu.berkeley.bearloc.BearLocService.BearLocBinder;
 import edu.berkeley.bearloc.MetaListener;
 import edu.berkeley.bearloc.SemLocListener;
 import edu.berkeley.bearloc.util.DeviceUUID;
 import edu.berkeley.bearloc.util.JSONHttpPostTask;
+import edu.berkeley.bearloc.util.JSONHttpPostTask.onJSONHttpPostRespondedListener;
 
 public class BuildSenseService extends Service implements SemLocListener,
     MetaListener, SensorEventListener {
@@ -187,6 +190,7 @@ public class BuildSenseService extends Service implements SemLocListener,
       return;
     }
 
+    URL url = null;
     try {
       final String path = "/report";
       final String serverHost = BuildSenseSettingsActivity.getServerAddr(this);
@@ -194,13 +198,26 @@ public class BuildSenseService extends Service implements SemLocListener,
       // TODO handle the exception of using IP address
       final URI uri = new URI("http", null, serverHost, serverPort, path, null,
           null);
-      final URL url = uri.toURL();
-
-      new JSONHttpPostTask(null).execute(url, report);
+      url = uri.toURL();
     } catch (final URISyntaxException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
+      Toast.makeText(this, R.string.url_error, Toast.LENGTH_SHORT).show();
     } catch (final MalformedURLException e) {
+      e.printStackTrace();
+      Toast.makeText(this, R.string.url_error, Toast.LENGTH_SHORT).show();
+    }
+
+    try {
+      new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
+        @Override
+        public void onJSONHttpPostResponded(final JSONObject response) {
+          if (response == null) {
+            Toast.makeText(BuildSenseService.this, R.string.server_no_respond,
+                Toast.LENGTH_SHORT).show();
+          }
+        }
+      }).execute(url, report);
+    } catch (final RejectedExecutionException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }

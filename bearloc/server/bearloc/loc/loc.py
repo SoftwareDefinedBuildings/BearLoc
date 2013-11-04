@@ -203,8 +203,6 @@ class Loc(object):
       if len(condsemlocs) == 0:
         break
 
-    print self._clf_infos
-
     # Only schedule next training task when this one finishes
     reactor.callLater(self._train_interval, self._train_all)
     

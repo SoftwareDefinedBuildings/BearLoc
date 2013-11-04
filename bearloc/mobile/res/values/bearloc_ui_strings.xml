@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Toast strings -->
+    <string name="bearloc_url_error">BearLoc URL Error</string>
+    <string name="bearloc_server_no_respond">BearLoc Server Not Responding</string>
+    <string name="bearloc_audio_error">BearLoc Audio Error</string>
+    <string name="bearloc_geoloc_error">BearLoc Geolocation Error</string>
+    <string name="bearloc_wifi_error">BearLoc Wifi Error</string>
+
+</resources>

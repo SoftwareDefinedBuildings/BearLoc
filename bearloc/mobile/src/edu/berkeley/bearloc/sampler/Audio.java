@@ -188,8 +188,8 @@ public class Audio implements Sampler {
       bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel, mFormat);
       if (bufferSize <= 0) {
         SamplerSettings.setAudioEnable(mContext, false);
-        Toast.makeText(mContext, "Audio not enabled", Toast.LENGTH_SHORT)
-            .show();
+        Toast.makeText(mContext, R.string.bearloc_audio_error,
+            Toast.LENGTH_SHORT).show();
         return false;
       }
 

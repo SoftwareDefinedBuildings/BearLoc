@@ -40,6 +40,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.Toast;
+import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class GeoLoc implements Sampler, LocationListener {
@@ -76,7 +77,7 @@ public class GeoLoc implements Sampler, LocationListener {
     if (mBusy == false && SamplerSettings.getGeoLocEnable(mContext) == true) {
       if (mLocManager == null) {
         SamplerSettings.setGeoLocEnable(mContext, false);
-        Toast.makeText(mContext, "Location Service not enabled",
+        Toast.makeText(mContext, R.string.bearloc_geoloc_error,
             Toast.LENGTH_SHORT).show();
         return false;
       }

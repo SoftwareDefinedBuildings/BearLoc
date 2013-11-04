@@ -17,6 +17,8 @@
     <string name="meta_updated">Location Candidates Updated</string>
     <string name="note">Notes about CURRENT environment</string>
     <string name="sel_freq_note">- Select Frequent Notes -</string>
+    <string name="url_error">buildSense URL Error</string>
+    <string name="server_no_respond">buildSense Server Not Responding</string>
 
     <!-- Settings strings -->
     <string name="pref_general_category_summ">General settings</string>

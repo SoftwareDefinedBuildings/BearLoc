@@ -22,7 +22,7 @@ public class ServerSettings {
     final SharedPreferences prefs = PreferenceManager
         .getDefaultSharedPreferences(context);
     final Editor editor = prefs.edit();
-    editor.putString("bearloc_prefserver_addr_key", addr);
+    editor.putString("bearloc_pref_server_addr_key", addr);
     editor.commit();
   }
 

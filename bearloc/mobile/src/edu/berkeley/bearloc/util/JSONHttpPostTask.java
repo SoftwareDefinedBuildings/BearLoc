@@ -57,6 +57,10 @@ public class JSONHttpPostTask extends AsyncTask<Object, Void, JSONObject> {
     final URL url = (URL) params[0];
     final JSONObject entity = (JSONObject) params[1];
 
+    if (url == null || entity == null) {
+      return null;
+    }
+
     // TODO reuse the connection
     HttpURLConnection connection = null;
     try {

@@ -4,13 +4,13 @@
     <EditTextPreference
         android:defaultValue="@string/bearloc_default_server_addr"
         android:inputType="textUri"
-        android:key="bearloc_pref_bearloc_server_addr_key"
+        android:key="bearloc_pref_server_addr_key"
         android:summary="@string/bearloc_pref_server_addr_summ"
         android:title="@string/bearloc_pref_server_addr" />
     <EditTextPreference
         android:defaultValue="@string/bearloc_default_server_port"
         android:inputType="number"
-        android:key="bearloc_pref_bearloc_server_port_key"
+        android:key="bearloc_pref_server_port_key"
         android:summary="@string/bearloc_pref_server_port_summ"
         android:title="@string/bearloc_pref_server_port" />
 

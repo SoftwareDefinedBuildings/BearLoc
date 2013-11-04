@@ -52,8 +52,7 @@ class Loc(object):
   
   def __init__(self, db):
     self._db = db
-    self._train_interval = 10*60 # in second
-    self._train_history = 30*24*60*60*1000 # in ms = 30 days
+    self._train_interval = 30*60 # in second
     reactor.callLater(0, self._train_all)
     
     self._clf_infos = {} # classifiers {(semloc, semantic): {"clf": clf, ...}}
@@ -204,6 +203,8 @@ class Loc(object):
       if len(condsemlocs) == 0:
         break
 
+    print self._clf_infos
+
     # Only schedule next training task when this one finishes
     reactor.callLater(self._train_interval, self._train_all)
     
@@ -214,6 +215,11 @@ class Loc(object):
     """Build model for sem under conditional sems and semlocs.
 
     return new conditional semlocs for lower level."""
+    cur = self._db.cursor()
+    operation = "SELECT DISTINCT uuid FROM device;"
+    cur.execute(operation)
+    uuids = cur.fetchall()
+
     condsems = self._sems[0:self._sems.index(targetsem)]
 
     new_condsemlocs = []
@@ -222,27 +228,27 @@ class Loc(object):
       if not all(condsem in condsemloc for condsem in condsems):
         continue
 
-      cur = self._db.cursor()
-      # extract locations stored in db
-      operation = "SELECT DISTINCT epoch, " + targetsem + " FROM " + "semloc"
-      conds = [condsem+"='"+condsemloc[condsem]+"'" for condsem in condsems]
-      if conds:
-        operation += " WHERE " + " AND ".join(conds) + " AND " + targetsem + " IS NOT NULL"
-      else:
-        operation += " WHERE " + targetsem + " IS NOT NULL"
-      cur.execute(operation)
-      locations = cur.fetchall()
-
-      if len(locations) == 0:
-        continue 
+      uuidlocations = {}
+      for uuid, in uuids:
+        cur = self._db.cursor()
+        # extract locations stored in db
+        operation = "SELECT DISTINCT epoch, " + targetsem + " FROM " + "semloc" + \
+                    " WHERE uuid='" + uuid + "'"
+        conds = [condsem+"='"+condsemloc[condsem]+"'" for condsem in condsems]
+        if conds:
+          operation += " AND " + " AND ".join(conds)
+        operation += " AND " + targetsem + " IS NOT NULL;"
+        cur.execute(operation)
+        locations = cur.fetchall()
+        uuidlocations[uuid] = locations
         
       clf = None
       if targetsem not in ("floor", "room"):
-        (clf, locations) = self._train_geoloc(locations)
+        (clf, locations) = self._train_geoloc(uuidlocations)
         if clf != None:
           self._clf_infos[(frozenset(condsemloc.items()), targetsem)] = {"clf": clf}
       else:
-        (clf, locations, bssids) = self._train_wifi(locations)
+        (clf, locations, bssids) = self._train_wifi(uuidlocations)
         if clf != None:
           self._clf_infos[(frozenset(condsemloc.items()), targetsem)] = {"clf": clf, "bssids": bssids}
 
@@ -256,92 +262,109 @@ class Loc(object):
 
 
   # TODO make this defer.inlineCallbacks
-  def _train_geoloc(self, locations):
+  def _train_geoloc(self, uuidlocations):
     cur = self._db.cursor()
 
-    # extract attributes stored in db
-    operation = "SELECT DISTINCT epoch, longitude, latitude FROM " + "geoloc"
-    cur.execute(operation)
-    geoloc = cur.fetchall()
+    uuidgeolocs = {}
+    for uuid in uuidlocations.keys():
+      # extract attributes stored in db
+      operation = "SELECT DISTINCT epoch, longitude, latitude FROM geoloc" + \
+                  " WHERE uuid='" + uuid + "'"
+      cur.execute(operation)
+      geolocs = cur.fetchall()
+      uuidgeolocs[uuid] = geolocs
 
-    if len(geoloc) == 0 or len(locations) == 0:
-      return (None, None)
-
-    # sort wifi and locations based on epoch
-    getepoch_f = lambda x: x[0]
-    geoloc.sort(key=getepoch_f)
-    locations.sort(key=getepoch_f)
     
-    data = []
+    data = []  # geoloc data
     classes = []  # locations corresponding to data
-    locepochs = [location[0] for location in locations]
-    for epoch, lon, lat in geoloc:
-      bisect_idx = bisect.bisect_left(locepochs, epoch)
-      low_idx = bisect_idx-1 if bisect_idx > 0 else 0
-      (epochdiff, cls) = min( \
-                          [(abs(epoch - location[0]), location[1]) \
-                           for location in locations[low_idx:bisect_idx+1]], \
-                         key=lambda x: x[0])
+    getepoch_f = lambda x: x[0]
+    for uuid in uuidlocations.keys():
+      geolocs = uuidgeolocs[uuid]
+      locations = uuidlocations[uuid]
 
-      if epochdiff <= self._geoloc_train_epoch_thld:
-        data.append((lon, lat))
-        classes.append(cls)
+      if len(geolocs) == 0 or len(locations) == 0:
+        continue
 
-    data = np.array(data)
-    classes = np.array(classes)
+      # sort geolocs and locations based on epoch
+      geolocs.sort(key=getepoch_f)
+      locations.sort(key=getepoch_f)
+
+      locepochs = [location[0] for location in locations]
+      for epoch, lon, lat in geolocs:
+        bisect_idx = bisect.bisect_left(locepochs, epoch)
+        low_idx = bisect_idx-1 if bisect_idx > 0 else 0
+        (epochdiff, cls) = min( \
+                            [(abs(epoch - location[0]), location[1]) \
+                             for location in locations[low_idx:bisect_idx+1]], \
+                           key=getepoch_f)
+
+        if epochdiff <= self._geoloc_train_epoch_thld:
+          data.append((lon, lat))
+          classes.append(cls)
 
     if len(data) == 0 or len(classes) == 0:
       return (None, None) 
+
+    data = np.array(data)
+    classes = np.array(classes)
     
     clf = tree.DecisionTreeClassifier().fit(data, classes)
 
     return (clf, classes)
 
 
-  def _train_wifi(self, locations):
+  def _train_wifi(self, uuidlocations):
     cur = self._db.cursor()
 
-    curepoch = int(round(time.time() * 1000))
-    # extract attributes and store in db
-    operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                " WHERE " + str(curepoch) + "-epoch<=" + str(self._train_history)
-    cur.execute(operation)
-    wifi = cur.fetchall()
+    uuidwifis = {}
+    for uuid in uuidlocations.keys():
+      # extract attributes and store in db
+      operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM wifi" + \
+                  " WHERE uuid='" + uuid + "'"
+      cur.execute(operation)
+      wifis = cur.fetchall()
+      uuidwifis[uuid] = wifis
+    
+    sigs = [] # wifi signatures 
+    classes = []  # locations corresponding to sigs
+    bssids = [] # BSSIDs of wifi data
+    getepoch_f = lambda x: x[0]
+    for uuid in uuidlocations.keys():
+      wifis = uuidwifis[uuid]
+      locations = uuidlocations[uuid]
 
-    if len(wifi) == 0 or len(locations) == 0:
+      if len(wifis) == 0 or len(locations) == 0:
+        continue
+
+      # sort wifi and locations based on epoch
+      wifis.sort(key=getepoch_f)
+      locations.sort(key=getepoch_f)
+
+      # group wifi {BSSID:RSSI} by epoch
+      wifisigs = [(epoch, {bssid:rssi for (epoch, bssid, rssi) in group}) \
+                  for epoch, group in itertools.groupby(wifis, key=getepoch_f)]
+
+      locepochs = [location[0] for location in locations]
+      for epoch, sig in wifisigs:
+        bisect_idx = bisect.bisect_left(locepochs, epoch)
+        low_idx = bisect_idx-1 if bisect_idx > 0 else 0
+        (epochdiff, cls) = min( \
+                            [(abs(epoch - location[0]), location[1]) \
+                             for location in locations[low_idx:bisect_idx+1]], \
+                           key=getepoch_f)
+
+        if epochdiff <= self._wifi_train_epoch_thld:
+          sigs.append(sig)
+          classes.append(cls)
+          bssids.extend(map(lambda x: x[1], wifis))
+
+    if len(sigs) == 0 or len(classes) == 0:
       return (None, None, None)
 
-    # sort wifi and locations based on epoch
-    getepoch_f = lambda x: x[0]
-    wifi.sort(key=getepoch_f)
-    locations.sort(key=getepoch_f)
-    # group wifi {BSSID:RSSI} by epoch
-    wifisigs = [(epoch, {bssid:rssi for (epoch, bssid, rssi) in group}) \
-                for epoch, group in itertools.groupby(wifi, key=getepoch_f)]
-    
-    sigs = []
-    classes = []  # locations corresponding to sigs
-    locepochs = [location[0] for location in locations]
-    for epoch, sig in wifisigs:
-      bisect_idx = bisect.bisect_left(locepochs, epoch)
-      low_idx = bisect_idx-1 if bisect_idx > 0 else 0
-      (epochdiff, cls) = min( \
-                          [(abs(epoch - location[0]), location[1]) \
-                           for location in locations[low_idx:bisect_idx+1]], \
-                         key=lambda x: x[0])
-
-      if epochdiff <= self._wifi_train_epoch_thld:
-        sigs.append(sig)
-        classes.append(cls)
-
-    bssids = tuple(set(map(lambda x: x[1], wifi)))
+    bssids = tuple(set(bssids))
     data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
-
     data = np.array(data)
     classes = np.array(classes)
-
-    if len(data) == 0 or len(classes) == 0:
-      return (None, None, None)
     
     clf = tree.DecisionTreeClassifier().fit(data, classes)
 

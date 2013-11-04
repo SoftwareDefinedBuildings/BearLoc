@@ -151,6 +151,12 @@ public class BuildSenseActivity extends Activity implements SemLocListener,
   }
 
   @Override
+  protected void onResume() {
+    super.onResume();
+    refresh();
+  }
+
+  @Override
   protected void onDestroy() {
     super.onDestroy();
     // Unbind from the service

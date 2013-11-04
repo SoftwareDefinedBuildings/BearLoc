@@ -87,6 +87,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
   private TextView mLocPrefixTextView;
   private TextView mCurSemLocTextView;
   private Button mAddButton;
+  private Button mSemButton;
 
   private LocReporterService mService;
   private boolean mBound = false;
@@ -129,14 +130,22 @@ public class LocReporterActivity extends Activity implements SemLocListener,
 
     mAddButton = (Button) findViewById(R.id.add_loc);
     mAddButton.setOnClickListener(this);
-    final Button semButton = (Button) findViewById(R.id.change_sem);
-    semButton.setOnClickListener(this);
+    mAddButton.setEnabled(false);
+    mSemButton = (Button) findViewById(R.id.change_sem);
+    mSemButton.setOnClickListener(this);
+    mSemButton.setEnabled(false);
     final Button locButton = (Button) findViewById(R.id.localize);
     locButton.setOnClickListener(this);
 
     final Intent intent = new Intent(this, LocReporterService.class);
     bindService(intent, mServiceConn, Context.BIND_AUTO_CREATE);
 
+    refresh();
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
     refresh();
   }
 
@@ -284,6 +293,8 @@ public class LocReporterActivity extends Activity implements SemLocListener,
 
   @Override
   public void onSemLocInfoReturned(final JSONObject semLocInfo) {
+    mAddButton.setEnabled(true);
+    mSemButton.setEnabled(true);
     refresh();
     Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT).show();
   }

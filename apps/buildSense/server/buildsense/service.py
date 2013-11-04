@@ -35,13 +35,13 @@ from buildsense.report.report import Report
 
 from twisted.application import service
 from twisted.internet import defer
-from zope.interface import implements
+from zope.interface import implementer
 import sqlite3
 
+
+@implementer(IbuildSenseService)
 class BuildSenseService(service.Service):
   """buildsense service"""
-  
-  implements(IbuildSenseService)
   
   def __init__(self, db, content):
     self._db = sqlite3.connect(database = db)  # No need to use aync DB for now

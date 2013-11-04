@@ -36,10 +36,12 @@ from buildsense.report.resource import ReportResource
 from twisted.web import resource, server
 from twisted.python import log, components
 from twisted.internet import defer
+from zope.interface import implementer
 import simplejson as json
 import httplib
 
 
+@implementer(resource.IResource)
 class BuildsenseResource(resource.Resource):
   """buildsense web-accessible resource"""
   

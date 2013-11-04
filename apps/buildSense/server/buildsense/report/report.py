@@ -28,12 +28,13 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 """
 @author Beidi Chen <beidichen1993@berkeley.edu>
+@author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
 from buildsense.report.interface import IReport
 
 from twisted.internet import defer, reactor
-from zope.interface import implements
+from zope.interface import implementer
 import os
 import glob
 import shutil
@@ -41,10 +42,10 @@ import simplejson as json
 import wave
 import array
 
+
+@implementer(IReport)
 class Report(object):
   """Report class"""
-
-  implements(IReport)
 
   def __init__(self, db):
     self._db = db
@@ -61,9 +62,9 @@ class Report(object):
 
 
   def _create_tables(self):
-    """Blocking call of creating loc and temp table"""
+    """Blocking call of creating loc and notes table"""
     #combination of semloc and temp
-    operation = "CREATE TABLE IF NOT EXISTS " + "temp_semloc" + \
+    operation = "CREATE TABLE IF NOT EXISTS " + "notes" + \
                 " (uuid TEXT NOT NULL, \
                   epoch INTEGER NOT NULL, \
                   country TEXT, \
@@ -76,34 +77,35 @@ class Report(object):
                   note TEXT, \
                   PRIMARY KEY (uuid, epoch));"
     cur = self._db.cursor()
-    cur.executescript(operation)
+    cur.execute(operation)
 
     self._db.commit()
 
 
   def _insert(self, report):
     """Insert the report to database"""
-    self._insert_temp_semloc(report) if "semloc" in report.get("report")[0] else None
+    self._insert_note(report) if "report" in report else None
 
 
-  def _insert_temp_semloc(self, report):
+  def _insert_note(self, report):
     cur = self._db.cursor()
+
     events = report.get("report")
     for event in events:
-      loc = event.get("semloc")
-      data = (event.get("device").get("uuid"),
+      semloc = event.get("semloc")
+      data = (event.get("uuid"),
               event.get("epoch"),
-              loc.get("country", None),
-              loc.get("state", None),
-              loc.get("city", None),
-              loc.get("street", None),
-              loc.get("building", None),
-              loc.get("floor", None),
-              loc.get("room", None),
-              event.get("note")) # temperature or others 
+              semloc.get("country", None),
+              semloc.get("state", None),
+              semloc.get("city", None),
+              semloc.get("street", None),
+              semloc.get("building", None),
+              semloc.get("floor", None),
+              semloc.get("room", None),
+              event.get("note", None)) # temperature or others 
   
-      operation = "INSERT OR REPLACE INTO " + "temp_semloc" + \
-                " VALUES (?,?,?,?,?,?,?,?,?,?);"
+      operation = "INSERT OR REPLACE INTO " + "notes" + \
+                  " VALUES (?,?,?,?,?,?,?,?,?,?);"
       cur.execute(operation, data)
 
     self._db.commit()

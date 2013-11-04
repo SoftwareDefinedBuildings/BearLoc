@@ -27,19 +27,19 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 """
-@author Kaifei Chen <kaifei@eecs.berkeley.edu>
+@author Beidi Chen <beidichen1993@berkeley.edu>
 """
 
 from twisted.application import internet, service
 from twisted.web import resource, server
 
-from bearloc.service import BearLocService
-import bearloc.resource
+from buildsense.service import BuildSenseService
+import buildsense.resource
 
 
-application = service.Application('bearloc')
-bearloc = BearLocService(db="bearloc.db", content=['report', 'localize', 'meta'])
+application = service.Application('buildsense')
+buildsense = BuildSenseService(db="buildsense.db", content=['report'])
 serviceCollection = service.IServiceCollection(application)
 # HTTP service
-site = server.Site(resource.IResource(bearloc))
-internet.TCPServer(10080, site).setServiceParent(serviceCollection)
+site = server.Site(resource.IResource(buildsense))
+internet.TCPServer(10081, site).setServiceParent(serviceCollection)

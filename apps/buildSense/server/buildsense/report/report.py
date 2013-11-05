@@ -124,6 +124,6 @@ class Report(object):
     cur.execute(operation)
     
     result = cur.fetchall()
-    string = ["[" + str(map(str, elem)[0]) + "]" + "/".join(map(str, elem)[1:-1]) + ":" + str(map(str, elem)[-1]) for elem in result]
+    string = ["<p>" + "[" + str(map(str, elem)[0]) + "]" + "/".join(map(str, elem)[1:-1]) + ":" + str(map(str, elem)[-1]) + "</p>" for elem in result]
     
-    return "\n".join(string)
+    return "<html>" + "\n".join(string) + "</html>"

@@ -111,51 +111,6 @@
     <string name="bearloc_pref_humidity_delay">Speed (Delay)</string>
     <string name="bearloc_default_humidity_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL</string>
 
-    <!-- Light settings strings -->
-    <string name="bearloc_pref_light_title">Light</string>
-    <string name="bearloc_pref_light_enable_summ">Enable light sampling</string>
-    <string name="bearloc_pref_light_enable">Sample Light</string>
-    <string name="bearloc_default_light_enable">true</string>
-    <string name="bearloc_pref_light_duration_summ">Max sample duration in milliseconds</string>
-    <string name="bearloc_pref_light_duration">Duration</string>
-    <string name="bearloc_default_light_duration">1000</string>
-    <string name="bearloc_pref_light_cnt_summ">Max sample count in one duration</string>
-    <string name="bearloc_pref_light_cnt">Count</string>
-    <string name="bearloc_default_light_cnt">1</string>
-    <string name="bearloc_pref_light_delay_summ">Min sample delay in milliseconds</string>
-    <string name="bearloc_pref_light_delay">Speed (Delay)</string>
-    <string name="bearloc_default_light_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL</string>
-
-    <!-- Linear Accelerometer settings strings -->
-    <string name="bearloc_pref_lacc_title">Linear Accelerometer</string>
-    <string name="bearloc_pref_lacc_enable_summ">Enable linear accelerometer sampling</string>
-    <string name="bearloc_pref_lacc_enable">Sample Linear Accelerometer</string>
-    <string name="bearloc_default_lacc_enable">true</string>
-    <string name="bearloc_pref_lacc_duration_summ">Max sample duration in milliseconds</string>
-    <string name="bearloc_pref_lacc_duration">Duration</string>
-    <string name="bearloc_default_lacc_duration">1000</string>
-    <string name="bearloc_pref_lacc_cnt_summ">Max sample count in one duration</string>
-    <string name="bearloc_pref_lacc_cnt">Count</string>
-    <string name="bearloc_default_lacc_cnt">50</string>
-    <string name="bearloc_pref_lacc_delay_summ">Min sample delay in milliseconds</string>
-    <string name="bearloc_pref_lacc_delay">Speed (Delay)</string>
-    <string name="bearloc_default_lacc_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
-
-    <!-- Magnetic settings strings -->
-    <string name="bearloc_pref_magnetic_title">Magnetic</string>
-    <string name="bearloc_pref_magnetic_enable_summ">Enable magnetic sampling</string>
-    <string name="bearloc_pref_magnetic_enable">Sample Magnetic</string>
-    <string name="bearloc_default_magnetic_enable">true</string>
-    <string name="bearloc_pref_magnetic_duration_summ">Delay duration in milliseconds</string>
-    <string name="bearloc_pref_magnetic_duration">Duration</string>
-    <string name="bearloc_default_magnetic_duration">1000</string>
-    <string name="bearloc_pref_magnetic_cnt_summ">Max sample count in one duration</string>
-    <string name="bearloc_pref_magnetic_cnt">Count</string>
-    <string name="bearloc_default_magnetic_cnt">1</string>
-    <string name="bearloc_pref_magnetic_delay_summ">Min sample delay in milliseconds</string>
-    <string name="bearloc_pref_magnetic_delay">Speed (Delay)</string>
-    <string name="bearloc_default_magnetic_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
-
     <!-- Geographic Location settings strings -->
     <string name="bearloc_pref_geoloc_title">Geographic Location</string>
     <string name="bearloc_pref_geoloc_enable_summ">Enable geolocation sampling</string>
@@ -203,6 +158,51 @@
     <string name="bearloc_pref_gyro_delay_summ">Min sample delay in milliseconds</string>
     <string name="bearloc_pref_gyro_delay">Speed (Delay)</string>
     <string name="bearloc_default_gyro_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
+
+    <!-- Light settings strings -->
+    <string name="bearloc_pref_light_title">Light</string>
+    <string name="bearloc_pref_light_enable_summ">Enable light sampling</string>
+    <string name="bearloc_pref_light_enable">Sample Light</string>
+    <string name="bearloc_default_light_enable">true</string>
+    <string name="bearloc_pref_light_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_light_duration">Duration</string>
+    <string name="bearloc_default_light_duration">1000</string>
+    <string name="bearloc_pref_light_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_light_cnt">Count</string>
+    <string name="bearloc_default_light_cnt">1</string>
+    <string name="bearloc_pref_light_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_light_delay">Speed (Delay)</string>
+    <string name="bearloc_default_light_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL</string>
+
+    <!-- Linear Accelerometer settings strings -->
+    <string name="bearloc_pref_lacc_title">Linear Accelerometer</string>
+    <string name="bearloc_pref_lacc_enable_summ">Enable linear accelerometer sampling</string>
+    <string name="bearloc_pref_lacc_enable">Sample Linear Accelerometer</string>
+    <string name="bearloc_default_lacc_enable">true</string>
+    <string name="bearloc_pref_lacc_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_lacc_duration">Duration</string>
+    <string name="bearloc_default_lacc_duration">1000</string>
+    <string name="bearloc_pref_lacc_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_lacc_cnt">Count</string>
+    <string name="bearloc_default_lacc_cnt">50</string>
+    <string name="bearloc_pref_lacc_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_lacc_delay">Speed (Delay)</string>
+    <string name="bearloc_default_lacc_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
+
+    <!-- Magnetic settings strings -->
+    <string name="bearloc_pref_magnetic_title">Magnetic</string>
+    <string name="bearloc_pref_magnetic_enable_summ">Enable magnetic sampling</string>
+    <string name="bearloc_pref_magnetic_enable">Sample Magnetic</string>
+    <string name="bearloc_default_magnetic_enable">true</string>
+    <string name="bearloc_pref_magnetic_duration_summ">Delay duration in milliseconds</string>
+    <string name="bearloc_pref_magnetic_duration">Duration</string>
+    <string name="bearloc_default_magnetic_duration">1000</string>
+    <string name="bearloc_pref_magnetic_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_magnetic_cnt">Count</string>
+    <string name="bearloc_default_magnetic_cnt">1</string>
+    <string name="bearloc_pref_magnetic_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_magnetic_delay">Speed (Delay)</string>
+    <string name="bearloc_default_magnetic_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
 
     <!-- Proximity settings strings -->
     <string name="bearloc_pref_proximity_title">Proximity</string>

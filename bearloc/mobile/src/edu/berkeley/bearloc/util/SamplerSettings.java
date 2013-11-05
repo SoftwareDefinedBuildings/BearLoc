@@ -366,6 +366,267 @@ public class SamplerSettings {
     final Editor editor = prefs.edit();
     editor.putString("bearloc_pref_audio_format_key", Integer.toString(format));
     editor.commit();
+  }/*
+    * Geographic location
+    */
+
+  public static boolean getGeoLocEnable(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final boolean defaultValue = Boolean.parseBoolean(context
+        .getString(R.string.bearloc_default_geoloc_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_geoloc_enable_key",
+        defaultValue);
+
+    return enable;
+  }
+
+  public static void setGeoLocEnable(final Context context, final boolean enable) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putBoolean("bearloc_pref_geoloc_enable_key", enable);
+    editor.commit();
+  }
+
+  public static long getGeoLocDuration(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_geoloc_duration);
+    final long duration = Long.parseLong(prefs.getString(
+        "bearloc_pref_geoloc_duration_key", defaultValue));
+
+    return duration;
+  }
+
+  public static void setGeoLocDuration(final Context context,
+      final long duration) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putString("bearloc_pref_geoloc_duration_key",
+        Long.toString(duration));
+    editor.commit();
+  }
+
+  public static int getGeoLocCnt(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_geoloc_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_geoloc_cnt_key", defaultValue));
+
+    return cnt;
+  }
+
+  public static void setGeoLocCnt(final Context context, final int cnt) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putString("bearloc_pref_geoloc_cnt_key", Integer.toString(cnt));
+    editor.commit();
+  }
+
+  public static int getGeoLocMinDelay(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_geoloc_min_delay);
+    final int delay = Integer.parseInt(prefs.getString(
+        "bearloc_pref_geoloc_min_delay_key", defaultValue));
+
+    return delay;
+  }
+
+  public static void setGeoLocMinDelay(final Context context, final int delay) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putString("bearloc_pref_geoloc_min_delay_key",
+        Integer.toString(delay));
+    editor.commit();
+  }
+
+  public static float getGeoLocMinDist(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_geoloc_min_dist);
+    final float dist = Float.parseFloat(prefs.getString(
+        "bearloc_pref_geoloc_min_dist_key", defaultValue));
+
+    return dist;
+  }
+
+  public static void setGeoLocMinDist(final Context context, final float dist) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putString("bearloc_pref_geoloc_min_dist_key", Float.toString(dist));
+    editor.commit();
+  }
+
+  /*
+   * Gravity
+   */
+  public static boolean getGravityEnable(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final boolean defaultValue = Boolean.parseBoolean(context
+        .getString(R.string.bearloc_default_gravity_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_gravity_enable_key",
+        defaultValue);
+
+    return enable;
+  }
+
+  public static void setGravityEnable(final Context context,
+      final boolean enable) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putBoolean("bearloc_pref_gravity_enable_key", enable);
+    editor.commit();
+  }
+
+  public static long getGravityDuration(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_gravity_duration);
+    final long duration = Long.parseLong(prefs.getString(
+        "bearloc_pref_gravity_duration_key", defaultValue));
+
+    return duration;
+  }
+
+  public static void setGravityDuration(final Context context,
+      final long duration) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putString("bearloc_pref_gravity_duration_key",
+        Long.toString(duration));
+    editor.commit();
+  }
+
+  public static int getGravityCnt(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_gravity_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_gravity_cnt_key", defaultValue));
+
+    return cnt;
+  }
+
+  public static void setGravityCnt(final Context context, final int cnt) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putString("bearloc_pref_gravity_cnt_key", Integer.toString(cnt));
+    editor.commit();
+  }
+
+  public static int getGravityDelay(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_gravity_delay_value);
+    final int delay = Integer.parseInt(prefs.getString(
+        "bearloc_pref_gravity_delay_key", defaultValue));
+
+    return delay;
+  }
+
+  public static void setGravityDelay(final Context context, final int delay) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putString("bearloc_pref_gravity_delay_key", Integer.toString(delay));
+    editor.commit();
+  }
+
+  /*
+   * Gyro
+   */
+  public static boolean getGyroEnable(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final boolean defaultValue = Boolean.parseBoolean(context
+        .getString(R.string.bearloc_default_gyro_enable));
+    final boolean enable = prefs.getBoolean("bearloc_pref_gyro_enable_key",
+        defaultValue);
+
+    return enable;
+  }
+
+  public static void setGyroEnable(final Context context, final boolean enable) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putBoolean("bearloc_pref_gyro_enable_key", enable);
+    editor.commit();
+  }
+
+  public static long getGyroDuration(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_gyro_duration);
+    final long duration = Long.parseLong(prefs.getString(
+        "bearloc_pref_gyro_duration_key", defaultValue));
+
+    return duration;
+  }
+
+  public static void setGyroDuration(final Context context, final long duration) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putString("bearloc_pref_gyro_duration_key", Long.toString(duration));
+    editor.commit();
+  }
+
+  public static int getGyroCnt(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_gyro_cnt);
+    final int cnt = Integer.parseInt(prefs.getString(
+        "bearloc_pref_gyro_cnt_key", defaultValue));
+
+    return cnt;
+  }
+
+  public static void setGyroCnt(final Context context, final int cnt) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putString("bearloc_pref_gyro_cnt_key", Integer.toString(cnt));
+    editor.commit();
+  }
+
+  public static int getGyroDelay(final Context context) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final String defaultValue = context
+        .getString(R.string.bearloc_default_gyro_delay_value);
+    final int delay = Integer.parseInt(prefs.getString(
+        "bearloc_pref_gyro_delay_key", defaultValue));
+
+    return delay;
+  }
+
+  public static void setGyroDelay(final Context context, final int delay) {
+    final SharedPreferences prefs = PreferenceManager
+        .getDefaultSharedPreferences(context);
+    final Editor editor = prefs.edit();
+    editor.putString("bearloc_pref_gyro_delay_key", Integer.toString(delay));
+    editor.commit();
   }
 
   /*
@@ -691,268 +952,6 @@ public class SamplerSettings {
     final Editor editor = prefs.edit();
     editor
         .putString("bearloc_pref_magnetic_delay_key", Integer.toString(delay));
-    editor.commit();
-  }
-
-  /*
-   * Geographic location
-   */
-  public static boolean getGeoLocEnable(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.bearloc_default_geoloc_enable));
-    final boolean enable = prefs.getBoolean("bearloc_pref_geoloc_enable_key",
-        defaultValue);
-
-    return enable;
-  }
-
-  public static void setGeoLocEnable(final Context context, final boolean enable) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putBoolean("bearloc_pref_geoloc_enable_key", enable);
-    editor.commit();
-  }
-
-  public static long getGeoLocDuration(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final String defaultValue = context
-        .getString(R.string.bearloc_default_geoloc_duration);
-    final long duration = Long.parseLong(prefs.getString(
-        "bearloc_pref_geoloc_duration_key", defaultValue));
-
-    return duration;
-  }
-
-  public static void setGeoLocDuration(final Context context,
-      final long duration) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putString("bearloc_pref_geoloc_duration_key",
-        Long.toString(duration));
-    editor.commit();
-  }
-
-  public static int getGeoLocCnt(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final String defaultValue = context
-        .getString(R.string.bearloc_default_geoloc_cnt);
-    final int cnt = Integer.parseInt(prefs.getString(
-        "bearloc_pref_geoloc_cnt_key", defaultValue));
-
-    return cnt;
-  }
-
-  public static void setGeoLocCnt(final Context context, final int cnt) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putString("bearloc_pref_geoloc_cnt_key", Integer.toString(cnt));
-    editor.commit();
-  }
-
-  public static int getGeoLocMinDelay(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final String defaultValue = context
-        .getString(R.string.bearloc_default_geoloc_min_delay);
-    final int delay = Integer.parseInt(prefs.getString(
-        "bearloc_pref_geoloc_min_delay_key", defaultValue));
-
-    return delay;
-  }
-
-  public static void setGeoLocMinDelay(final Context context, final int delay) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putString("bearloc_pref_geoloc_min_delay_key",
-        Integer.toString(delay));
-    editor.commit();
-  }
-
-  public static float getGeoLocMinDist(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final String defaultValue = context
-        .getString(R.string.bearloc_default_geoloc_min_dist);
-    final float dist = Float.parseFloat(prefs.getString(
-        "bearloc_pref_geoloc_min_dist_key", defaultValue));
-
-    return dist;
-  }
-
-  public static void setGeoLocMinDist(final Context context, final float dist) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putString("bearloc_pref_geoloc_min_dist_key", Float.toString(dist));
-    editor.commit();
-  }
-
-  /*
-   * Gravity
-   */
-  public static boolean getGravityEnable(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.bearloc_default_gravity_enable));
-    final boolean enable = prefs.getBoolean("bearloc_pref_gravity_enable_key",
-        defaultValue);
-
-    return enable;
-  }
-
-  public static void setGravityEnable(final Context context,
-      final boolean enable) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putBoolean("bearloc_pref_gravity_enable_key", enable);
-    editor.commit();
-  }
-
-  public static long getGravityDuration(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final String defaultValue = context
-        .getString(R.string.bearloc_default_gravity_duration);
-    final long duration = Long.parseLong(prefs.getString(
-        "bearloc_pref_gravity_duration_key", defaultValue));
-
-    return duration;
-  }
-
-  public static void setGravityDuration(final Context context,
-      final long duration) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putString("bearloc_pref_gravity_duration_key",
-        Long.toString(duration));
-    editor.commit();
-  }
-
-  public static int getGravityCnt(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final String defaultValue = context
-        .getString(R.string.bearloc_default_gravity_cnt);
-    final int cnt = Integer.parseInt(prefs.getString(
-        "bearloc_pref_gravity_cnt_key", defaultValue));
-
-    return cnt;
-  }
-
-  public static void setGravityCnt(final Context context, final int cnt) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putString("bearloc_pref_gravity_cnt_key", Integer.toString(cnt));
-    editor.commit();
-  }
-
-  public static int getGravityDelay(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final String defaultValue = context
-        .getString(R.string.bearloc_default_gravity_delay_value);
-    final int delay = Integer.parseInt(prefs.getString(
-        "bearloc_pref_gravity_delay_key", defaultValue));
-
-    return delay;
-  }
-
-  public static void setGravityDelay(final Context context, final int delay) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putString("bearloc_pref_gravity_delay_key", Integer.toString(delay));
-    editor.commit();
-  }
-
-  /*
-   * Gyro
-   */
-  public static boolean getGyroEnable(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.bearloc_default_gyro_enable));
-    final boolean enable = prefs.getBoolean("bearloc_pref_gyro_enable_key",
-        defaultValue);
-
-    return enable;
-  }
-
-  public static void setGyroEnable(final Context context, final boolean enable) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putBoolean("bearloc_pref_gyro_enable_key", enable);
-    editor.commit();
-  }
-
-  public static long getGyroDuration(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final String defaultValue = context
-        .getString(R.string.bearloc_default_gyro_duration);
-    final long duration = Long.parseLong(prefs.getString(
-        "bearloc_pref_gyro_duration_key", defaultValue));
-
-    return duration;
-  }
-
-  public static void setGyroDuration(final Context context, final long duration) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putString("bearloc_pref_gyro_duration_key", Long.toString(duration));
-    editor.commit();
-  }
-
-  public static int getGyroCnt(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final String defaultValue = context
-        .getString(R.string.bearloc_default_gyro_cnt);
-    final int cnt = Integer.parseInt(prefs.getString(
-        "bearloc_pref_gyro_cnt_key", defaultValue));
-
-    return cnt;
-  }
-
-  public static void setGyroCnt(final Context context, final int cnt) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putString("bearloc_pref_gyro_cnt_key", Integer.toString(cnt));
-    editor.commit();
-  }
-
-  public static int getGyroDelay(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final String defaultValue = context
-        .getString(R.string.bearloc_default_gyro_delay_value);
-    final int delay = Integer.parseInt(prefs.getString(
-        "bearloc_pref_gyro_delay_key", defaultValue));
-
-    return delay;
-  }
-
-  public static void setGyroDelay(final Context context, final int delay) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final Editor editor = prefs.edit();
-    editor.putString("bearloc_pref_gyro_delay_key", Integer.toString(delay));
     editor.commit();
   }
 

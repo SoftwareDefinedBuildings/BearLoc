@@ -3,6 +3,34 @@
 
 ## 1. Server RESTful Interface
 
+### 1.1. localize
+
+### 1.1.1. POST
+
+
+#### 1.1.2. Return
+
+
+### 1.2. report
+
+#### 1.2.1. POST
+HTTP POST JSON obejct.
+
+##### 1.2.1.1. keys schema
+`"device"`, `"sensormeta"`, `"wifi"`, ......
+
+
+#### 1.2.2. Return
+Nothing
+
+
+### 1.3. meta
+
+#### 1.3.1. POST
+
+
+#### 1.3.2. Return
+
 
 
 ## 2. Server Database Structure
@@ -245,14 +273,47 @@ BearLoc has an Android library that takes care of all communication and data col
 
 ### 3.1. Bind BearLocService
 
+Your application needs to bind to BearLocService in order to use it. The details of service binding is introduced [here](http://developer.android.com/guide/components/bound-services.html#Binding). Below is an example of binding to BearLocService.
+
+```java
+BearLocService mBearLocService;
+private ServiceConnection mBearLocConn = new ServiceConnection() {
+    // Called when the connection with the service is established
+    public void onServiceConnected(ComponentName className, IBinder service) {
+        // Because we have bound to an explicit
+        // service that is running in our own process, we can
+        // cast its IBinder to a concrete class and directly access it.
+        BearLocBinder binder = (BearLocBinder) service;
+        mBearLocService = binder.getService();
+        mBound = true;
+    }
+
+    // Called when the connection with the service disconnects unexpectedly
+    public void onServiceDisconnected(ComponentName className) {
+        mBound = false;
+    }
+};
+```
+
+After doing this in your application's Activity or Service, you can access the functionalies that BearLocService provides indicated in interface **SemLocService**, which is introduced in following part. Quick examples of calling BealocService are as follows.
+
+```java
+// ask for localization with an instance of SemLocListener
+mBearLocService.localize(this);
+// report current location with an instance of semantic location
+mBearLocService.report(semloc);
+// Ask for metadata with an instance of MetaListener
+mBearLocService.meta(semloc, this);
+```
+
+Details about the listeners and the interface are in next part.
+
 
 ### 3.2. Interfaces
 
 Interfaces are the only thing you need to know after binding to BearLocService.
 
-
-
-#### 3.1.1. SemLocListener Interface
+#### 3.2.1. SemLocListener Interface
 **SemLocListener** is the interface to listen to returned estimated location back from BearLoc server. It is defined as follows.
 
 ```java
@@ -269,7 +330,7 @@ public abstract void onSemLocInfoReturned(JSONObject semLocInfo);
 ```
 in this interface, which will be called by BearLocService when location is returned by localziation service, and the parameter semLocInfo contains all the information of returned semantic location. 
 
-**semLocInfo** is a JSONObject [[ref](http://www.json.org/)], which has following structure (as an example). 
+**semLocInfo** is a **JSONObject** [[ref1](http://www.json.org/), [ref2](http://developer.android.com/reference/org/json/JSONObject.html)], which has following structure (as an example). 
 
 ```json
 {
@@ -333,7 +394,7 @@ in this interface, which will be called by BearLocService when location is retur
 In this example, `"semloc"`, `"alter"`, `"sem"` are fixed top-layer keys, indicating the best estimated semantic location, alternative locations under different semantics, and tree structure of semantics, respectively. And the second-layer keys `"country"`, `"state"`, `"city"`, `"street"`, `"building"`, `"floor"`, and `"room"` are all semantics predefined in schema in `"sem"`. In `"semloc"`, all values are strings, which are locations reported by users. In `"alter"`, all values are numbers that are less than 1, which are the confidence about each estimated location that the server has. All confidences under one semantic should sum to 1. in `"sem"`, it is a tree describing the semantic schema. This represents how the server understands the semantics. Currently every semantic only have child, but presumably, they can have multiple children. For example, besides *room*, we can have *ventilation zone* or *lighting zone* inside one floor. We may remove the `"sem"` part in the future, so please don't make your application reply on it.
 
 
-#### 3.1.2. MetaListener Interface
+#### 3.2.2. MetaListener Interface
 **MetaListener** is the listener to listen to returned metadata back from BearLoc server. It is defined as follows.
 
 ```java
@@ -350,7 +411,7 @@ public abstract void onMetaReturned(JSONObject meta);
 ```
 in this interface, which will be called by BearLocService when metadata is returned from server.
 
-**meta** is also an JSONObject, with an example of it as follows.
+**meta** is also an **JSONObject**, with an example of it as follows.
 
 ```json
 {
@@ -368,7 +429,7 @@ In each semantic, it is a list of all known locations on server that are under t
 
 
 
-#### 3.1.3. SemLocService Interface
+#### 3.2.3. SemLocService Interface
 SemLocService is the interface that should be implemented by any semantic localization service, such as BearLocService. It is defined as follows.
 
 ```java
@@ -379,10 +440,26 @@ public interface SemLocService {
 }
 ```
 
-Call them
+##### 3.2.3.1. localize
+The first method is for localization request.
+```java
+public abstract boolean localize(SemLocListener listener);
+```
+
+Your application can call it after binding to BearLocServie as we described above. When calling this methid, you should pass an instance of **SemLocListener** to it. The method **onSemLocInfoReturned** in SemLocListener will be called when the location is returned from server.
+
+This `localize` method returns a boolean indicating whether it successfully scheduled a localization request for caller. If it returns **true**, then **onSemLocInfoReturned** is guaranteed to be called later for this localization request. If it returns **false**, then **onSemLocInfoReturned** is guaranteed NOT to be called later for this localization request.
 
 
-**semloc** should be 
+##### 3.2.3.2.
+The second method is used for reporting your current location.
+```java
+public abstract boolean report(JSONObject semloc);
+```
+
+Your application must try best to ensure this **semloc** is correct locaton, such as taking the semantic location from user input.
+
+**semloc** is an **JSONObject**. As an exmaple, the structure of **semloc** should be
 ```json
 {
   "country": "US",
@@ -395,6 +472,25 @@ Call them
 }
 ```
 
+It is not required to include all semantics in the **semloc**, but semantics in **semloc** has to start from top-level semantic with no semantic hole. For example, if your application is sure the device is in building *Soda Hall*, but not sure which floor and room it is, then it can just call `report` with **semloc**
+```json
+{
+  "country": "US",
+  "state": "CA",
+  "city": "berkeley",
+  "street": "Leroy Ave",
+  "building": "Soda Hall",
+}
+```
+But it cannot report **semloc**
+floor and room it is, then it can just call `report` with **semloc**
+```json
+{
+  "building": "Soda Hall",
+}
+```
+Intuitively this requirement is valid, because the user should know the locations in the higher semantics. Like she/he must know *Soda Hall* is in *Berkeley* and on *Leroy Ave*. Otherwise it is not possible for our system to distinguish another possible *Soda Hall* at some other place in the world.
 
 
 ### 3.3. Utilities
+BearLoc library has some utilities, such as **DeviceUUID** and **JSONHttpPostTask**.

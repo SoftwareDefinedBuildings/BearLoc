@@ -38,8 +38,8 @@ import os
 import glob
 import shutil
 import simplejson as json
-import wave
 import array
+import sqlite3
 
 
 @implementer(IReport)
@@ -356,7 +356,7 @@ class Report(object):
               sampwidth,
               framerate,
               nframes,
-              raw)
+              sqlite3.Binary(raw))
   
       operation = "INSERT OR REPLACE INTO " + "audio" + \
                   " VALUES (?,?,?,?,?,?,?,?);" 

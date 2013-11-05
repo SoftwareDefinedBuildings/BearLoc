@@ -81,7 +81,7 @@
     <string name="bearloc_default_audio_enable">true</string>
     <string name="bearloc_pref_audio_duration_summ">Audio duration in milliseconds</string>
     <string name="bearloc_pref_audio_duration">Audio Duration</string>
-    <string name="bearloc_default_audio_duration">500</string>
+    <string name="bearloc_default_audio_duration">1000</string>
     <string name="bearloc_pref_audio_src_summ">The microphone to use</string>
     <string name="bearloc_pref_audio_src">Audio Source</string>
     <string name="bearloc_default_audio_src_value">@string/bearloc_CAMCORDER</string>

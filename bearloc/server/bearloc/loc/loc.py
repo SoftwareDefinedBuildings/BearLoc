@@ -271,7 +271,6 @@ class Loc(object):
       cur.execute(operation)
       geolocs = cur.fetchall()
       uuidgeolocs[uuid] = geolocs
-
     
     data = []  # geoloc data
     classes = []  # locations corresponding to data

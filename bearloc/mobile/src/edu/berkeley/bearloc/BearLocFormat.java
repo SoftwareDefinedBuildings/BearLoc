@@ -95,7 +95,7 @@ public class BearLocFormat {
 
       if (dumpObj.length() > 0) {
         dumpObj.put("device", mDeviceInfo);
-        dumpObj.put("meta", mSensorInfo);
+        dumpObj.put("sensormeta", mSensorInfo);
       }
     } catch (final JSONException e) {
       // TODO Auto-generated catch block

@@ -24,7 +24,7 @@ with **PRIMARY KEY uuid**.
 
 Table **sensormeta** stores metadata of sensors on each devices. Its structure is:
 
-**|uuid TEXT NOT NULL | sensor TEXT NOT NULL | vendor TEXT | name TEXT | power REAL | minDelay INTEGER | maxRange REAL | version INTEGER | resolution REAL |**
+**| uuid TEXT NOT NULL | sensor TEXT NOT NULL | vendor TEXT | name TEXT | power REAL | minDelay INTEGER | maxRange REAL | version INTEGER | resolution REAL |**
 
 with **PRIMARY KEY (uuid, sensor)**.
 
@@ -237,4 +237,164 @@ with **PRIMARY KEY (uuid, epoch, sysnano, eventnano)**.
 **humidity** is relative ambient air humidity in percent. When relative ambient air humidity and ambient temperature are measured, the dew point and absolute humidity can be calculated. [[ref](http://developer.android.com/reference/android/hardware/SensorEvent.html#values)]
 
 
+
 ## 3. Android App Interface
+
+BearLoc has an Android library that takes care of all communication and data collection, providing simple interfaces for Android applications using an Android service [[ref](http://developer.android.com/guide/components/services.html)]. This section describes how to build your application using BearLoc Android library.
+
+
+### 3.1. Bind BearLocService
+
+
+### 3.2. Interfaces
+
+Interfaces are the only thing you need to know after binding to BearLocService.
+
+
+
+#### 3.1.1. SemLocListener Interface
+**SemLocListener** is the interface to listen to returned estimated location back from BearLoc server. It is defined as follows.
+
+```java
+public interface SemLocListener {
+  public abstract void onSemLocInfoReturned(JSONObject semLocInfo);
+}
+```
+
+When your application asks for localization, it should pass an object that implements this interface, as we will discuss soon. 
+
+There is one method 
+```java
+public abstract void onSemLocInfoReturned(JSONObject semLocInfo);
+```
+in this interface, which will be called by BearLocService when location is returned by localziation service, and the parameter semLocInfo contains all the information of returned semantic location. 
+
+**semLocInfo** is a JSONObject [[ref](http://www.json.org/)], which has following structure (as an example). 
+
+```json
+{
+  "semloc": {
+    "country": "US",
+    "state": "CA",
+    "city": "berkeley",
+    "street": "Leroy Ave",
+    "building": "Soda Hall",
+    "floor": "Floor 4",
+    "room": "494"
+  },
+  "alter": {
+    "country": {
+      "US": 0.95,
+      "Canada": 0.05
+    },
+    "state": {
+      "CA": 0.87,
+      "MA": 0.21,
+      "TX": 0.02
+    },
+    "city": {
+      "berkeley": 0.98,
+      "San Francisco": 0.02
+    },
+    "street": {
+      "Leroy Ave": 1.0,
+    },
+    "building": {
+      "Soda Hall": 1.0,
+     },
+    "floor": {
+      "Floor 3": 0.67,
+      "Floor 4": 0.33
+    },
+    "room": {
+      "494": 0.54,
+      "410": 0.33,
+      "RADLab Kitchen": 0.13
+    }
+  },
+  "sem": {
+    "country": {
+      "state": {
+        "city": {
+          "street": {
+            "building": {
+              "floor": {
+                "room": {
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+}
+```
+
+In this example, `"semloc"`, `"alter"`, `"sem"` are fixed top-layer keys, indicating the best estimated semantic location, alternative locations under different semantics, and tree structure of semantics, respectively. And the second-layer keys `"country"`, `"state"`, `"city"`, `"street"`, `"building"`, `"floor"`, and `"room"` are all semantics predefined in schema in `"sem"`. In `"semloc"`, all values are strings, which are locations reported by users. In `"alter"`, all values are numbers that are less than 1, which are the confidence about each estimated location that the server has. All confidences under one semantic should sum to 1. in `"sem"`, it is a tree describing the semantic schema. This represents how the server understands the semantics. Currently every semantic only have child, but presumably, they can have multiple children. For example, besides *room*, we can have *ventilation zone* or *lighting zone* inside one floor. We may remove the `"sem"` part in the future, so please don't make your application reply on it.
+
+
+#### 3.1.2. MetaListener Interface
+**MetaListener** is the listener to listen to returned metadata back from BearLoc server. It is defined as follows.
+
+```java
+public interface MetaListener {
+  public abstract void onMetaReturned(JSONObject meta);
+}
+```
+
+Similar to SemLocListener, your application should pass an object that implements this interface when asking for metadata of a semantic location. In addition, your application also needs to provide an semantic location to query the metadata. We will discuss the details in next part.
+
+There is also one method 
+```java
+public abstract void onMetaReturned(JSONObject meta);
+```
+in this interface, which will be called by BearLocService when metadata is returned from server.
+
+**meta** is also an JSONObject, with an example of it as follows.
+
+```json
+{
+  "country": ["US", "Canada"], 
+  "state": ["CA", "MA"],
+  "city": ["Berkeley", "San Francisco", "Mountain View"], 
+  "street": ["Leroy Ave", "Telegraph Ave"], 
+  "building": ["Soda Hall"],
+  "floor": ["Floor 3", "Floor 4"],
+  "room": ["410", "494", "RADLab Kitchen", "417", "415", "Wozniak Lounge"]
+}
+```
+
+In each semantic, it is a list of all known locations on server that are under the same semantic and **location context** of the semantic location that your application provides. **Location context** means the list of locations that are under the semantics that are higher than the semantic of the location your are talking about (targeting) in the semantic tree. For example, ["US", "CA", "Berkeley", "Leroy Ave"] is the location context of "Soda Hall", but not the location context of "Floor 4" or "Cory Hall". A location context and location consist of one concrete location on the world.
+
+
+
+#### 3.1.3. SemLocService Interface
+SemLocService is the interface that should be implemented by any semantic localization service, such as BearLocService. It is defined as follows.
+
+```java
+public interface SemLocService {
+  public abstract boolean localize(SemLocListener listener);
+  public abstract boolean report(JSONObject semloc);
+  public abstract boolean meta(JSONObject semloc, MetaListener listener);
+}
+```
+
+Call them
+
+
+**semloc** should be 
+```json
+{
+  "country": "US",
+  "state": "CA",
+  "city": "berkeley",
+  "street": "Leroy Ave",
+  "building": "Soda Hall",
+  "floor": "Floor 4",
+  "room": "494"
+}
+```
+
+
+
+### 3.3. Utilities

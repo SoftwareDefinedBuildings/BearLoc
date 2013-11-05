@@ -57,8 +57,8 @@ class ReportResource(resource.Resource):
       return resource.Resource.getChild(self, path, request)
   
   
-  def render_GET(self, request):
-    return self.__doc__ + ": POST JSON to me!"
+  def render_GET(self, request): 
+    return self._report.fetch()
   
   
   def render_POST(self, request):

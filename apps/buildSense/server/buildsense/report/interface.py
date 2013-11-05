@@ -40,3 +40,8 @@ class IReport(Interface):
     """
     Return a deferred returning a boolean.
     """
+
+  def fetch():
+  	"""
+  	Post data from database
+  	"""

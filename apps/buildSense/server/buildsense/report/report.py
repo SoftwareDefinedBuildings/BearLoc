@@ -61,6 +61,12 @@ class Report(object):
     return defer.succeed(response)
 
 
+  def fetch(self):
+    """Fetch reported location and temperature data.
+    """
+    return self._get()
+
+
   def _create_tables(self):
     """Blocking call of creating loc and notes table"""
     #combination of semloc and temp
@@ -109,3 +115,15 @@ class Report(object):
       cur.execute(operation, data)
 
     self._db.commit()
+
+
+  def _get(self):
+    cur = self._db.cursor()
+
+    operation = "SELECT * FROM " + "notes;"
+    cur.execute(operation)
+    
+    result = cur.fetchall()
+    string = ["[" + str(map(str, elem)[0]) + "]" + "/".join(map(str, elem)[1:-1]) + ":" + str(map(str, elem)[-1]) for elem in result]
+    
+    return "\n".join(string)

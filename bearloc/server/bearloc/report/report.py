@@ -127,7 +127,7 @@ class Report(object):
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
     
     # linear acc 
     operation += "CREATE TABLE IF NOT EXISTS " + "lacc" + \
@@ -139,7 +139,7 @@ class Report(object):
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
 
     # gravity                                                                                                                   
     operation += "CREATE TABLE IF NOT EXISTS " + "gravity" + \
@@ -151,7 +151,7 @@ class Report(object):
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
     
     # gyro                                                                                                                      
     operation += "CREATE TABLE IF NOT EXISTS " + "gyro" + \
@@ -163,7 +163,7 @@ class Report(object):
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
     
     # rotation                                                                                                                      
     operation += "CREATE TABLE IF NOT EXISTS " + "rotation" + \
@@ -177,7 +177,7 @@ class Report(object):
                     cos REAL, \
                     head_accuracy REAL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
 
     # magnetic                                                                                                                  
     operation += "CREATE TABLE IF NOT EXISTS " + "magnetic" + \
@@ -189,7 +189,7 @@ class Report(object):
                     y REAL NOT NULL, \
                     z REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
     
     # light                                                                                                                     
     operation += "CREATE TABLE IF NOT EXISTS " + "light" + \
@@ -199,7 +199,7 @@ class Report(object):
                     eventnano INTEGER NOT NULL, \
                     light REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
     
     # temp                                                                                                                      
     operation += "CREATE TABLE IF NOT EXISTS " + "temp" + \
@@ -209,7 +209,7 @@ class Report(object):
                     eventnano INTEGER NOT NULL, \
                     temp REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
 
     # pressure                                                                                                                  
     operation += "CREATE TABLE IF NOT EXISTS " + "pressure" + \
@@ -219,7 +219,7 @@ class Report(object):
                     eventnano INTEGER NOT NULL, \
                     pressure REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
     
     # proximity                                                                                                                 
     operation += "CREATE TABLE IF NOT EXISTS " + "proximity" + \
@@ -229,7 +229,7 @@ class Report(object):
                     eventnano INTEGER NOT NULL, \
                     proximity REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
     
     # humidity
     operation += "CREATE TABLE IF NOT EXISTS " + "humidity" + \
@@ -239,7 +239,7 @@ class Report(object):
                     eventnano INTEGER NOT NULL, \
                     humidity REAL NOT NULL, \
                     accuracy REAL, \
-                    PRIMARY KEY (uuid, epoch));"
+                    PRIMARY KEY (uuid, epoch, sysnano, eventnano));"
    
     # semloc
     operation += "CREATE TABLE IF NOT EXISTS " + "semloc" + \

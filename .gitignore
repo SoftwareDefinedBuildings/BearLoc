@@ -122,6 +122,11 @@ local.properties
 *-Ex.R
 
 
+## Sphinx.gitignore
+# sphinx build folder
+_build
+
+
 ## Mine.gitignore
 
 # Data files

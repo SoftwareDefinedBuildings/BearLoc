@@ -70,7 +70,6 @@ There is one method
 
    public abstract void onSemLocInfoReturned(JSONObject semLocInfo);
 
-
 in this interface, which will be called by BearLocService when location is returned by localziation service, and the parameter semLocInfo contains all the information of returned semantic location. 
 
 **semLocInfo** is a **JSONObject** [`ref1 <http://www.json.org/>`__, `ref2 <http://developer.android.com/reference/org/json/JSONObject.html>`__], which has following structure (as an example). 
@@ -81,7 +80,7 @@ in this interface, which will be called by BearLocService when location is retur
      "semloc": {
        "country": "US",
        "state": "CA",
-       "city": "berkeley",
+       "city": "Berkeley",
        "street": "Leroy Ave",
        "building": "Soda Hall",
        "floor": "Floor 4",
@@ -98,7 +97,7 @@ in this interface, which will be called by BearLocService when location is retur
          "TX": 0.02
        },
        "city": {
-         "berkeley": 0.98,
+         "Berkeley": 0.98,
          "San Francisco": 0.02
        },
        "street": {
@@ -155,7 +154,7 @@ There is also one method
 
 .. code-block:: java
 
-public abstract void onMetaReturned(JSONObject meta);
+   public abstract void onMetaReturned(JSONObject meta);
 
 in this interface, which will be called by BearLocService when metadata is returned from server.
 
@@ -226,7 +225,7 @@ Your application must try best to ensure this **semloc** is correct locaton, suc
    {
      "country": "US",
      "state": "CA",
-     "city": "berkeley",
+     "city": "Berkeley",
      "street": "Leroy Ave",
      "building": "Soda Hall",
      "floor": "Floor 4",
@@ -241,7 +240,7 @@ It is not required to include all semantics in the **semloc**, but semantics in 
    {
      "country": "US",
      "state": "CA",
-     "city": "berkeley",
+     "city": "Berkeley",
      "street": "Leroy Ave",
      "building": "Soda Hall",
    }

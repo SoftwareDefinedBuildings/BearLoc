@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Server address settings strings -->
+    <string name="bearloc_pref_server_addr_summ">BearLoc server domain name or IP address</string>
+    <string name="bearloc_pref_server_addr">BearLoc Server Address</string>
+    <string name="bearloc_default_server_addr">kaifei.info</string>
+
+    <!-- Server port settings strings -->
+    <string name="bearloc_pref_server_port_summ">Port of BearLoc service</string>
+    <string name="bearloc_pref_server_port">BearLoc Server Port</string>
+    <string name="bearloc_default_server_port">10080</string>
+
+</resources>

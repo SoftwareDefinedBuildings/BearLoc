@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="note_candidates">
+        <item>@string/sel_freq_note</item>
+        <item>freezing</item>
+        <item>cold</item>
+        <item>comfortable</item>
+        <item>warm</item>
+        <item>burning</item>
+    </string-array>
+</resources>

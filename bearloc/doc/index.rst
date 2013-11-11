@@ -13,6 +13,7 @@ Contents:
    :numbered:
 
    intro
+   install
    android
    server
    database

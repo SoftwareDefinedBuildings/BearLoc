@@ -12,7 +12,7 @@ Table **device** stores information of devices that have reported to the databas
 
 with **PRIMARY KEY uuid**.
 
-**uuid** is an universal unique device-dependant ID string. **make** is the manufacturer of the device, and **model** is the model of the device.
+**uuid** is an universal unique device-dependent ID string. **make** is the manufacturer of the device, and **model** is the model of the device.
 
 
 sensormeta

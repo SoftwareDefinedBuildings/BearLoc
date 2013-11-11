@@ -5,7 +5,7 @@ BearLoc is an semantic indoor localization service.
 
 
 System Architecture
------------------
+-------------------
 
 BearLoc consists of a cloud service that performs all localization intelligence and mobile end library for application to use.
 
@@ -53,6 +53,9 @@ A **location** is how BearLoc refers to a place, versus **name** used by human. 
 Schema
 ------
 
+Semantic
+^^^^^^^^
+
 BearLoc specifies the schema of semantics as below, with the order they are from the root to leaves in semantic tree.
 
 ========== =============
@@ -69,3 +72,33 @@ room       under floor
 
 
 The schema may extend in the future, but the current semantics and there relationships in semantic hierarchy will persist. For example, it is possible that there will be lighting zones in a floor, which means there can be a semantic **lighting zone** under semantic **floor** and at the same level with semantic **room**. Other examples include **highway** in **country**, **HVAC** duct in a **building**, **district** in a **city**.
+
+
+.. _sensor-schema:
+
+Sensor
+^^^^^^
+
+BearLoc also has schema about the type of sensor data it is collecting, shown as below. The details values collected for each type of sensor can be found in :doc:`database`.
+
+============= =============
+Sensor Type   Description
+============= =============
+device        device information
+sensormeta    sensor metadata for all devices
+semloc        semantic locations
+wifi          Wi-Fi access points information
+audio         microphone data
+geoloc        geolocation (longitude and latitude) return from GPS or network address database
+acc           accelerometer data
+lacc          linear accelerometer data, which is accelerometer data - gravity
+gravity       gravity data
+gyro          gyroscope data
+rotation      device rotation data
+magnetic      magnetic field data
+light         light sensor data
+temp          ambient temperature data
+pressure      atmospheric pressure data
+proximity     proximity sensor data
+humidity      humidity sensor data
+============= =============

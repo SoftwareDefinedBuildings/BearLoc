@@ -140,3 +140,7 @@ _build
 
 # MacOS system files
 .DS_Store
+
+#diagrams
+*.graffle
+zentus-sqlite-license.txt

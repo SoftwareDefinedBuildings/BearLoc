@@ -34,6 +34,7 @@ from bearloc.meta.interface import IMeta
 
 from twisted.internet import defer, reactor
 from twisted.python import log
+from twisted.enterprise import adbapi
 from zope.interface import implementer
 from collections import defaultdict
 import numpy as np
@@ -65,16 +66,17 @@ class Meta(object):
         return d
 
 
+    @defer.inlineCallbacks
     def _meta(self, request, d):
         semloc = request.get("semloc")
 
-        country = self._locs(semloc, "country")
-        state = self._locs(semloc, "state")
-        city = self._locs(semloc, "city")
-        street = self._locs(semloc, "street")
-        building = self._locs(semloc, "building")
-        floor = self._locs(semloc, "floor")
-        room = self._locs(semloc, "room")
+        country = yield self._locs(semloc, "country")
+        state = yield self._locs(semloc, "state")
+        city = yield self._locs(semloc, "city")
+        street = yield self._locs(semloc, "street")
+        building = yield self._locs(semloc, "building")
+        floor = yield self._locs(semloc, "floor")
+        room = yield self._locs(semloc, "room")
 
         meta = {"country":country, "state":state, "city":city, "street":street, "building":building, \
                 "floor":floor, "room":room}
@@ -82,22 +84,22 @@ class Meta(object):
         d.callback(meta)
 
 
+    @defer.inlineCallbacks
     def _locs(self, semloc, targetsem):
         """Get list of locations under targetsem and semloc"""
-        cur = self._db.cursor()
-
         condsems = self._sems[0:self._sems.index(targetsem)]
         # if semloc miss some consems, we return empty list
         if all([sem in semloc for sem in condsems]):
-            operation = "SELECT DISTINCT " + targetsem + " FROM " + "semloc"
+            query = "SELECT DISTINCT " + targetsem + " FROM " + "semloc"
             conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
             if conds:
-                operation += " WHERE " + " AND ".join(conds) + " AND " + targetsem + " IS NOT NULL"
+                query += " WHERE " + " AND ".join(conds) + " AND " + targetsem + " IS NOT NULL"
             else:
-                operation += " WHERE " + targetsem + " IS NOT NULL"
-            cur.execute(operation)
-            siblings = [x[0] for x in cur.fetchall()]
+                query += " WHERE " + targetsem + " IS NOT NULL"
+            d = self._db.runQuery(query)
+            siblings = yield d
+            siblings = [x[0] for x in siblings]
 
-            return siblings
+            defer.returnValue(siblings)
         else:
-            return []
+            defer.returnValue([])

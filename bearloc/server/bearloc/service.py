@@ -37,6 +37,7 @@ from bearloc.meta.meta import Meta
 
 from twisted.application import service
 from twisted.internet import defer
+from twisted.enterprise import adbapi
 from zope.interface import implementer
 import sqlite3
 
@@ -45,8 +46,8 @@ import sqlite3
 class BearLocService(service.Service):
     """BearLoc service"""
 
-    def __init__(self, db, content):
-        self._db = sqlite3.connect(database = db)  # No need to use aync DB for now
+    def __init__(self, dbname, content):
+        self._db = adbapi.ConnectionPool('sqlite3', database = dbname)
         self._content = content
 
         if 'report' in self._content:

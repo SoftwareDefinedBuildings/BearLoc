@@ -297,7 +297,7 @@ public class BearLocFormat {
             final int sampwidth = (from.getInt("sampwidth") == AudioFormat.ENCODING_PCM_16BIT) ? 2
                     : 1;
             final int nframes = event.getJSONArray("raw").length()
-                    / (event.getInt("sampwidth") * event.getInt("channel"));
+                    / (sampwidth * channel);
             event.put("source", source);
             event.put("channel", channel);
             event.put("sampwidth", sampwidth);

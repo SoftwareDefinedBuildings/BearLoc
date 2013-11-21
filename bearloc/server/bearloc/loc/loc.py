@@ -36,6 +36,7 @@ from bearloc.loc.interface import ILoc
 
 from twisted.internet import defer, reactor
 from twisted.python import log
+from twisted.enterprise import adbapi
 from zope.interface import implementer
 from collections import defaultdict
 import numpy as np
@@ -80,7 +81,7 @@ class Loc(object):
         return d
 
 
-    # Maybe it is good to make this block to ensure fast response
+    @defer.inlineCallbacks
     def _localize(self, request, d):
         device = request.get('device')
         uuid = device.get('uuid') if device != None else None
@@ -90,7 +91,8 @@ class Loc(object):
         alter = {}
         if uuid != None and locepoch != None :
             for sem in self._sems:
-                if self._predict(uuid, locepoch, (semloc, alter), sem) == False:
+                result = yield self._predict(uuid, locepoch, (semloc, alter), sem)
+                if result == False:
                     break
 
         semlocinfo = self._aggr(semloc, alter)
@@ -98,38 +100,39 @@ class Loc(object):
         d.callback(semlocinfo)
 
 
+    @defer.inlineCallbacks
     def _predict(self, uuid, locepoch, (semloc, alter), targetsem):
         clf_info = self._clf_infos.get((frozenset(semloc.items()), targetsem))
         if clf_info != None:
             if targetsem not in ("floor", "room"):
-                (loc, alter_locs) = self._predict_geoloc(uuid, locepoch, clf_info)
+                (loc, alter_locs) = yield self._predict_geoloc(uuid, locepoch, clf_info)
             else:
-                (loc, alter_locs) = self._predict_wifi(uuid, locepoch, clf_info)
+                (loc, alter_locs) = yield self._predict_wifi(uuid, locepoch, clf_info)
 
             if loc != None and alter_locs != None:
                 semloc[targetsem] = loc
                 alter[targetsem] = alter_locs
-                return True
+                defer.returnValue(True)
 
-        return False
+        defer.returnValue(False)
 
 
+    @defer.inlineCallbacks
     def _predict_geoloc(self, uuid, locepoch, clf_info):
         clf = clf_info["clf"]
 
-        cur = self._db.cursor()
         # extract attributes and store in db
-        operation = "SELECT longitude, latitude FROM " + "geoloc" + \
-                    " WHERE uuid='" + str(uuid) + "'" + \
-                    " AND ABS(epoch-" + str(locepoch) + ") <= " + \
-                    str(self._geoloc_predict_epoch_thld) + \
-                    " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
-                    " LIMIT 1"
-        cur.execute(operation)
-        geoloc = cur.fetchall()
+        query = "SELECT longitude, latitude FROM " + "geoloc" + \
+                " WHERE uuid='" + str(uuid) + "'" + \
+                " AND ABS(epoch-" + str(locepoch) + ") <= " + \
+                str(self._geoloc_predict_epoch_thld) + \
+                " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
+                " LIMIT 1"
+        d = self._db.runQuery(query)
+        geoloc = yield d
 
         if len(geoloc) == 0:
-            return (None, None)
+            defer.returnValue((None, None))
 
         data = np.array(geoloc)
 
@@ -137,24 +140,25 @@ class Loc(object):
         count = collections.Counter(locations)
         location = count.most_common(1)[0][0]
         alter = {loc: float(cnt)/len(locations) for loc, cnt in count.items()}
-        return (location, alter)
+
+        defer.returnValue((location, alter))
 
 
+    @defer.inlineCallbacks
     def _predict_wifi(self, uuid, locepoch, clf_info):
         bssids = clf_info["bssids"]
         clf = clf_info["clf"]
 
-        cur = self._db.cursor()
         # extract attributes and store in db
-        operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                    " WHERE uuid='" + str(uuid) + "'" + \
-                    " AND ABS(epoch-" + str(locepoch) + ") <= " + \
-                    str(self._wifi_predict_epoch_thld)
-        cur.execute(operation)
-        wifi = cur.fetchall()
+        query = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
+                " WHERE uuid='" + str(uuid) + "'" + \
+                " AND ABS(epoch-" + str(locepoch) + ") <= " + \
+                str(self._wifi_predict_epoch_thld)
+        d = self._db.runQuery(query)
+        wifi = yield d
 
         if len(wifi) == 0:
-            return (None, None)
+            defer.returnValue((None, None))
 
         epochs = list(set(map(lambda x: x[0], wifi)))
         # sigs: {BSSID: RSSI}
@@ -167,7 +171,8 @@ class Loc(object):
         count = collections.Counter(locations)
         location = count.most_common(1)[0][0]
         alter = {loc: float(cnt)/len(locations) for loc, cnt in count.items()}
-        return (location, alter)
+
+        defer.returnValue((location, alter))
 
 
     def _aggr(self, semloc, alter):
@@ -209,14 +214,14 @@ class Loc(object):
         log.msg("Stopped Loc training")
 
 
+    @defer.inlineCallbacks
     def _train(self, condsemlocs, targetsem):
         """Build model for sem under conditional sems and semlocs.
 
         return new conditional semlocs for lower level."""
-        cur = self._db.cursor()
-        operation = "SELECT DISTINCT uuid FROM device;"
-        cur.execute(operation)
-        uuids = cur.fetchall()
+        query = "SELECT DISTINCT uuid FROM device;"
+        d = self._db.runQuery(query)
+        uuids = yield d
 
         condsems = self._sems[0:self._sems.index(targetsem)]
 
@@ -228,25 +233,24 @@ class Loc(object):
 
             uuidlocations = {}
             for uuid, in uuids:
-                cur = self._db.cursor()
                 # extract locations stored in db
-                operation = "SELECT DISTINCT epoch, " + targetsem + " FROM " + "semloc" + \
-                            " WHERE uuid='" + uuid + "'"
+                query = "SELECT DISTINCT epoch, " + targetsem + " FROM " + "semloc" + \
+                        " WHERE uuid='" + uuid + "'"
                 conds = [condsem+"='"+condsemloc[condsem]+"'" for condsem in condsems]
                 if conds:
-                    operation += " AND " + " AND ".join(conds)
-                operation += " AND " + targetsem + " IS NOT NULL;"
-                cur.execute(operation)
-                locations = cur.fetchall()
+                    query += " AND " + " AND ".join(conds)
+                query += " AND " + targetsem + " IS NOT NULL;"
+                d = self._db.runQuery(query)
+                locations = yield d
                 uuidlocations[uuid] = locations
 
             clf = None
             if targetsem not in ("floor", "room"):
-                (clf, locations) = self._train_geoloc(uuidlocations)
+                (clf, locations) = yield self._train_geoloc(uuidlocations)
                 if clf != None:
                     self._clf_infos[(frozenset(condsemloc.items()), targetsem)] = {"clf": clf}
             else:
-                (clf, locations, bssids) = self._train_wifi(uuidlocations)
+                (clf, locations, bssids) = yield self._train_wifi(uuidlocations)
                 if clf != None:
                     self._clf_infos[(frozenset(condsemloc.items()), targetsem)] = {"clf": clf, "bssids": bssids}
 
@@ -256,20 +260,18 @@ class Loc(object):
                     new_condsemloc[targetsem] = location
                     new_condsemlocs.append(new_condsemloc)
 
-        return new_condsemlocs
+        defer.returnValue(new_condsemlocs)
 
 
-    # TODO make this defer.inlineCallbacks
+    @defer.inlineCallbacks
     def _train_geoloc(self, uuidlocations):
-        cur = self._db.cursor()
-
         uuidgeolocs = {}
         for uuid in uuidlocations.keys():
             # extract attributes stored in db
-            operation = "SELECT DISTINCT epoch, longitude, latitude FROM geoloc" + \
-                        " WHERE uuid='" + uuid + "'"
-            cur.execute(operation)
-            geolocs = cur.fetchall()
+            query = "SELECT DISTINCT epoch, longitude, latitude FROM geoloc" + \
+                    " WHERE uuid='" + uuid + "'"
+            d = self._db.runQuery(query)
+            geolocs = yield d
             uuidgeolocs[uuid] = geolocs
 
         data = []  # geoloc data
@@ -300,26 +302,25 @@ class Loc(object):
                     classes.append(cls)
 
         if len(data) == 0 or len(classes) == 0:
-            return (None, None)
+            defer.returnValue((None, None))
 
         data = np.array(data)
         classes = np.array(classes)
 
         clf = tree.DecisionTreeClassifier().fit(data, classes)
 
-        return (clf, classes)
+        defer.returnValue((clf, classes))
 
 
+    @defer.inlineCallbacks
     def _train_wifi(self, uuidlocations):
-        cur = self._db.cursor()
-
         uuidwifis = {}
         for uuid in uuidlocations.keys():
             # extract attributes and store in db
-            operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM wifi" + \
-                        " WHERE uuid='" + uuid + "'"
-            cur.execute(operation)
-            wifis = cur.fetchall()
+            query = "SELECT DISTINCT epoch, BSSID, RSSI FROM wifi" + \
+                    " WHERE uuid='" + uuid + "'"
+            d = self._db.runQuery(query)
+            wifis = yield d
             uuidwifis[uuid] = wifis
 
         sigs = [] # wifi signatures
@@ -356,7 +357,7 @@ class Loc(object):
                     bssids.extend(sig.keys())
 
         if len(sigs) == 0 or len(classes) == 0:
-            return (None, None, None)
+            defer.returnValue((None, None, None))
 
         bssids = tuple(set(bssids))
         data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
@@ -365,4 +366,4 @@ class Loc(object):
 
         clf = tree.DecisionTreeClassifier().fit(data, classes)
 
-        return (clf, classes, bssids)
+        defer.returnValue((clf, classes, bssids))

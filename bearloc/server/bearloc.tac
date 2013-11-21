@@ -38,7 +38,7 @@ import bearloc.resource
 
 
 application = service.Application('bearloc')
-bearloc = BearLocService(db="bearloc.db", content=['report', 'localize', 'meta'])
+bearloc = BearLocService(dbname="bearloc.db", content=['report', 'localize', 'meta'])
 serviceCollection = service.IServiceCollection(application)
 # HTTP service
 site = server.Site(resource.IResource(bearloc))

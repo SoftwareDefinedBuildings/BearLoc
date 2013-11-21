@@ -44,135 +44,136 @@ import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class GeoLoc implements Sampler, LocationListener {
-  private boolean mBusy;
-  private int mSampleCap;
-  private int nSampleNum;
+    private boolean mBusy;
+    private int mSampleCap;
+    private int nSampleNum;
 
-  private final Context mContext;
-  private final SamplerListener mListener;
-  private final Handler mHandler;
-  private final LocationManager mLocManager;
+    private final Context mContext;
+    private final SamplerListener mListener;
+    private final Handler mHandler;
+    private final LocationManager mLocManager;
 
-  public static interface SamplerListener {
-    public abstract void onGeoLocEvent(Location location);
-  }
+    public static interface SamplerListener {
+        public abstract void onGeoLocEvent(Location location);
+    }
 
-  private final Runnable mPauseTask = new Runnable() {
+    private final Runnable mPauseTask = new Runnable() {
+        @Override
+        public void run() {
+            pause();
+        }
+    };
+
+    public GeoLoc(final Context context, final SamplerListener listener) {
+        mContext = context;
+        mListener = listener;
+        mHandler = new Handler();
+        mLocManager = (LocationManager) context
+                .getSystemService(Context.LOCATION_SERVICE);
+    }
+
     @Override
-    public void run() {
-      pause();
-    }
-  };
+    public boolean start() {
+        if (mBusy == false && SamplerSettings.getGeoLocEnable(mContext) == true) {
+            if (mLocManager == null) {
+                SamplerSettings.setGeoLocEnable(mContext, false);
+                Toast.makeText(mContext, R.string.bearloc_geoloc_error,
+                        Toast.LENGTH_SHORT).show();
+                return false;
+            }
 
-  public GeoLoc(final Context context, final SamplerListener listener) {
-    mContext = context;
-    mListener = listener;
-    mHandler = new Handler();
-    mLocManager = (LocationManager) context
-        .getSystemService(Context.LOCATION_SERVICE);
-  }
-
-  @Override
-  public boolean start() {
-    if (mBusy == false && SamplerSettings.getGeoLocEnable(mContext) == true) {
-      if (mLocManager == null) {
-        SamplerSettings.setGeoLocEnable(mContext, false);
-        Toast.makeText(mContext, R.string.bearloc_geoloc_error,
-            Toast.LENGTH_SHORT).show();
-        return false;
-      }
-
-      final long duration = SamplerSettings.getGeoLocDuration(mContext);
-      final int num = SamplerSettings.getGeoLocCnt(mContext);
-      final int minDelay = SamplerSettings.getGeoLocMinDelay(mContext);
-      final float minDist = SamplerSettings.getGeoLocMinDist(mContext);
-      nSampleNum = 0;
-      mSampleCap = num;
-      // TODO get last know geoloc
-      try {
-        mLocManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-            minDelay, minDist, this);
-      } catch (final IllegalArgumentException e) {
-        e.printStackTrace();
-      }
-      try {
-        mLocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-            minDelay, minDist, this);
-      } catch (final IllegalArgumentException e) {
-        e.printStackTrace();
-      }
-      mHandler.postDelayed(mPauseTask, duration);
-      mBusy = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private void pause() {
-    if (mBusy == true) {
-      // If no geoloc returned, then return the last know ones
-      if (nSampleNum == 0) {
-        try {
-          final Location location = mLocManager
-              .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-
-          if (location != null && mListener != null) {
-            mListener.onGeoLocEvent(location);
-          }
-        } catch (final IllegalArgumentException e) {
-          e.printStackTrace();
+            final long duration = SamplerSettings.getGeoLocDuration(mContext);
+            final int num = SamplerSettings.getGeoLocCnt(mContext);
+            final int minDelay = SamplerSettings.getGeoLocMinDelay(mContext);
+            final float minDist = SamplerSettings.getGeoLocMinDist(mContext);
+            nSampleNum = 0;
+            mSampleCap = num;
+            // TODO get last know geoloc
+            try {
+                mLocManager.requestLocationUpdates(
+                        LocationManager.NETWORK_PROVIDER, minDelay, minDist,
+                        this);
+            } catch (final IllegalArgumentException e) {
+                e.printStackTrace();
+            }
+            try {
+                mLocManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER, minDelay, minDist, this);
+            } catch (final IllegalArgumentException e) {
+                e.printStackTrace();
+            }
+            mHandler.postDelayed(mPauseTask, duration);
+            mBusy = true;
+            return true;
+        } else {
+            return false;
         }
-        try {
-          final Location location = mLocManager
-              .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+    }
 
-          if (location != null && mListener != null) {
-            mListener.onGeoLocEvent(location);
-          }
-        } catch (final IllegalArgumentException e) {
-          e.printStackTrace();
+    private void pause() {
+        if (mBusy == true) {
+            // If no geoloc returned, then return the last know ones
+            if (nSampleNum == 0) {
+                try {
+                    final Location location = mLocManager
+                            .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+                    if (location != null && mListener != null) {
+                        mListener.onGeoLocEvent(location);
+                    }
+                } catch (final IllegalArgumentException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    final Location location = mLocManager
+                            .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+                    if (location != null && mListener != null) {
+                        mListener.onGeoLocEvent(location);
+                    }
+                } catch (final IllegalArgumentException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            mBusy = false;
+            mLocManager.removeUpdates(this);
+            mHandler.removeCallbacks(mPauseTask);
         }
-      }
-
-      mBusy = false;
-      mLocManager.removeUpdates(this);
-      mHandler.removeCallbacks(mPauseTask);
-    }
-  }
-
-  @Override
-  public void onLocationChanged(final Location location) {
-    if (location == null) {
-      return;
     }
 
-    if (mListener != null) {
-      mListener.onGeoLocEvent(location);
+    @Override
+    public void onLocationChanged(final Location location) {
+        if (location == null) {
+            return;
+        }
+
+        if (mListener != null) {
+            mListener.onGeoLocEvent(location);
+        }
+
+        nSampleNum++;
+        if (nSampleNum >= mSampleCap) {
+            pause();
+        }
     }
 
-    nSampleNum++;
-    if (nSampleNum >= mSampleCap) {
-      pause();
+    @Override
+    public void onProviderDisabled(final String provider) {
+        // TODO Auto-generated method stub
+
     }
-  }
 
-  @Override
-  public void onProviderDisabled(final String provider) {
-    // TODO Auto-generated method stub
+    @Override
+    public void onProviderEnabled(final String provider) {
+        // TODO Auto-generated method stub
 
-  }
+    }
 
-  @Override
-  public void onProviderEnabled(final String provider) {
-    // TODO Auto-generated method stub
+    @Override
+    public void onStatusChanged(final String provider, final int status,
+            final Bundle extras) {
+        // TODO Auto-generated method stub
 
-  }
-
-  @Override
-  public void onStatusChanged(final String provider, final int status,
-      final Bundle extras) {
-    // TODO Auto-generated method stub
-
-  }
+    }
 }

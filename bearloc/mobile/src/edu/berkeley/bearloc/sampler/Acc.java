@@ -43,85 +43,85 @@ import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Acc implements Sampler, SensorEventListener {
 
-  private boolean mBusy;
-  private int mSampleCap;
-  private int nSampleNum;
+    private boolean mBusy;
+    private int mSampleCap;
+    private int nSampleNum;
 
-  private final Context mContext;
-  private final SamplerListener mListener;
-  private final Handler mHandler;
-  private final SensorManager mSensorManager;
-  private final Sensor mAcc;
+    private final Context mContext;
+    private final SamplerListener mListener;
+    private final Handler mHandler;
+    private final SensorManager mSensorManager;
+    private final Sensor mAcc;
 
-  public static interface SamplerListener {
-    public abstract void onAccEvent(SensorEvent event);
-  }
+    public static interface SamplerListener {
+        public abstract void onAccEvent(SensorEvent event);
+    }
 
-  private final Runnable mPauseTask = new Runnable() {
+    private final Runnable mPauseTask = new Runnable() {
+        @Override
+        public void run() {
+            pause();
+        }
+    };
+
+    public Acc(final Context context, final SamplerListener listener) {
+        mContext = context;
+        mListener = listener;
+        mHandler = new Handler();
+        mSensorManager = (SensorManager) context
+                .getSystemService(Context.SENSOR_SERVICE);
+        mAcc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+    }
+
     @Override
-    public void run() {
-      pause();
-    }
-  };
+    public boolean start() {
+        if (mBusy == false && SamplerSettings.getAccEnable(mContext) == true) {
+            if (mAcc == null) {
+                SamplerSettings.setAccEnable(mContext, false);
+                return false;
+            }
 
-  public Acc(final Context context, final SamplerListener listener) {
-    mContext = context;
-    mListener = listener;
-    mHandler = new Handler();
-    mSensorManager = (SensorManager) context
-        .getSystemService(Context.SENSOR_SERVICE);
-    mAcc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-  }
-
-  @Override
-  public boolean start() {
-    if (mBusy == false && SamplerSettings.getAccEnable(mContext) == true) {
-      if (mAcc == null) {
-        SamplerSettings.setAccEnable(mContext, false);
-        return false;
-      }
-
-      final long duration = SamplerSettings.getAccDuration(mContext);
-      final int num = SamplerSettings.getAccCnt(mContext);
-      final int delay = SamplerSettings.getAccDelay(mContext);
-      nSampleNum = 0;
-      mSampleCap = num;
-      mSensorManager.registerListener(this, mAcc, delay);
-      mHandler.postDelayed(mPauseTask, duration);
-      mBusy = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private void pause() {
-    if (mBusy == true) {
-      mBusy = false;
-      mSensorManager.unregisterListener(this);
-      mHandler.removeCallbacks(mPauseTask);
-    }
-  }
-
-  @Override
-  public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void onSensorChanged(final SensorEvent event) {
-    if (event == null) {
-      return;
+            final long duration = SamplerSettings.getAccDuration(mContext);
+            final int num = SamplerSettings.getAccCnt(mContext);
+            final int delay = SamplerSettings.getAccDelay(mContext);
+            nSampleNum = 0;
+            mSampleCap = num;
+            mSensorManager.registerListener(this, mAcc, delay);
+            mHandler.postDelayed(mPauseTask, duration);
+            mBusy = true;
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    if (mListener != null) {
-      mListener.onAccEvent(event);
+    private void pause() {
+        if (mBusy == true) {
+            mBusy = false;
+            mSensorManager.unregisterListener(this);
+            mHandler.removeCallbacks(mPauseTask);
+        }
     }
 
-    nSampleNum++;
-    if (nSampleNum >= mSampleCap) {
-      pause();
+    @Override
+    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
+        // TODO Auto-generated method stub
+
     }
-  }
+
+    @Override
+    public void onSensorChanged(final SensorEvent event) {
+        if (event == null) {
+            return;
+        }
+
+        if (mListener != null) {
+            mListener.onAccEvent(event);
+        }
+
+        nSampleNum++;
+        if (nSampleNum >= mSampleCap) {
+            pause();
+        }
+    }
 }

@@ -57,238 +57,242 @@ import edu.berkeley.bearloc.MetaListener;
 import edu.berkeley.bearloc.SemLocListener;
 
 public class LocReporterService extends Service implements SemLocListener,
-    MetaListener, SensorEventListener {
+        MetaListener, SensorEventListener {
 
-  private static final long AUTO_REPORT_ITVL = 180000L; // millisecond
+    private static final long AUTO_REPORT_ITVL = 180000L; // millisecond
 
-  private BearLocService mBearLocService;
-  private boolean mBound = false;
-  private final ServiceConnection mBearLocConn = new ServiceConnection() {
-    @Override
-    public void onServiceConnected(final ComponentName name,
-        final IBinder service) {
-      final BearLocBinder binder = (BearLocBinder) service;
-      mBearLocService = binder.getService();
-      mBound = true;
-    }
-
-    @Override
-    public void onServiceDisconnected(final ComponentName name) {
-      mBound = false;
-    }
-  };
-
-  final public static String[] Sems = new String[] { "country", "state",
-      "city", "street", "building", "floor", "room" };
-  private JSONObject mCurSemLocInfo;
-  private JSONObject mCurMeta;
-
-  private IBinder mBinder;
-  private Handler mHandler;
-  private SemLocListener mSemLocListener;
-  private MetaListener mMetaListener;
-
-  private Sensor mAcc;
-  private final Runnable mReportLocTask = new Runnable() {
-    @Override
-    public void run() {
-      reportSemLoc();
-    }
-  };
-
-  public class LocReporterBinder extends Binder {
-    public LocReporterService getService() {
-      // Return this instance of LocalService so clients can call public methods
-      return LocReporterService.this;
-    }
-  }
-
-  @Override
-  public void onCreate() {
-    final Intent intent = new Intent(this, BearLocService.class);
-    bindService(intent, mBearLocConn, Context.BIND_AUTO_CREATE);
-
-    mCurSemLocInfo = new JSONObject();
-    mCurMeta = new JSONObject();
-
-    mBinder = new LocReporterBinder();
-    mHandler = new Handler();
-
-    final SensorManager sensorMgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-    mAcc = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-    sensorMgr.registerListener(this, mAcc, SensorManager.SENSOR_DELAY_NORMAL);
-  }
-
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    // Unbind from the service
-    if (mBound) {
-      unbindService(mBearLocConn);
-      mBound = false;
-    }
-  }
-
-  @Override
-  public IBinder onBind(final Intent intent) {
-    return mBinder;
-  }
-
-  public void setSemLocListener(final SemLocListener semLocListener) {
-    mSemLocListener = semLocListener;
-  }
-
-  public void setMetaListener(final MetaListener metaListener) {
-    mMetaListener = metaListener;
-  }
-
-  public JSONObject curSemLocInfo() {
-    return mCurSemLocInfo;
-  }
-
-  public JSONObject curMeta() {
-    return mCurMeta;
-  }
-
-  public boolean localize() {
-    if (mSemLocListener == null) {
-      return false;
-    }
-
-    return mBearLocService.localize(this);
-  }
-
-  /*
-   * Application changes current semantic location
-   */
-  public void changeSemLoc(final String sem, final String loc) {
-    final JSONObject semloc = mCurSemLocInfo.optJSONObject("semloc");
-    if (semloc != null) {
-      try {
-        semloc.put(sem, loc);
-        mCurSemLocInfo.put("confidence", 1);
-      } catch (final JSONException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-
-      // clear all locations in lower levels
-      for (int i = Arrays.asList(LocReporterService.Sems).indexOf(sem) + 1; i < LocReporterService.Sems.length; i++) {
-        semloc.remove(LocReporterService.Sems[i]);
-      }
-
-      reportSemLoc();
-
-      changeMeta(sem, loc);
-    }
-  }
-
-  private void changeMeta(final String sem, final String loc) {
-    final JSONArray locArray = mCurMeta.optJSONArray(sem);
-    if (locArray != null) {
-      // add new location to meta if it doesn't exist
-      boolean newLoc = true;
-      for (int i = 0; i < locArray.length(); i++) {
-        if (loc.equals(locArray.optString(i))) {
-          newLoc = false;
-          break;
+    private BearLocService mBearLocService;
+    private boolean mBound = false;
+    private final ServiceConnection mBearLocConn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(final ComponentName name,
+                final IBinder service) {
+            final BearLocBinder binder = (BearLocBinder) service;
+            mBearLocService = binder.getService();
+            mBound = true;
         }
-      }
-      if (newLoc == true) {
-        locArray.put(loc);
-      }
 
-      // clear all meta in lower levels
-      for (int i = Arrays.asList(LocReporterService.Sems).indexOf(sem) + 1; i < LocReporterService.Sems.length; i++) {
-        try {
-          mCurMeta.put(LocReporterService.Sems[i], new JSONArray());
-        } catch (final JSONException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+        @Override
+        public void onServiceDisconnected(final ComponentName name) {
+            mBound = false;
         }
-      }
+    };
 
-      // request new meta if it is not a new location sem is not at lowest level
-      if (newLoc == false
-          && Arrays.asList(LocReporterService.Sems).indexOf(sem) < LocReporterService.Sems.length - 1) {
+    final public static String[] Sems = new String[] { "country", "state",
+            "city", "street", "building", "floor", "room" };
+    private JSONObject mCurSemLocInfo;
+    private JSONObject mCurMeta;
+
+    private IBinder mBinder;
+    private Handler mHandler;
+    private SemLocListener mSemLocListener;
+    private MetaListener mMetaListener;
+
+    private Sensor mAcc;
+    private final Runnable mReportLocTask = new Runnable() {
+        @Override
+        public void run() {
+            reportSemLoc();
+        }
+    };
+
+    public class LocReporterBinder extends Binder {
+        public LocReporterService getService() {
+            // Return this instance of LocalService so clients can call public
+            // methods
+            return LocReporterService.this;
+        }
+    }
+
+    @Override
+    public void onCreate() {
+        final Intent intent = new Intent(this, BearLocService.class);
+        bindService(intent, mBearLocConn, Context.BIND_AUTO_CREATE);
+
+        mCurSemLocInfo = new JSONObject();
+        mCurMeta = new JSONObject();
+
+        mBinder = new LocReporterBinder();
+        mHandler = new Handler();
+
+        final SensorManager sensorMgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mAcc = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorMgr.registerListener(this, mAcc,
+                SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Unbind from the service
+        if (mBound) {
+            unbindService(mBearLocConn);
+            mBound = false;
+        }
+    }
+
+    @Override
+    public IBinder onBind(final Intent intent) {
+        return mBinder;
+    }
+
+    public void setSemLocListener(final SemLocListener semLocListener) {
+        mSemLocListener = semLocListener;
+    }
+
+    public void setMetaListener(final MetaListener metaListener) {
+        mMetaListener = metaListener;
+    }
+
+    public JSONObject curSemLocInfo() {
+        return mCurSemLocInfo;
+    }
+
+    public JSONObject curMeta() {
+        return mCurMeta;
+    }
+
+    public boolean localize() {
+        if (mSemLocListener == null) {
+            return false;
+        }
+
+        return mBearLocService.localize(this);
+    }
+
+    /*
+     * Application changes current semantic location
+     */
+    public void changeSemLoc(final String sem, final String loc) {
+        final JSONObject semloc = mCurSemLocInfo.optJSONObject("semloc");
+        if (semloc != null) {
+            try {
+                semloc.put(sem, loc);
+                mCurSemLocInfo.put("confidence", 1);
+            } catch (final JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            // clear all locations in lower levels
+            for (int i = Arrays.asList(LocReporterService.Sems).indexOf(sem) + 1; i < LocReporterService.Sems.length; i++) {
+                semloc.remove(LocReporterService.Sems[i]);
+            }
+
+            reportSemLoc();
+
+            changeMeta(sem, loc);
+        }
+    }
+
+    private void changeMeta(final String sem, final String loc) {
+        final JSONArray locArray = mCurMeta.optJSONArray(sem);
+        if (locArray != null) {
+            // add new location to meta if it doesn't exist
+            boolean newLoc = true;
+            for (int i = 0; i < locArray.length(); i++) {
+                if (loc.equals(locArray.optString(i))) {
+                    newLoc = false;
+                    break;
+                }
+            }
+            if (newLoc == true) {
+                locArray.put(loc);
+            }
+
+            // clear all meta in lower levels
+            for (int i = Arrays.asList(LocReporterService.Sems).indexOf(sem) + 1; i < LocReporterService.Sems.length; i++) {
+                try {
+                    mCurMeta.put(LocReporterService.Sems[i], new JSONArray());
+                } catch (final JSONException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+
+            // request new meta if it is not a new location sem is not at lowest
+            // level
+            if (newLoc == false
+                    && Arrays.asList(LocReporterService.Sems).indexOf(sem) < LocReporterService.Sems.length - 1) {
+                requestMeta();
+            }
+        }
+    }
+
+    public static String getLocStr(final JSONObject semloc,
+            final String[] sems, final String endSem) {
+        String locStr = "";
+
+        for (final String sem : sems) {
+            if (sem == endSem) {
+                break;
+            }
+            locStr += "/" + semloc.optString(sem, null);
+        }
+
+        return locStr;
+    }
+
+    /*
+     * Async call to report current location
+     */
+    private void reportSemLoc() {
+        final JSONObject semloc = mCurSemLocInfo.optJSONObject("semloc");
+        if (semloc != null) {
+            mBearLocService.report(semloc);
+
+            if (mAcc != null
+                    && LocReporterSettingsActivity.getAutoReport(this) == true) {
+                // report in AUTO_REPORT_ITVL milliseconds
+                mHandler.postDelayed(mReportLocTask,
+                        LocReporterService.AUTO_REPORT_ITVL);
+            }
+        }
+    }
+
+    /*
+     * Async call to request meta for current location
+     */
+    private boolean requestMeta() {
+        final JSONObject semloc = mCurSemLocInfo.optJSONObject("semloc");
+        if (semloc != null) {
+            return mBearLocService.meta(semloc, this);
+        }
+        return false;
+    }
+
+    @Override
+    public void onSemLocInfoReturned(final JSONObject semLocInfo) {
+        mCurSemLocInfo = semLocInfo;
         requestMeta();
-      }
-    }
-  }
 
-  public static String getLocStr(final JSONObject semloc, final String[] sems,
-      final String endSem) {
-    String locStr = "";
-
-    for (final String sem : sems) {
-      if (sem == endSem) {
-        break;
-      }
-      locStr += "/" + semloc.optString(sem, null);
+        if (mSemLocListener != null) {
+            mSemLocListener.onSemLocInfoReturned(mCurSemLocInfo);
+        }
     }
 
-    return locStr;
-  }
+    @Override
+    public void onMetaReturned(final JSONObject meta) {
+        mCurMeta = meta;
 
-  /*
-   * Async call to report current location
-   */
-  private void reportSemLoc() {
-    final JSONObject semloc = mCurSemLocInfo.optJSONObject("semloc");
-    if (semloc != null) {
-      mBearLocService.report(semloc);
-
-      if (mAcc != null
-          && LocReporterSettingsActivity.getAutoReport(this) == true) {
-        // report in AUTO_REPORT_ITVL milliseconds
-        mHandler.postDelayed(mReportLocTask,
-            LocReporterService.AUTO_REPORT_ITVL);
-      }
+        if (mMetaListener != null) {
+            mMetaListener.onMetaReturned(mCurMeta);
+        }
     }
-  }
 
-  /*
-   * Async call to request meta for current location
-   */
-  private boolean requestMeta() {
-    final JSONObject semloc = mCurSemLocInfo.optJSONObject("semloc");
-    if (semloc != null) {
-      return mBearLocService.meta(semloc, this);
+    @Override
+    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
+        // TODO Auto-generated method stub
+
     }
-    return false;
-  }
 
-  @Override
-  public void onSemLocInfoReturned(final JSONObject semLocInfo) {
-    mCurSemLocInfo = semLocInfo;
-    requestMeta();
-
-    if (mSemLocListener != null) {
-      mSemLocListener.onSemLocInfoReturned(mCurSemLocInfo);
+    @Override
+    public void onSensorChanged(final SensorEvent event) {
+        if (event != null
+                && (Math.abs(event.values[0]) > 1
+                        || Math.abs(event.values[0]) > 1 || event.values[2] < 9)) {
+            // If not statically face up, then stop reporting location
+            mHandler.removeCallbacks(mReportLocTask);
+        }
     }
-  }
-
-  @Override
-  public void onMetaReturned(final JSONObject meta) {
-    mCurMeta = meta;
-
-    if (mMetaListener != null) {
-      mMetaListener.onMetaReturned(mCurMeta);
-    }
-  }
-
-  @Override
-  public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void onSensorChanged(final SensorEvent event) {
-    if (event != null
-        && (Math.abs(event.values[0]) > 1 || Math.abs(event.values[0]) > 1 || event.values[2] < 9)) {
-      // If not statically face up, then stop reporting location
-      mHandler.removeCallbacks(mReportLocTask);
-    }
-  }
 }

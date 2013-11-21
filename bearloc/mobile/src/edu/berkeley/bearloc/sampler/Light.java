@@ -43,85 +43,85 @@ import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Light implements Sampler, SensorEventListener {
 
-  private boolean mBusy;
-  private int mSampleCap;
-  private int mSampleNum;
+    private boolean mBusy;
+    private int mSampleCap;
+    private int mSampleNum;
 
-  private final Context mContext;
-  private final SamplerListener mListener;
-  private final Handler mHandler;
-  private final SensorManager mSensorManager;
-  private final Sensor mLight;
+    private final Context mContext;
+    private final SamplerListener mListener;
+    private final Handler mHandler;
+    private final SensorManager mSensorManager;
+    private final Sensor mLight;
 
-  public static interface SamplerListener {
-    public abstract void onLightEvent(SensorEvent event);
-  }
+    public static interface SamplerListener {
+        public abstract void onLightEvent(SensorEvent event);
+    }
 
-  private final Runnable mPauseTask = new Runnable() {
+    private final Runnable mPauseTask = new Runnable() {
+        @Override
+        public void run() {
+            pause();
+        }
+    };
+
+    public Light(final Context context, final SamplerListener listener) {
+        mContext = context;
+        mListener = listener;
+        mHandler = new Handler();
+        mSensorManager = (SensorManager) context
+                .getSystemService(Context.SENSOR_SERVICE);
+        mLight = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+    }
+
     @Override
-    public void run() {
-      pause();
-    }
-  };
+    public boolean start() {
+        if (mBusy == false && SamplerSettings.getLightEnable(mContext) == true) {
+            if (mLight == null) {
+                SamplerSettings.setLightEnable(mContext, false);
+                return false;
+            }
 
-  public Light(final Context context, final SamplerListener listener) {
-    mContext = context;
-    mListener = listener;
-    mHandler = new Handler();
-    mSensorManager = (SensorManager) context
-        .getSystemService(Context.SENSOR_SERVICE);
-    mLight = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-  }
-
-  @Override
-  public boolean start() {
-    if (mBusy == false && SamplerSettings.getLightEnable(mContext) == true) {
-      if (mLight == null) {
-        SamplerSettings.setLightEnable(mContext, false);
-        return false;
-      }
-
-      final long duration = SamplerSettings.getLightDuration(mContext);
-      final int num = SamplerSettings.getLightCnt(mContext);
-      final int delay = SamplerSettings.getLightDelay(mContext);
-      mSampleNum = 0;
-      mSampleCap = num;
-      mSensorManager.registerListener(this, mLight, delay);
-      mHandler.postDelayed(mPauseTask, duration);
-      mBusy = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private void pause() {
-    if (mBusy == true) {
-      mBusy = false;
-      mSensorManager.unregisterListener(this);
-      mHandler.removeCallbacks(mPauseTask);
-    }
-  }
-
-  @Override
-  public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void onSensorChanged(final SensorEvent event) {
-    if (event == null) {
-      return;
+            final long duration = SamplerSettings.getLightDuration(mContext);
+            final int num = SamplerSettings.getLightCnt(mContext);
+            final int delay = SamplerSettings.getLightDelay(mContext);
+            mSampleNum = 0;
+            mSampleCap = num;
+            mSensorManager.registerListener(this, mLight, delay);
+            mHandler.postDelayed(mPauseTask, duration);
+            mBusy = true;
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    if (mListener != null) {
-      mListener.onLightEvent(event);
+    private void pause() {
+        if (mBusy == true) {
+            mBusy = false;
+            mSensorManager.unregisterListener(this);
+            mHandler.removeCallbacks(mPauseTask);
+        }
     }
 
-    mSampleNum++;
-    if (mSampleNum >= mSampleCap) {
-      pause();
+    @Override
+    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
+        // TODO Auto-generated method stub
+
     }
-  }
+
+    @Override
+    public void onSensorChanged(final SensorEvent event) {
+        if (event == null) {
+            return;
+        }
+
+        if (mListener != null) {
+            mListener.onLightEvent(event);
+        }
+
+        mSampleNum++;
+        if (mSampleNum >= mSampleCap) {
+            pause();
+        }
+    }
 }

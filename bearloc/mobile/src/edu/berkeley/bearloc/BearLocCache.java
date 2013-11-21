@@ -46,32 +46,33 @@ import android.content.Context;
 import android.util.Pair;
 
 public class BearLocCache {
-  private final Map<String, List<Pair<Object, JSONObject>>> mDataMap;
+    private final Map<String, List<Pair<Object, JSONObject>>> mDataMap;
 
-  public BearLocCache(final Context context) {
-    mDataMap = new HashMap<String, List<Pair<Object, JSONObject>>>();
-  }
-
-  public void put(final String type, final Object data, final JSONObject meta) {
-    if (!mDataMap.containsKey(type)) {
-      mDataMap.put(type, new LinkedList<Pair<Object, JSONObject>>());
+    public BearLocCache(final Context context) {
+        mDataMap = new HashMap<String, List<Pair<Object, JSONObject>>>();
     }
-    final List<Pair<Object, JSONObject>> list = mDataMap.get(type);
 
-    list.add(new Pair<Object, JSONObject>(data, meta));
-  }
+    public void put(final String type, final Object data, final JSONObject meta) {
+        if (!mDataMap.containsKey(type)) {
+            mDataMap.put(type, new LinkedList<Pair<Object, JSONObject>>());
+        }
+        final List<Pair<Object, JSONObject>> list = mDataMap.get(type);
 
-  public Map<String, List<Pair<Object, JSONObject>>> get() {
-    return mDataMap;
-  }
-
-  public void clear() {
-    final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = mDataMap
-        .entrySet().iterator();
-    while (it.hasNext()) {
-      final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it.next();
-      final List<Pair<Object, JSONObject>> events = entry.getValue();
-      events.clear();
+        list.add(new Pair<Object, JSONObject>(data, meta));
     }
-  }
+
+    public Map<String, List<Pair<Object, JSONObject>>> get() {
+        return mDataMap;
+    }
+
+    public void clear() {
+        final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = mDataMap
+                .entrySet().iterator();
+        while (it.hasNext()) {
+            final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it
+                    .next();
+            final List<Pair<Object, JSONObject>> events = entry.getValue();
+            events.clear();
+        }
+    }
 }

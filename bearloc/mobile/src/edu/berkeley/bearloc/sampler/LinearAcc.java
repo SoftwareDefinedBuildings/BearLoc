@@ -45,91 +45,94 @@ import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class LinearAcc implements Sampler, SensorEventListener {
 
-  private boolean mBusy;
-  private int mSampleCap;
-  private int nSampleNum;
+    private boolean mBusy;
+    private int mSampleCap;
+    private int nSampleNum;
 
-  private final Context mContext;
-  private final SamplerListener mListener;
-  private final Handler mHandler;
-  private final SensorManager mSensorManager;
-  private final Sensor mLAcc;
+    private final Context mContext;
+    private final SamplerListener mListener;
+    private final Handler mHandler;
+    private final SensorManager mSensorManager;
+    private final Sensor mLAcc;
 
-  public static interface SamplerListener {
-    public abstract void onLinearAccEvent(SensorEvent event);
-  }
+    public static interface SamplerListener {
+        public abstract void onLinearAccEvent(SensorEvent event);
+    }
 
-  private final Runnable mPauseTask = new Runnable() {
+    private final Runnable mPauseTask = new Runnable() {
+        @Override
+        public void run() {
+            pause();
+        }
+    };
+
+    // get null for mLAcc if not available
+    @SuppressLint("InlinedApi")
+    public LinearAcc(final Context context, final SamplerListener listener) {
+        mContext = context;
+        mListener = listener;
+        mHandler = new Handler();
+        mSensorManager = (SensorManager) context
+                .getSystemService(Context.SENSOR_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            mLAcc = mSensorManager
+                    .getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        } else {
+            mLAcc = null;
+        }
+    }
+
     @Override
-    public void run() {
-      pause();
-    }
-  };
+    public boolean start() {
+        if (mBusy == false
+                && SamplerSettings.getLinearAccEnable(mContext) == true) {
+            if (mLAcc == null) {
+                SamplerSettings.setLinearAccEnable(mContext, false);
+                return false;
+            }
 
-  // get null for mLAcc if not available
-  @SuppressLint("InlinedApi")
-  public LinearAcc(final Context context, final SamplerListener listener) {
-    mContext = context;
-    mListener = listener;
-    mHandler = new Handler();
-    mSensorManager = (SensorManager) context
-        .getSystemService(Context.SENSOR_SERVICE);
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-      mLAcc = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-    } else {
-      mLAcc = null;
-    }
-  }
-
-  @Override
-  public boolean start() {
-    if (mBusy == false && SamplerSettings.getLinearAccEnable(mContext) == true) {
-      if (mLAcc == null) {
-        SamplerSettings.setLinearAccEnable(mContext, false);
-        return false;
-      }
-
-      final long duration = SamplerSettings.getLinearAccDuration(mContext);
-      final int num = SamplerSettings.getLinearAccCnt(mContext);
-      final int delay = SamplerSettings.getLinearAccDelay(mContext);
-      nSampleNum = 0;
-      mSampleCap = num;
-      mSensorManager.registerListener(this, mLAcc, delay);
-      mHandler.postDelayed(mPauseTask, duration);
-      mBusy = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private void pause() {
-    if (mBusy == true) {
-      mBusy = false;
-      mSensorManager.unregisterListener(this);
-      mHandler.removeCallbacks(mPauseTask);
-    }
-  }
-
-  @Override
-  public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void onSensorChanged(final SensorEvent event) {
-    if (event == null) {
-      return;
+            final long duration = SamplerSettings
+                    .getLinearAccDuration(mContext);
+            final int num = SamplerSettings.getLinearAccCnt(mContext);
+            final int delay = SamplerSettings.getLinearAccDelay(mContext);
+            nSampleNum = 0;
+            mSampleCap = num;
+            mSensorManager.registerListener(this, mLAcc, delay);
+            mHandler.postDelayed(mPauseTask, duration);
+            mBusy = true;
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    if (mListener != null) {
-      mListener.onLinearAccEvent(event);
+    private void pause() {
+        if (mBusy == true) {
+            mBusy = false;
+            mSensorManager.unregisterListener(this);
+            mHandler.removeCallbacks(mPauseTask);
+        }
     }
 
-    nSampleNum++;
-    if (nSampleNum >= mSampleCap) {
-      pause();
+    @Override
+    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
+        // TODO Auto-generated method stub
+
     }
-  }
+
+    @Override
+    public void onSensorChanged(final SensorEvent event) {
+        if (event == null) {
+            return;
+        }
+
+        if (mListener != null) {
+            mListener.onLinearAccEvent(event);
+        }
+
+        nSampleNum++;
+        if (nSampleNum >= mSampleCap) {
+            pause();
+        }
+    }
 }

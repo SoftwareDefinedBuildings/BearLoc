@@ -46,67 +46,70 @@ import android.preference.PreferenceManager;
 
 public class LocReporterSettingsActivity extends PreferenceActivity {
 
-  final public static String ACTION_PREF_GENERAL = "edu.berkeley.locreporter.PREF_GENERAL";
-  final public static String ACTION_PREF_SERVER = "edu.berkeley.bearloc.PREF_SERVER";
-  final public static String ACTION_PREF_SAMPLER = "edu.berkeley.bearloc.PREF_SAMPLER";
+    final public static String ACTION_PREF_GENERAL = "edu.berkeley.locreporter.PREF_GENERAL";
+    final public static String ACTION_PREF_SERVER = "edu.berkeley.bearloc.PREF_SERVER";
+    final public static String ACTION_PREF_SAMPLER = "edu.berkeley.bearloc.PREF_SAMPLER";
 
-  // Only call addPreferencesFromResource() before Honeycomb
-  @SuppressWarnings("deprecation")
-  @Override
-  protected void onCreate(final Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-
-    final String action = getIntent().getAction();
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-      if (action != null
-          && action.equals(LocReporterSettingsActivity.ACTION_PREF_GENERAL)) {
-        addPreferencesFromResource(R.xml.general_settings);
-      } else if (action != null
-          && action.equals(LocReporterSettingsActivity.ACTION_PREF_SERVER)) {
-        addPreferencesFromResource(R.xml.bearloc_server_settings);
-      } else if (action != null
-          && action.equals(LocReporterSettingsActivity.ACTION_PREF_SAMPLER)) {
-        addPreferencesFromResource(R.xml.bearloc_sampler_settings);
-      } else {
-        // Load the legacy preferences headers
-        addPreferencesFromResource(R.xml.pref_headers_legacy);
-      }
-    }
-  }
-
-  // Called only on Honeycomb and later
-  @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-  @Override
-  public void onBuildHeaders(final List<Header> target) {
-    super.onBuildHeaders(target);
-    loadHeadersFromResource(R.xml.pref_headers, target);
-  }
-
-  @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-  public static class SettingsFragment extends PreferenceFragment {
+    // Only call addPreferencesFromResource() before Honeycomb
+    @SuppressWarnings("deprecation")
     @Override
-    public void onCreate(final Bundle savedInstanceState) {
-      super.onCreate(savedInstanceState);
+    protected void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-      final String settings = getArguments().getString("settings");
-      if ("general".equals(settings)) {
-        addPreferencesFromResource(R.xml.general_settings);
-      } else if ("server".equals(settings)) {
-        addPreferencesFromResource(R.xml.bearloc_server_settings);
-      } else if ("sampler".equals(settings)) {
-        addPreferencesFromResource(R.xml.bearloc_sampler_settings);
-      }
+        final String action = getIntent().getAction();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            if (action != null
+                    && action
+                            .equals(LocReporterSettingsActivity.ACTION_PREF_GENERAL)) {
+                addPreferencesFromResource(R.xml.general_settings);
+            } else if (action != null
+                    && action
+                            .equals(LocReporterSettingsActivity.ACTION_PREF_SERVER)) {
+                addPreferencesFromResource(R.xml.bearloc_server_settings);
+            } else if (action != null
+                    && action
+                            .equals(LocReporterSettingsActivity.ACTION_PREF_SAMPLER)) {
+                addPreferencesFromResource(R.xml.bearloc_sampler_settings);
+            } else {
+                // Load the legacy preferences headers
+                addPreferencesFromResource(R.xml.pref_headers_legacy);
+            }
+        }
     }
-  }
 
-  public static Boolean getAutoReport(final Context context) {
-    final SharedPreferences prefs = PreferenceManager
-        .getDefaultSharedPreferences(context);
-    final boolean defaultValue = Boolean.parseBoolean(context
-        .getString(R.string.default_auto_report));
-    final boolean enable = prefs.getBoolean("pref_auto_report_key",
-        defaultValue);
+    // Called only on Honeycomb and later
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    @Override
+    public void onBuildHeaders(final List<Header> target) {
+        super.onBuildHeaders(target);
+        loadHeadersFromResource(R.xml.pref_headers, target);
+    }
 
-    return enable;
-  }
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class SettingsFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(final Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+
+            final String settings = getArguments().getString("settings");
+            if ("general".equals(settings)) {
+                addPreferencesFromResource(R.xml.general_settings);
+            } else if ("server".equals(settings)) {
+                addPreferencesFromResource(R.xml.bearloc_server_settings);
+            } else if ("sampler".equals(settings)) {
+                addPreferencesFromResource(R.xml.bearloc_sampler_settings);
+            }
+        }
+    }
+
+    public static Boolean getAutoReport(final Context context) {
+        final SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        final boolean defaultValue = Boolean.parseBoolean(context
+                .getString(R.string.default_auto_report));
+        final boolean enable = prefs.getBoolean("pref_auto_report_key",
+                defaultValue);
+
+        return enable;
+    }
 }

@@ -45,93 +45,94 @@ import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Temp implements Sampler, SensorEventListener {
 
-  private boolean mBusy;
-  private int mSampleCap;
-  private int nSampleNum;
+    private boolean mBusy;
+    private int mSampleCap;
+    private int nSampleNum;
 
-  private final Context mContext;
-  private final SamplerListener mListener;
-  private final Handler mHandler;
-  private final SensorManager mSensorManager;
-  private final Sensor mTemp;
+    private final Context mContext;
+    private final SamplerListener mListener;
+    private final Handler mHandler;
+    private final SensorManager mSensorManager;
+    private final Sensor mTemp;
 
-  public static interface SamplerListener {
-    public abstract void onTempEvent(SensorEvent event);
-  }
+    public static interface SamplerListener {
+        public abstract void onTempEvent(SensorEvent event);
+    }
 
-  private final Runnable mPauseTask = new Runnable() {
+    private final Runnable mPauseTask = new Runnable() {
+        @Override
+        public void run() {
+            pause();
+        }
+    };
+
+    // get null for mRotation if not available
+    @SuppressLint("InlinedApi")
+    @SuppressWarnings("deprecation")
+    public Temp(final Context context, final SamplerListener listener) {
+        mContext = context;
+        mListener = listener;
+        mHandler = new Handler();
+        mSensorManager = (SensorManager) context
+                .getSystemService(Context.SENSOR_SERVICE);
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            mTemp = mSensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE);
+        } else {
+            mTemp = mSensorManager
+                    .getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        }
+    }
+
     @Override
-    public void run() {
-      pause();
-    }
-  };
+    public boolean start() {
+        if (mBusy == false && SamplerSettings.getTempEnable(mContext) == true) {
+            if (mTemp == null) {
+                SamplerSettings.setTempEnable(mContext, false);
+                return false;
+            }
 
-  // get null for mRotation if not available
-  @SuppressLint("InlinedApi")
-  @SuppressWarnings("deprecation")
-  public Temp(final Context context, final SamplerListener listener) {
-    mContext = context;
-    mListener = listener;
-    mHandler = new Handler();
-    mSensorManager = (SensorManager) context
-        .getSystemService(Context.SENSOR_SERVICE);
-
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-      mTemp = mSensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE);
-    } else {
-      mTemp = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-    }
-  }
-
-  @Override
-  public boolean start() {
-    if (mBusy == false && SamplerSettings.getTempEnable(mContext) == true) {
-      if (mTemp == null) {
-        SamplerSettings.setTempEnable(mContext, false);
-        return false;
-      }
-
-      final long duration = SamplerSettings.getTempDuration(mContext);
-      final int num = SamplerSettings.getTempCnt(mContext);
-      final int delay = SamplerSettings.getTempDelay(mContext);
-      nSampleNum = 0;
-      mSampleCap = num;
-      mSensorManager.registerListener(this, mTemp, delay);
-      mHandler.postDelayed(mPauseTask, duration);
-      mBusy = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private void pause() {
-    if (mBusy == true) {
-      mBusy = false;
-      mSensorManager.unregisterListener(this);
-      mHandler.removeCallbacks(mPauseTask);
-    }
-  }
-
-  @Override
-  public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void onSensorChanged(final SensorEvent event) {
-    if (event == null) {
-      return;
+            final long duration = SamplerSettings.getTempDuration(mContext);
+            final int num = SamplerSettings.getTempCnt(mContext);
+            final int delay = SamplerSettings.getTempDelay(mContext);
+            nSampleNum = 0;
+            mSampleCap = num;
+            mSensorManager.registerListener(this, mTemp, delay);
+            mHandler.postDelayed(mPauseTask, duration);
+            mBusy = true;
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    if (mListener != null) {
-      mListener.onTempEvent(event);
+    private void pause() {
+        if (mBusy == true) {
+            mBusy = false;
+            mSensorManager.unregisterListener(this);
+            mHandler.removeCallbacks(mPauseTask);
+        }
     }
 
-    nSampleNum++;
-    if (nSampleNum >= mSampleCap) {
-      pause();
+    @Override
+    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
+        // TODO Auto-generated method stub
+
     }
-  }
+
+    @Override
+    public void onSensorChanged(final SensorEvent event) {
+        if (event == null) {
+            return;
+        }
+
+        if (mListener != null) {
+            mListener.onTempEvent(event);
+        }
+
+        nSampleNum++;
+        if (nSampleNum >= mSampleCap) {
+            pause();
+        }
+    }
 }

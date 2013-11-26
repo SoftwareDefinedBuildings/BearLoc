@@ -127,8 +127,8 @@ public class Wifi implements Sampler {
             mHandler.postDelayed(mWifiScanTask, 0);
             mHandler.postDelayed(mPauseTask, duration);
             mBusy = true;
-            mWifiLock = mWifiManager.createWifiLock(
-                    WifiManager.WIFI_MODE_SCAN_ONLY, "BearLoc");
+            mWifiLock = mWifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL,
+                    "BearLoc");
             mWifiLock.acquire();
             return true;
         } else {

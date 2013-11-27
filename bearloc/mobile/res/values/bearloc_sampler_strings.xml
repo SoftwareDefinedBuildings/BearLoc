@@ -33,7 +33,7 @@
     <string name="bearloc_pref_acc_title">Accelerometer</string>
     <string name="bearloc_pref_acc_enable_summ">Enable accelerometer sampling</string>
     <string name="bearloc_pref_acc_enable">Sample Accelerometer</string>
-    <string name="bearloc_default_acc_enable">true</string>
+    <string name="bearloc_default_acc_enable">false</string>
     <string name="bearloc_pref_acc_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_acc_duration">Duration</string>
     <string name="bearloc_default_acc_duration">1000</string>
@@ -48,7 +48,7 @@
     <string name="bearloc_pref_temp_title">Ambient Temperature</string>
     <string name="bearloc_pref_temp_enable_summ">Enable ambient temperature sampling</string>
     <string name="bearloc_pref_temp_enable">Sample Temperature</string>
-    <string name="bearloc_default_temp_enable">true</string>
+    <string name="bearloc_default_temp_enable">false</string>
     <string name="bearloc_pref_temp_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_temp_duration">Duration</string>
     <string name="bearloc_default_temp_duration">1000</string>
@@ -63,7 +63,7 @@
     <string name="bearloc_pref_pressure_title">Atmospheric Pressure</string>
     <string name="bearloc_pref_pressure_enable_summ">Enable atmospheric pressure sampling</string>
     <string name="bearloc_pref_pressure_enable">Sample Pressure</string>
-    <string name="bearloc_default_pressure_enable">true</string>
+    <string name="bearloc_default_pressure_enable">false</string>
     <string name="bearloc_pref_pressure_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_pressure_duration">Duration</string>
     <string name="bearloc_default_pressure_duration">1000</string>
@@ -78,7 +78,7 @@
     <string name="bearloc_pref_audio_title">Audio</string>
     <string name="bearloc_pref_audio_enable_summ">Enable Audio recording</string>
     <string name="bearloc_pref_audio_enable">Record Audio</string>
-    <string name="bearloc_default_audio_enable">true</string>
+    <string name="bearloc_default_audio_enable">false</string>
     <string name="bearloc_pref_audio_duration_summ">Audio duration in milliseconds</string>
     <string name="bearloc_pref_audio_duration">Audio Duration</string>
     <string name="bearloc_default_audio_duration">1000</string>
@@ -100,7 +100,7 @@
     <string name="bearloc_pref_humidity_title">Humidity</string>
     <string name="bearloc_pref_humidity_enable_summ">Enable humidity sampling</string>
     <string name="bearloc_pref_humidity_enable">Sample Humidity</string>
-    <string name="bearloc_default_humidity_enable">true</string>
+    <string name="bearloc_default_humidity_enable">false</string>
     <string name="bearloc_pref_humidity_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_humidity_duration">Duration</string>
     <string name="bearloc_default_humidity_duration">1000</string>
@@ -133,7 +133,7 @@
     <string name="bearloc_pref_gravity_title">Gravity</string>
     <string name="bearloc_pref_gravity_enable_summ">Enable gravity sampling</string>
     <string name="bearloc_pref_gravity_enable">Sample Gravity</string>
-    <string name="bearloc_default_gravity_enable">true</string>
+    <string name="bearloc_default_gravity_enable">false</string>
     <string name="bearloc_pref_gravity_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_gravity_duration">Duration</string>
     <string name="bearloc_default_gravity_duration">1000</string>
@@ -148,7 +148,7 @@
     <string name="bearloc_pref_gyro_title">Gyroscope</string>
     <string name="bearloc_pref_gyro_enable_summ">Enable gyroscope sampling</string>
     <string name="bearloc_pref_gyro_enable">Sample Gyroscope</string>
-    <string name="bearloc_default_gyro_enable">true</string>
+    <string name="bearloc_default_gyro_enable">false</string>
     <string name="bearloc_pref_gyro_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_gyro_duration">Duration</string>
     <string name="bearloc_default_gyro_duration">1000</string>
@@ -163,7 +163,7 @@
     <string name="bearloc_pref_light_title">Light</string>
     <string name="bearloc_pref_light_enable_summ">Enable light sampling</string>
     <string name="bearloc_pref_light_enable">Sample Light</string>
-    <string name="bearloc_default_light_enable">true</string>
+    <string name="bearloc_default_light_enable">false</string>
     <string name="bearloc_pref_light_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_light_duration">Duration</string>
     <string name="bearloc_default_light_duration">1000</string>
@@ -178,7 +178,7 @@
     <string name="bearloc_pref_lacc_title">Linear Accelerometer</string>
     <string name="bearloc_pref_lacc_enable_summ">Enable linear accelerometer sampling</string>
     <string name="bearloc_pref_lacc_enable">Sample Linear Accelerometer</string>
-    <string name="bearloc_default_lacc_enable">true</string>
+    <string name="bearloc_default_lacc_enable">false</string>
     <string name="bearloc_pref_lacc_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_lacc_duration">Duration</string>
     <string name="bearloc_default_lacc_duration">1000</string>
@@ -193,7 +193,7 @@
     <string name="bearloc_pref_magnetic_title">Magnetic</string>
     <string name="bearloc_pref_magnetic_enable_summ">Enable magnetic sampling</string>
     <string name="bearloc_pref_magnetic_enable">Sample Magnetic</string>
-    <string name="bearloc_default_magnetic_enable">true</string>
+    <string name="bearloc_default_magnetic_enable">false</string>
     <string name="bearloc_pref_magnetic_duration_summ">Delay duration in milliseconds</string>
     <string name="bearloc_pref_magnetic_duration">Duration</string>
     <string name="bearloc_default_magnetic_duration">1000</string>
@@ -208,7 +208,7 @@
     <string name="bearloc_pref_proximity_title">Proximity</string>
     <string name="bearloc_pref_proximity_enable_summ">Enable proximity sampling</string>
     <string name="bearloc_pref_proximity_enable">Sample Proximity</string>
-    <string name="bearloc_default_proximity_enable">true</string>
+    <string name="bearloc_default_proximity_enable">false</string>
     <string name="bearloc_pref_proximity_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_proximity_duration">Duration</string>
     <string name="bearloc_default_proximity_duration">1000</string>
@@ -223,7 +223,7 @@
     <string name="bearloc_pref_rotation_title">Rotation</string>
     <string name="bearloc_pref_rotation_enable_summ">Enable rotation sampling</string>
     <string name="bearloc_pref_rotation_enable">Sample Rotation</string>
-    <string name="bearloc_default_rotation_enable">true</string>
+    <string name="bearloc_default_rotation_enable">false</string>
     <string name="bearloc_pref_rotation_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_rotation_duration">Duration</string>
     <string name="bearloc_default_rotation_duration">1000</string>
@@ -241,12 +241,12 @@
     <string name="bearloc_default_wifi_enable">true</string>
     <string name="bearloc_pref_wifi_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_wifi_duration">Duration</string>
-    <string name="bearloc_default_wifi_duration">1000</string>
+    <string name="bearloc_default_wifi_duration">5000</string>
     <string name="bearloc_pref_wifi_cnt_summ">Max sample count in one duration</string>
     <string name="bearloc_pref_wifi_cnt">Count</string>
-    <string name="bearloc_default_wifi_cnt">3</string>
+    <string name="bearloc_default_wifi_cnt">1000</string>
     <string name="bearloc_pref_wifi_delay_summ">Min sample delay in milliseconds</string>
     <string name="bearloc_pref_wifi_delay">Speed (Delay)</string>
-    <string name="bearloc_default_wifi_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL_MS</string>
+    <string name="bearloc_default_wifi_delay_value">@string/bearloc_SENSOR_DELAY_FASTEST_MS</string>
 
 </resources>

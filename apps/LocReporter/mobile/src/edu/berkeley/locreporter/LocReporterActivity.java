@@ -42,6 +42,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
@@ -51,6 +52,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -91,6 +93,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
 
     private LocReporterService mService;
     private boolean mBound = false;
+    private PowerManager.WakeLock mWakeLock;
 
     private final ServiceConnection mServiceConn = new ServiceConnection() {
         @Override
@@ -109,6 +112,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
         }
     };
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -141,8 +145,10 @@ public class LocReporterActivity extends Activity implements SemLocListener,
         bindService(intent, mServiceConn, Context.BIND_AUTO_CREATE);
 
         refresh();
-        getWindow().clearFlags(
-                android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        mWakeLock = pm
+                .newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "BearLoc");
+        mWakeLock.acquire();
     }
 
     @Override
@@ -151,6 +157,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
         refresh();
     }
 
+    @SuppressLint("Wakelock")
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -159,6 +166,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
             unbindService(mServiceConn);
             mBound = false;
         }
+        mWakeLock.release();
     }
 
     @Override

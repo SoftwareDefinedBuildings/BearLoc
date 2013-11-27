@@ -232,6 +232,7 @@ public class LocReporterService extends Service implements SemLocListener,
             mBearLocService.report(semloc);
 
             if (LocReporterSettingsActivity.getAutoReport(this) == true) {
+                mHandler.removeCallbacks(mReportLocTask);
                 // report in AUTO_REPORT_ITVL milliseconds
                 mHandler.postDelayed(mReportLocTask,
                         LocReporterService.AUTO_REPORT_ITVL);

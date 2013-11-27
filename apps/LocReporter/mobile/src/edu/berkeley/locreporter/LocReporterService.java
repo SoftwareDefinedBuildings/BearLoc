@@ -44,10 +44,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -57,9 +53,9 @@ import edu.berkeley.bearloc.MetaListener;
 import edu.berkeley.bearloc.SemLocListener;
 
 public class LocReporterService extends Service implements SemLocListener,
-        MetaListener, SensorEventListener {
+        MetaListener {
 
-    private static final long AUTO_REPORT_ITVL = 180000L; // millisecond
+    private static final long AUTO_REPORT_ITVL = 60000L; // millisecond
 
     private BearLocService mBearLocService;
     private boolean mBound = false;
@@ -88,7 +84,6 @@ public class LocReporterService extends Service implements SemLocListener,
     private SemLocListener mSemLocListener;
     private MetaListener mMetaListener;
 
-    private Sensor mAcc;
     private final Runnable mReportLocTask = new Runnable() {
         @Override
         public void run() {
@@ -114,11 +109,6 @@ public class LocReporterService extends Service implements SemLocListener,
 
         mBinder = new LocReporterBinder();
         mHandler = new Handler();
-
-        final SensorManager sensorMgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mAcc = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorMgr.registerListener(this, mAcc,
-                SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
@@ -241,8 +231,7 @@ public class LocReporterService extends Service implements SemLocListener,
         if (semloc != null) {
             mBearLocService.report(semloc);
 
-            if (mAcc != null
-                    && LocReporterSettingsActivity.getAutoReport(this) == true) {
+            if (LocReporterSettingsActivity.getAutoReport(this) == true) {
                 // report in AUTO_REPORT_ITVL milliseconds
                 mHandler.postDelayed(mReportLocTask,
                         LocReporterService.AUTO_REPORT_ITVL);
@@ -277,22 +266,6 @@ public class LocReporterService extends Service implements SemLocListener,
 
         if (mMetaListener != null) {
             mMetaListener.onMetaReturned(mCurMeta);
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void onSensorChanged(final SensorEvent event) {
-        if (event != null
-                && (Math.abs(event.values[0]) > 1
-                        || Math.abs(event.values[0]) > 1 || event.values[2] < 9)) {
-            // If not statically face up, then stop reporting location
-            mHandler.removeCallbacks(mReportLocTask);
         }
     }
 }

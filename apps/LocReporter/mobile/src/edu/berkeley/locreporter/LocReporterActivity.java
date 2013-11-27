@@ -141,6 +141,8 @@ public class LocReporterActivity extends Activity implements SemLocListener,
         bindService(intent, mServiceConn, Context.BIND_AUTO_CREATE);
 
         refresh();
+        getWindow().clearFlags(
+                android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     @Override

@@ -256,6 +256,8 @@ public class LocReporterService extends Service implements SemLocListener,
         mCurSemLocInfo = semLocInfo;
         requestMeta();
 
+        mHandler.removeCallbacks(mReportLocTask);
+
         if (mSemLocListener != null) {
             mSemLocListener.onSemLocInfoReturned(mCurSemLocInfo);
         }

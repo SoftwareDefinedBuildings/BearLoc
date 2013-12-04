@@ -25,7 +25,7 @@ On debian, you can install these with apt and pip:
 .. code-block:: bash
 
    apt-get install build-essential python-dev python-scipy python-pip
-   pip install twisted numpy scikit-learn zope.interface
+   pip install twisted numpy scikit-learn zope.interface simplejson
 
 
 On Mac OS X, you can install these with using `Homebrew <http://brew.sh/>`__ and pip. 

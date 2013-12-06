@@ -243,6 +243,8 @@ public class LocReporterService extends Service implements SemLocListener,
 
             if (mAcc != null
                     && LocReporterSettingsActivity.getAutoReport(this) == true) {
+                mHandler.removeCallbacks(mReportLocTask);
+
                 // report in AUTO_REPORT_ITVL milliseconds
                 mHandler.postDelayed(mReportLocTask,
                         LocReporterService.AUTO_REPORT_ITVL);
@@ -263,6 +265,8 @@ public class LocReporterService extends Service implements SemLocListener,
 
     @Override
     public void onSemLocInfoReturned(final JSONObject semLocInfo) {
+        mHandler.removeCallbacks(mReportLocTask);
+
         mCurSemLocInfo = semLocInfo;
         requestMeta();
 

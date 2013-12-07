@@ -102,6 +102,11 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
         }
     }
 
+    @Override
+    protected boolean isValidFragment(final String fragmentName) {
+        return true;
+    }
+
     public static Boolean getAutoReport(final Context context) {
         final SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);

@@ -68,17 +68,19 @@ public class Wifi implements Sampler {
     private final BroadcastReceiver mOnScanDone = new BroadcastReceiver() {
         @Override
         public void onReceive(final Context context, final Intent intent) {
-            final List<ScanResult> results = mWifiManager.getScanResults();
+            if (mBusy == true) {
+                final List<ScanResult> results = mWifiManager.getScanResults();
 
-            if (mListener != null) {
-                mListener.onWifiEvent(results);
-            }
+                if (mListener != null) {
+                    mListener.onWifiEvent(results);
+                }
 
-            nSampleNum++;
-            if (nSampleNum < mSampleCap) {
-                mHandler.postDelayed(mWifiScanTask, mSampleItvl);
-            } else {
-                pause();
+                nSampleNum++;
+                if (nSampleNum < mSampleCap) {
+                    mHandler.postDelayed(mWifiScanTask, mSampleItvl);
+                } else {
+                    pause();
+                }
             }
         }
     };

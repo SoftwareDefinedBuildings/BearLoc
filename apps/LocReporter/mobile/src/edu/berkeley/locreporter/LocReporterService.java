@@ -230,13 +230,13 @@ public class LocReporterService extends Service implements SemLocListener,
         final JSONObject semloc = mCurSemLocInfo.optJSONObject("semloc");
         if (semloc != null) {
             mBearLocService.report(semloc);
-
-            if (LocReporterSettingsActivity.getAutoReport(this) == true) {
-                mHandler.removeCallbacks(mReportLocTask);
-                // report in AUTO_REPORT_ITVL milliseconds
-                mHandler.postDelayed(mReportLocTask,
-                        LocReporterService.AUTO_REPORT_ITVL);
-            }
+        }
+        if (LocReporterSettingsActivity.getAutoReport(this) == true) {
+            mHandler.removeCallbacks(mReportLocTask);
+            // report in AUTO_REPORT_ITVL milliseconds
+            while (mHandler.postDelayed(mReportLocTask,
+                    LocReporterService.AUTO_REPORT_ITVL) == false)
+                ;
         }
     }
 

@@ -241,10 +241,10 @@
     <string name="bearloc_default_wifi_enable">true</string>
     <string name="bearloc_pref_wifi_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_wifi_duration">Duration</string>
-    <string name="bearloc_default_wifi_duration">5000</string>
+    <string name="bearloc_default_wifi_duration">20000</string>
     <string name="bearloc_pref_wifi_cnt_summ">Max sample count in one duration</string>
     <string name="bearloc_pref_wifi_cnt">Count</string>
-    <string name="bearloc_default_wifi_cnt">1000</string>
+    <string name="bearloc_default_wifi_cnt">10000</string>
     <string name="bearloc_pref_wifi_delay_summ">Min sample delay in milliseconds</string>
     <string name="bearloc_pref_wifi_delay">Speed (Delay)</string>
     <string name="bearloc_default_wifi_delay_value">@string/bearloc_SENSOR_DELAY_FASTEST_MS</string>

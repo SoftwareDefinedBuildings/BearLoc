@@ -53,7 +53,6 @@ class Loc(object):
     def __init__(self, db):
         self._db = db
         self._train_interval = 30*60 # in second
-        reactor.callLater(0, self._train_all)
 
         self._clf_infos = {} # classifiers {(semloc, semantic): {"clf": clf, ...}}
 

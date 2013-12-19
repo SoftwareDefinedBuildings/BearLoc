@@ -4,7 +4,7 @@
     <!-- Server address settings strings -->
     <string name="bearloc_pref_server_addr_summ">BearLoc server domain name or IP address</string>
     <string name="bearloc_pref_server_addr">BearLoc Server Address</string>
-    <string name="bearloc_default_server_addr">kaifei.info</string>
+    <string name="bearloc_default_server_addr">bearloc.cal-sdb.org</string>
 
     <!-- Server port settings strings -->
     <string name="bearloc_pref_server_port_summ">Port of BearLoc service</string>

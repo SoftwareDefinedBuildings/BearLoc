@@ -48,12 +48,7 @@ import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Wifi implements Sampler {
-
-    private long mSampleItvl; // millisecond
-
     private boolean mBusy;
-    private int mSampleCap;
-    private int nSampleNum;
 
     private final Context mContext;
     private final SamplerListener mListener;
@@ -75,12 +70,7 @@ public class Wifi implements Sampler {
                     mListener.onWifiEvent(results);
                 }
 
-                nSampleNum++;
-                if (nSampleNum < mSampleCap) {
-                    mHandler.postDelayed(mWifiScanTask, mSampleItvl);
-                } else {
-                    pause();
-                }
+                mHandler.postDelayed(mWifiScanTask, 0);
             }
         }
     };
@@ -89,13 +79,6 @@ public class Wifi implements Sampler {
         @Override
         public void run() {
             scan();
-        }
-    };
-
-    private final Runnable mPauseTask = new Runnable() {
-        @Override
-        public void run() {
-            pause();
         }
     };
 
@@ -121,13 +104,7 @@ public class Wifi implements Sampler {
                 return false;
             }
 
-            final long duration = SamplerSettings.getWifiDuration(mContext);
-            final int num = SamplerSettings.getWifiCnt(mContext);
-            mSampleItvl = SamplerSettings.getWifiDelay(mContext);
-            nSampleNum = 0;
-            mSampleCap = num;
             mHandler.postDelayed(mWifiScanTask, 0);
-            mHandler.postDelayed(mPauseTask, duration);
             mBusy = true;
             mWifiLock = mWifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL,
                     "BearLoc");
@@ -138,29 +115,11 @@ public class Wifi implements Sampler {
         }
     }
 
-    private void pause() {
-        if (mBusy == true) {
-            // If no wifi returned, then return the last know ones
-            if (nSampleNum == 0) {
-                final List<ScanResult> results = mWifiManager.getScanResults();
-
-                if (mListener != null) {
-                    mListener.onWifiEvent(results);
-                }
-            }
-            mBusy = false;
-            mWifiLock.release();
-            mWifiLock = null;
-            mHandler.removeCallbacks(mWifiScanTask);
-            mHandler.removeCallbacks(mPauseTask);
-        }
-    }
-
     private void scan() {
         final boolean success = mWifiManager.startScan();
 
         if (success == false) {
-            mHandler.postDelayed(mWifiScanTask, mSampleItvl);
+            mHandler.postDelayed(mWifiScanTask, 0);
         }
     }
 }

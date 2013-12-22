@@ -1,36 +1,47 @@
-Server RESTful Interface
+Server REST Resources
 ========================
 
-BearLoc server provides an RESTful interface [`ref1 <http://en.wikipedia.org/wiki/Representational_state_transfer>`__, `ref2 <http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm>`__] for data post and get. 
+BearLoc server provides an RESTful interface for data post and get. 
 
 
-**Note: currently the design and implementation of server RESTful interface is not in stable version, expect potential changes in later versions.**
-
-
-localize
+Location
 --------
 
-**NOTE: localize HTTP POST may be changed to location HTTP GET later.**
+*Location* is the **estimated** semantic location of a device at a time. 
 
-*localize* is the interface of server to request localization service. It is done by HTTP POST now. The client needs to call HTTP POST to server (port 10080) with ``localize`` as path. The POSTed object should be an `JSON object <http://www.json.org/>`__. Here is an example request:
-
-.. code-block:: http
-
-   POST /localize
-   Host: 54.242.57.128
-   Authorization: Basic xxxxxxxxxxxxxxxxxxx
-   Content-Length: nnn
-   Content-Type: application/json
- 
-   {
-     "device": {
-       "uuid": "1d352410-4a5e-11e3-8f96-0800200c9a66"
-     },
-     "epoch": 1384125523375
-   }
+========================================================= ===================
+Resource                                                  Description
+========================================================= ===================
+:ref:`GET location/:id <get-location-id>`                 Returns the most recent semantic location (and its epoch time) of device with specified id parameter.
+:ref:`GET location/:id/:epoch <get-location-id-epoch>`    Returns the semantic location (and its epoch time) of device with specified id parameter at the closest available time with the specified epoch time.
+========================================================= ===================
 
 
-And the HTTPP POST response is also an JSON object. If localization is done successfully, the response will contain estimated semantic location of the device specified by ``"uuid"``, as well as its information. If localization is not able to be done, it will return an empty JSON object. An example response of successful localization is:
+.. _get-location-id:
+
+GET location/:id
+^^^^^^^^^^^^^^^^
+
+Returns the most recent semantic location (and its epoch time) of device with specified id parameter.
+
+
+**Resource URL**
+
+http://bearloc.cal-sdb.org:20080/api/location/:id
+
+
+**Parameters**
+
+========================== ===================
+**id** *(required)*        The string of UUID of the device. (Example Value: 1d352410-4a5e-11e3-8f96-0800200c9a66)
+========================== ===================
+
+
+**Example Request**
+
+========================== ===================
+GET                        http://bearloc.cal-sdb.org/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66
+========================== ===================
 
 .. code-block:: json
 
@@ -44,68 +55,68 @@ And the HTTPP POST response is also an JSON object. If localization is done succ
        "floor": "Floor 4",
        "room": "494"
      },
-     "alter": {
-       "country": {
-         "US": 0.95,
-         "Canada": 0.05
-       },
-       "state": {
-         "CA": 0.87,
-         "MA": 0.21,
-         "TX": 0.02
-       },
-       "city": {
-         "Berkeley": 0.98,
-         "San Francisco": 0.02
-       },
-       "street": {
-         "Leroy Ave": 1.0,
-       },
-       "building": {
-         "Soda Hall": 1.0,
-        },
-       "floor": {
-         "Floor 3": 0.67,
-         "Floor 4": 0.33
-       },
-       "room": {
-         "494": 0.54,
-         "410": 0.33,
-         "RADLab Kitchen": 0.13
-       }
-     },
-     "sem": {
-       "country": {
-         "state": {
-           "city": {
-             "street": {
-               "building": {
-                 "floor": {
-                   "room": {
-                   }
-                 }
-               }
-             }
-           }
-         }
-       }
-     }
+     "epoch": 1387670483532,
+     "id": "1d352410-4a5e-11e3-8f96-0800200c9a66"
    }
 
 
-In this example, ``"semloc"``, ``"alter"``, ``"sem"`` are fixed top-layer keys, indicating the best estimated semantic location, alternative locations under different semantics, and tree structure of semantics, respectively. And the second-layer keys ``"country"``, ``"state"``, ``"city"``, ``"street"``, ``"building"``, ``"floor"``, and ``"room"`` are all semantics predefined in schema in ``"sem"``. In ``"semloc"``, all values are strings, which are locations reported by users. In ``"alter"``, all values are numbers that are less than 1, which are the confidence about each estimated location that the server has. All confidences under one semantic should sum to 1. in ``"sem"``, it is a tree describing the semantic schema. This represents how the server understands the semantics. Currently every semantic only have child, but presumably, they can have multiple children. For example, besides *room*, we can have *ventilation zone* or *lighting zone* inside one floor. We may remove the ``"sem"`` part in the future, so please don't make your application reply on it.
+.. _get-location-id-epoch:
+
+GET location/:id/:epoch
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Returns the semantic location (and its epoch time) of device with specified id parameter at the closest available time with the specified epoch time.
 
 
-To make the localization work, client must report its data in the recent 5 seconds, via the **report** interface we described in next part. Our Android library makes sure it will report current sensor data to server right after application requests localization service and before the library really sends out an localization request to server.
+**Resource URL**
+
+http://bearloc.cal-sdb.org:20080/api/location/:id/:epoch
 
 
-** NOTE: we may change the server to return the most recent available location later. **
+**Parameters**
+
+========================== ===================
+**id** *(required)*        The string of UUID of the device. (Example Value: 1d352410-4a5e-11e3-8f96-0800200c9a66)
+**epoch** *(required)*     The numerical value of epoch time in millisecond. (Example Value: 1384125523390)
+========================== ===================
 
 
-report
-------
+**Example Request**
 
-**report** is the interface for client to report data to server. This is the crucial functionality for BearLoc to operate. With no reported data, BearLoc cannot train any model, and provide real time localization service. Client and report any data type specified in :ref:`Sensor Schema <sensor-schema>`, and the fields it should report is specified in :doc:`database`. It is also done by HTTP POST. The client needs to call HTTP POST to server (port 10080) with ``report`` as path. The POSTed object should also be an JSON object, and it must contain a "device" value. Here is an example request:
+========================== ===================
+GET                        http://bearloc.cal-sdb.org/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66/1384125523390
+========================== ===================
+
+.. code-block:: json
+
+   {
+     "semloc": {
+       "country": "US",
+       "state": "CA",
+       "city": "Berkeley",
+       "street": "Leroy Ave",
+       "building": "Soda Hall",
+       "floor": "Floor 4",
+       "room": "494"
+     },
+     "epoch": 1384125523375,
+     "id": "1d352410-4a5e-11e3-8f96-0800200c9a66"
+   }
+
+
+Data
+----
+
+**Data** is the collections of data from all sensors, including the locations reported by users. Clients can report any data type, but only those specified in :ref:`Sensor Schema <sensor-schema>` will be useful for localization.
+
+========================================================= ===================
+Resource                                                  Description
+========================================================= ===================
+:ref:`GET data/:id <post-data-id>`                        Add new data of sensor of device with specified id parameter at the closest available time with the specified epoch time.
+:ref:`POST data/:id <post-data-id>`                       Add new data of sensor of device with specified id parameter at the closest available time with the specified epoch time.
+========================================================= ===================
+
+
 
 .. code-block:: http
 

@@ -15,8 +15,7 @@ Contents:
    intro
    install
    android
-   server
-   database
+   rest
    schema
 
 

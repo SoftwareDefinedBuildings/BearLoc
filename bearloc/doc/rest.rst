@@ -7,7 +7,7 @@ BearLoc server provides an RESTful interface for data post and get.
 Location
 --------
 
-*Location* is the **estimated** semantic location of a device at a time. 
+Location is the **estimated** semantic location of a device at a time. 
 
 ========================================================= ====================================================================================================
 Resource                                                  Description
@@ -33,7 +33,7 @@ http://bearloc.cal-sdb.org:20080/api/location/:id
 **Parameters**
 
 ========================== ====================================================================================================
-**id** *(required)*        The string of UUID of the device. (Example Value: 1d352410-4a5e-11e3-8f96-0800200c9a66)
+**id** *(required)*        The string of UUID of the device. (Example Value: "1d352410-4a5e-11e3-8f96-0800200c9a66")
 ========================== ====================================================================================================
 
 
@@ -60,8 +60,7 @@ Return Data                *(See Below)*
       "city": "Berkeley",
       "street": "Leroy Ave",
       "building": "Soda Hall",
-      "floor": "Floor 4",
-      "room": "494"
+      "locale": "494"
    }
 
 
@@ -81,7 +80,7 @@ http://bearloc.cal-sdb.org:20080/api/location/:id/:epoch
 **Parameters**
 
 ========================== ====================================================================================================
-**id** *(required)*        The string of UUID of the device. (Example Value: 1d352410-4a5e-11e3-8f96-0800200c9a66)
+**id** *(required)*        The string of UUID of the device. (Example Value: "1d352410-4a5e-11e3-8f96-0800200c9a66")
 **epoch** *(required)*     The numerical value of epoch time in millisecond. (Example Value: 1384125523390)
 ========================== ====================================================================================================
 
@@ -109,15 +108,14 @@ Return Data                *(See Below)*
       "city": "Berkeley",
       "street": "Leroy Ave",
       "building": "Soda Hall",
-      "floor": "Floor 4",
-      "room": "494"
+      "locale": "494"
    }
 
 
 Data
 ----
 
-**Data** is the collections of data from all sensors, including the locations reported by users. Clients can report any data type, but only those specified in :ref:`Sensor Schema <sensor-schema>` will be useful for localization.
+Data is the collections of data from all sensors, including the locations reported by users. Clients can report any data type, but only those specified in :ref:`Sensor Schema <sensor-schema>` will be useful for localization.
 
 ========================================================= ====================================================================================================
 Resource                                                  Description
@@ -142,13 +140,13 @@ http://bearloc.cal-sdb.org:20080/api/data/:id
 **Parameters**
 
 ========================== ====================================================================================================
-**id** *(required)*        The string of UUID of the device. (Example Value: 1d352410-4a5e-11e3-8f96-0800200c9a66)
+**id** *(required)*        The string of UUID of the device. (Example Value: "1d352410-4a5e-11e3-8f96-0800200c9a66")
 ========================== ====================================================================================================
 
 
 **POST Data**
 
-POST data is an JSON array of JSON objects that represent events. The event JSON objects are reuqired to have an **"type"** and **"id"** keys, otherwise the event will not be accepted by server. There is no specification on other keys and values, but we have an :doc:`schema </schema>` of event types, keys, and values. Only those data conform to the schema will be correctly parsed by our localization service.
+POST data is an JSON array of JSON objects that represent events. The event JSON objects are required to have **"type"** and **"id"** keys, otherwise the event will not be accepted by server. There is no specification on other keys and values, but we have an :doc:`schema </schema>` of event types, keys, and values. Only those data conform to the schema will be correctly parsed by our localization service.
 
 
 **Return Data**
@@ -169,13 +167,14 @@ POST Data                  *(See Below)*
      {
         "type": "sensor meta",
         "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
-        "sensor": "acc":
-        "maxRange": 1,
+        "sensor": "accelerometer",
         "vendor": "st micro",
-        "name": "kr3dh",
+        "model": "kr3dh",
+        "version": "1",
+        "unit": "m/s^2",
         "power": 20,
-        "minDelay": 0,
-        "version": 1,
+        "min delay": 0,
+        "max range": 1,
         "resolution": 1
      },
      {
@@ -187,8 +186,6 @@ POST Data                  *(See Below)*
      {
         "type": "accelerometer",
         "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
-        "eventnano": 22325627610000,
-        "sysnano": 22325532395689,
         "epoch": 1384128767709,
         "y": 0.054481390863657,
         "x": 0,
@@ -199,21 +196,21 @@ POST Data                  *(See Below)*
         "type": "wifi",
         "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
         "epoch": 1384128767808,
-        "SSID": "EECS-Open",
         "BSSID": "00:1a:df:a7:33:12",
+        "SSID": "EECS-Open",
+        "RSSI": -67,
         "capability": "[WPA2-EAP-CCMP]",
-        "frequency": 2462,
-        "RSSI": -67
+        "frequency": 2462
      },
      {
         "type": "wifi",
         "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
         "epoch": 1384128767809,
-        "SSID": "AirBears2",
         "BSSID": "00:13:5f:51:d8:b0",
-        "cap ability": "",
-        "frequency": 2462,
-        "RSSI": -92
+        "SSID": "AirBears2",
+        "RSSI": -92,
+        "capability": "",
+        "frequency": 2462
      },
      {
         "type": "reported semloc",
@@ -224,8 +221,7 @@ POST Data                  *(See Below)*
         "city": "Berkeley",
         "street": "Leroy Ave",
         "building": "Soda Hall",
-        "floor": "Floor 4",
-        "room": "494"
+        "locale": "494"
      }
    ]
 
@@ -243,10 +239,10 @@ Return Data                *(See Below)*
 
 
 
-meta
-----
+Metadata
+--------
 
-**meta** is an interface for client to query metadata of locations. It is also done with HTTP POST with JSON object. In HTTP POST request, the JSON obejct should be a semantic location, with an example as below:
+Metadata is an interface for client to query metadata of locations. It is also done with HTTP POST with JSON object. In HTTP POST request, the JSON obejct should be a semantic location, with an example as below:
 
 .. code-block:: http
 
@@ -263,8 +259,7 @@ meta
        "city": "Berkeley",
        "street": "Leroy Ave",
        "building": "Soda Hall",
-       "floor": "Floor 4",
-       "room": "494"
+       "locale": "494"
      }
   }
 

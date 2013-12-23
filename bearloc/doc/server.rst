@@ -9,12 +9,12 @@ Location
 
 *Location* is the **estimated** semantic location of a device at a time. 
 
-========================================================= ===================
+========================================================= ====================================================================================================
 Resource                                                  Description
-========================================================= ===================
+========================================================= ====================================================================================================
 :ref:`GET location/:id <get-location-id>`                 Returns the most recent semantic location (and its epoch time) of device with specified id parameter.
 :ref:`GET location/:id/:epoch <get-location-id-epoch>`    Returns the semantic location (and its epoch time) of device with specified id parameter at the closest available time with the specified epoch time.
-========================================================= ===================
+========================================================= ====================================================================================================
 
 
 .. _get-location-id:
@@ -32,31 +32,36 @@ http://bearloc.cal-sdb.org:20080/api/location/:id
 
 **Parameters**
 
-========================== ===================
+========================== ====================================================================================================
 **id** *(required)*        The string of UUID of the device. (Example Value: 1d352410-4a5e-11e3-8f96-0800200c9a66)
-========================== ===================
+========================== ====================================================================================================
+
+
+**Return Data**
+
+Return data is an JSON object of an event with type "estimated semloc".
 
 
 **Example Request**
 
-========================== ===================
-GET                        http://bearloc.cal-sdb.org/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66
-========================== ===================
+========================== ====================================================================================================
+GET                        http://bearloc.cal-sdb.org:20080/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66
+Return Data                *(See Below)*
+========================== ====================================================================================================
 
 .. code-block:: json
 
    {
-     "semloc": {
-       "country": "US",
-       "state": "CA",
-       "city": "Berkeley",
-       "street": "Leroy Ave",
-       "building": "Soda Hall",
-       "floor": "Floor 4",
-       "room": "494"
-     },
-     "epoch": 1387670483532,
-     "id": "1d352410-4a5e-11e3-8f96-0800200c9a66"
+      "type": "estimated semloc",
+      "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
+      "epoch": 1387670483532,
+      "country": "US",
+      "state": "CA",
+      "city": "Berkeley",
+      "street": "Leroy Ave",
+      "building": "Soda Hall",
+      "floor": "Floor 4",
+      "room": "494"
    }
 
 
@@ -75,32 +80,37 @@ http://bearloc.cal-sdb.org:20080/api/location/:id/:epoch
 
 **Parameters**
 
-========================== ===================
+========================== ====================================================================================================
 **id** *(required)*        The string of UUID of the device. (Example Value: 1d352410-4a5e-11e3-8f96-0800200c9a66)
 **epoch** *(required)*     The numerical value of epoch time in millisecond. (Example Value: 1384125523390)
-========================== ===================
+========================== ====================================================================================================
+
+
+**Return Data**
+
+Return data is an JSON object of an event with type "estimated semloc".
 
 
 **Example Request**
 
-========================== ===================
-GET                        http://bearloc.cal-sdb.org/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66/1384125523390
-========================== ===================
+========================== ====================================================================================================
+GET                        http://bearloc.cal-sdb.org:20080/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66/1384125523390
+Return Data                *(See Below)*
+========================== ====================================================================================================
 
 .. code-block:: json
 
    {
-     "semloc": {
-       "country": "US",
-       "state": "CA",
-       "city": "Berkeley",
-       "street": "Leroy Ave",
-       "building": "Soda Hall",
-       "floor": "Floor 4",
-       "room": "494"
-     },
-     "epoch": 1384125523375,
-     "id": "1d352410-4a5e-11e3-8f96-0800200c9a66"
+      "type": "estimated semloc",
+      "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
+      "epoch": 1384125523375,
+      "country": "US",
+      "state": "CA",
+      "city": "Berkeley",
+      "street": "Leroy Ave",
+      "building": "Soda Hall",
+      "floor": "Floor 4",
+      "room": "494"
    }
 
 
@@ -109,81 +119,126 @@ Data
 
 **Data** is the collections of data from all sensors, including the locations reported by users. Clients can report any data type, but only those specified in :ref:`Sensor Schema <sensor-schema>` will be useful for localization.
 
-========================================================= ===================
+========================================================= ====================================================================================================
 Resource                                                  Description
-========================================================= ===================
-:ref:`GET data/:id <post-data-id>`                        Add new data of sensor of device with specified id parameter at the closest available time with the specified epoch time.
-:ref:`POST data/:id <post-data-id>`                       Add new data of sensor of device with specified id parameter at the closest available time with the specified epoch time.
-========================================================= ===================
+========================================================= ====================================================================================================
+:ref:`POST data/:id <post-data-id>`                       Add new sensor data of device with specified id parameter.
+========================================================= ====================================================================================================
 
 
+.. _post-data-id:
 
-.. code-block:: http
+POST data/:id
+^^^^^^^^^^^^^
 
-   POST /report
-   Host: 54.242.57.128
-   Authorization: Basic xxxxxxxxxxxxxxxxxxx
-   Content-Length: nnn
-   Content-Type: application/json
+Add new sensor data of device with specified id parameter.
+
+
+**Resource URL**
+
+http://bearloc.cal-sdb.org:20080/api/data/:id
+
+
+**Parameters**
+
+========================== ====================================================================================================
+**id** *(required)*        The string of UUID of the device. (Example Value: 1d352410-4a5e-11e3-8f96-0800200c9a66)
+========================== ====================================================================================================
+
+
+**POST Data**
+
+POST data is an JSON array of JSON objects that represent events. The event JSON objects are reuqired to have an **"type"** and **"id"** keys, otherwise the event will not be accepted by server. There is no specification on other keys and values, but we have an :doc:`schema </schema>` of event types, keys, and values. Only those data conform to the schema will be correctly parsed by our localization service.
+
+
+**Return Data**
+
+Return data is an JSON object with keys **"reported"** and **"accepted"**. "reported" has a number value indicating the number of events reported, and "accepted" has a number value indicating the number of events accepted.
+
+
+**Example Request**
+
+========================== ====================================================================================================
+POST                       http://bearloc.cal-sdb.org:20080/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66
+POST Data                  *(See Below)*
+========================== ====================================================================================================
+
+.. code-block:: json
  
-   {
-     'sensormeta': {
-       'acc': {
-         'm axRange': 1,
-         'vendor': 'st micro',
-         'name': 'kr3dh',
-         'power': 20,
-         'minDelay': 0,
-         'version': 1,
-         'resolution': 1
-       },
-       ...
+   [
+     {
+        "type": "sensor meta",
+        "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
+        "sensor": "acc":
+        "maxRange": 1,
+        "vendor": "st micro",
+        "name": "kr3dh",
+        "power": 20,
+        "minDelay": 0,
+        "version": 1,
+        "resolution": 1
      },
-     'device': {
-       'make': 'LGE',
-       'model': 'VS910 4G',
-       'uuid': '5036b270-b584-3248-9322-93ce70a32f62'
+     {
+        "type": "device meta",
+        "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
+        "make": "LGE",
+        "model": "VS910 4G"
      },
-     'acc': [
-       {
-         'eventnano': 22325627610000,
-         'sysnano': 22325532395689,
-         'epoch': 1384128767709,
-         'y': 0.054481390863657,
-         'x': 0,
-         'z': 9.779409408569336,
-         'accuracy': 3
-       }
-     ],
-     'wifi': [
-       {
-         'SSID': 'EECS-Secure ',
-         'BSSID': '00:17:df:a7:33:12',
-         'capability': '[WPA2-EAP-CCMP]',
-         'epoch': 1384128767808,
-         'frequency': 2462,
-         'RSSI': -67
-       },
-       ...
-       {
-         'SSID': 'AirBears',
-         'BSSID': '00:13:5f:55:d8:b0',
-         'cap ability': '',
-         'epoch': 1384128767809,
-         'frequency': 2462,
-         'RSSI': -92
-       }
-     ],
-     ...
-   }
+     {
+        "type": "accelerometer",
+        "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
+        "eventnano": 22325627610000,
+        "sysnano": 22325532395689,
+        "epoch": 1384128767709,
+        "y": 0.054481390863657,
+        "x": 0,
+        "z": 9.779409408569336,
+        "accuracy": 3
+     },
+     {
+        "type": "wifi",
+        "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
+        "epoch": 1384128767808,
+        "SSID": "EECS-Open",
+        "BSSID": "00:1a:df:a7:33:12",
+        "capability": "[WPA2-EAP-CCMP]",
+        "frequency": 2462,
+        "RSSI": -67
+     },
+     {
+        "type": "wifi",
+        "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
+        "epoch": 1384128767809,
+        "SSID": "AirBears2",
+        "BSSID": "00:13:5f:51:d8:b0",
+        "cap ability": "",
+        "frequency": 2462,
+        "RSSI": -92
+     },
+     {
+        "type": "reported semloc",
+        "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
+        "epoch": 1384128515251,
+        "country": "US",
+        "state": "CA",
+        "city": "Berkeley",
+        "street": "Leroy Ave",
+        "building": "Soda Hall",
+        "floor": "Floor 4",
+        "room": "494"
+     }
+   ]
 
-The response of report HTTP POST will be a simple JSON object indicating whether the report is correctly received. One example is here
+========================== ====================================================================================================
+Return Data                *(See Below)*
+========================== ====================================================================================================
 
 .. code-block:: json
 
 
   {
-    'result': True
+    "reported": 6,
+    "accepted": 6
   }
 
 

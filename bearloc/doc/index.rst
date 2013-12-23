@@ -17,6 +17,7 @@ Contents:
    android
    server
    database
+   schema
 
 
 

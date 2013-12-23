@@ -1,5 +1,5 @@
-Android App Interface
-=====================
+Android Library Interface
+=========================
 
 BearLoc has an Android library that takes care of all communication and data collection, providing simple interfaces for Android applications using an Android service [`ref <http://developer.android.com/guide/components/services.html>`__]. This section describes how to build your application using BearLoc Android library.
 

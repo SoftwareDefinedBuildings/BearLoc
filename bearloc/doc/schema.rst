@@ -53,6 +53,33 @@ resolution      number       The resolution of the sensor in the sensor's unit. 
 =============== ============ ====================================================================================================
 
 
+.. _estimated-semantic-location:
+
+Estimated Semantic Location
+---------------------------
+
+Estimated Semantic Location is semantic location estimated by BearLoc server.
+
+
+**Type**
+
+"estimated semloc"
+
+
+**Keys**
+
+=============== ============ ====================================================================================================
+Key             Value        Description
+=============== ============ ====================================================================================================
+epoch           number       The Unix time in millisecond, defined as the number of milliseconds that have elapsed since 00:00:00.000 Coordinated Universal Time (UTC), Thursday, 1 January 1970, not counting leap seconds. (Example Value: 1387670483532)
+country         string       The name of the country of the location. (Example Value: "US")
+state           string       The name of the state of the location. (Example Value: "CA")
+city            string       The name of the city of the location. (Example Value: "Berkeley")
+street          string       The name of the street of the location. (Example Value: "Leroy Ave")
+building        string       The name of the building of the location. (Example Value: "Soda Hall")
+locale          string       The name of the location. (Example Value: "RADLab Kitchen")
+=============== ============ ====================================================================================================
+
 
 Reported Semantic Location
 --------------------------
@@ -105,46 +132,10 @@ frequency       number       The frequency in MHz of the channel over which the 
 =============== ============ ====================================================================================================
 
 
-audio
+Audio
 -----
 
-Table **audio** stores audio data recorded by the device. Its structure is:
-
-**| uuid TEXT NOT NULL | epoch INTEGER NOT NULL | source TEXT | channel INTEGER NOT NULL | sampwidth INTEGER NOT NULL | framerate INTEGER NOT NULL | nframes INTEGER NOT NULL | raw BLOB NOT NULL |**
-
-with **PRIMARY KEY (uuid, epoch)**.
-
-**source** is the source of audio, such as *MIC* and *CAMCORDER* [`ref <http://developer.android.com/reference/android/media/MediaRecorder.AudioSource.html>`__]. **channel** describes the number of separated streams of audio data. **sampwidth** is the number of bytes per audio sample (a.k.a. frame). **framerate** is the sample rate expressed in Hertz, which indicates the number of sample/frame recorded every second. **nframes** is the number of frames the audio data has.
-
-
-To convert the audio data to wav file, here is an example python codes.
-
-.. code-block:: python
-
-   import wave
-   import sqlite3
-
-   dbpath = 'bearloc.db'
-   wavfpath = 'audio.wav'
-
-   conn = sqlite3.connect(database = dbpath)
-   cur = conn.cursor()
-
-   conn.text_factory = str 
-
-   # extract attributes and store in db
-   operation = "SELECT channel, sampwidth, framerate, nframes, raw FROM audio;"
-   cur.execute(operation)
-   audio = cur.fetchall()
-   (channel, sampwidth, framerate, nframes, raw) = audio[0]
-
-   wavf = wave.open(wavfpath, 'wb')
-   wavf.setnchannels(channel)
-   wavf.setsampwidth(sampwidth)
-   wavf.setframerate(framerate)
-   wavf.setnframes(nframes)
-   wavf.writeframesraw(raw)
-   wavf.close()
+TODO: add audio data description
 
 
 Geographic Coordinate 

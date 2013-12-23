@@ -53,4 +53,4 @@ The server listens to port 10080. We will make the server an plug-in of twisted 
 Set Up Android Programming Environment
 --------------------------------------
 
-To use BearLoc Android library, you need to import BeaLoc library project to your Android IDE. It should work in both `Eclipse <http://www.eclipse.org/>`__ and `Android Studio <http://developer.android.com/sdk/installing/studio.html>`__ (not tested). The details of setting up Android programming environment in Eclipse can be found `here <http://developer.android.com/sdk/installing/installing-adt.html>`__. here `here <http://developer.android.com/tools/projects/index.html>`__.
+To use BearLoc Android library, you need to import BeaLoc library project to your Android IDE. It should work in both `Eclipse <http://www.eclipse.org/>`__ and `Android Studio <http://developer.android.com/sdk/installing/studio.html>`__ (not tested). The details of setting up Android programming environment in Eclipse can be found `here <http://developer.android.com/sdk/installing/installing-adt.html>`__ and `here <http://developer.android.com/tools/projects/index.html>`__.

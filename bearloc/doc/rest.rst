@@ -39,7 +39,7 @@ http://bearloc.cal-sdb.org:20080/api/location/:id
 
 **Return Data**
 
-Return data is an JSON object of an event with type "estimated semloc".
+Return data is :ref:`an event JSON object with type "estimated semloc" <estimated-semantic-location>`.
 
 
 **Example Request**
@@ -87,7 +87,7 @@ http://bearloc.cal-sdb.org:20080/api/location/:id/:epoch
 
 **Return Data**
 
-Return data is an JSON object of an event with type "estimated semloc".
+Return data is :ref:`an event JSON object with type "estimated semloc" <estimated-semantic-location>`.
 
 
 **Example Request**

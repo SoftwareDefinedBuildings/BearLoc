@@ -1,7 +1,7 @@
 Installation
 ============
 
-To setup a BearLoc system, you need to have a running BearLoc server, and user needs an mobile application that uses BearLoc mobile library to talk to BearLoc server. You can also build your own mobile BearLoc client using our server RESTful interface. This part talks about how to setup a server program on your own server, and how to setup Android programming environment to use our BearLoc library. Note that we have one server running 24/7 already, so you only need to know how to develop application with our mobile library in most cases.
+To setup a BearLoc system, you need to have a running BearLoc server, and a client talking to it. We implemented the Anderoid version of client library on top of which you can build your own Android applications. This part talks about how to setup a server, and how to setup Android programming environment to use our BearLoc Android library.
 
 
 Set Up Server

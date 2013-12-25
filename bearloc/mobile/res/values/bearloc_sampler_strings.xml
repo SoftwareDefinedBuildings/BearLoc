@@ -115,7 +115,7 @@
     <string name="bearloc_pref_geoloc_title">Geographic Location</string>
     <string name="bearloc_pref_geoloc_enable_summ">Enable geolocation sampling</string>
     <string name="bearloc_pref_geoloc_enable">Sample GeoLocation</string>
-    <string name="bearloc_default_geoloc_enable">true</string>
+    <string name="bearloc_default_geoloc_enable">false</string>
     <string name="bearloc_pref_geoloc_duration_summ">Max sample duration in milliseconds</string>
     <string name="bearloc_pref_geoloc_duration">Duration</string>
     <string name="bearloc_default_geoloc_duration">1000</string>

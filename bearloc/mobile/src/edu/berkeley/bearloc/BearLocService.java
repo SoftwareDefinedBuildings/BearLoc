@@ -33,6 +33,10 @@
 
 package edu.berkeley.bearloc;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -47,10 +51,12 @@ import org.json.JSONObject;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.widget.Toast;
 import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
+import edu.berkeley.bearloc.util.DeviceUUID;
 import edu.berkeley.bearloc.util.JSONHttpPostTask;
 import edu.berkeley.bearloc.util.JSONHttpPostTask.onJSONHttpPostRespondedListener;
 import edu.berkeley.bearloc.util.ServerSettings;
@@ -58,7 +64,7 @@ import edu.berkeley.bearloc.util.ServerSettings;
 public class BearLocService extends Service implements SemLocService,
         OnSampleEventListener {
 
-    private static final int DATA_SEND_ITVL = 1000; // millisecond
+    private static final int DATA_SEND_ITVL = 60000; // millisecond
 
     private IBinder mBinder;
 
@@ -221,29 +227,39 @@ public class BearLocService extends Service implements SemLocService,
     }
 
     private void sendData() {
-        final String path = "/report";
-        final URL url = getHttpURL(path);
-
         final JSONObject report = mFormat.dump(mCache.get());
         mCache.clear();
 
         if (report.length() > 0) {
             try {
-                new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
-                    @Override
-                    public void onJSONHttpPostResponded(
-                            final JSONObject response) {
-                        if (response == null) {
-                            Toast.makeText(BearLocService.this,
-                                    R.string.bearloc_server_no_respond,
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }).execute(url, report);
-            } catch (final RejectedExecutionException e) {
+                // This will get the SD Card directory and create a folder named
+                // MyFiles in it.
+                final File sdCard = Environment.getExternalStorageDirectory();
+                final File directory = new File(sdCard.getAbsolutePath()
+                        + "/BearLoc");
+                directory.mkdirs();
+
+                // Now create the file in the above directory and write the
+                // contents into it
+                final String fileName = Long.toString(System
+                        .currentTimeMillis()) + ".txt";
+                final File file = new File(directory, fileName);
+                final FileOutputStream fOut = new FileOutputStream(file);
+                final OutputStreamWriter osw = new OutputStreamWriter(fOut);
+                osw.write(report.toString());
+                osw.flush();
+                osw.close();
+
+                Toast.makeText(
+                        this,
+                        "Save to New File " + fileName + "\nUUID"
+                                + DeviceUUID.getDeviceUUID(this),
+                        Toast.LENGTH_SHORT).show();
+            } catch (final IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+
             mHandler.postDelayed(mSendDataTask, mDataSendItvl);
         } else {
             mDataSendItvl = null;
@@ -288,5 +304,24 @@ public class BearLocService extends Service implements SemLocService,
         }
 
         return url;
+    }
+
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        final String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public boolean isExternalStorageReadable() {
+        final String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)
+                || Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
     }
 }

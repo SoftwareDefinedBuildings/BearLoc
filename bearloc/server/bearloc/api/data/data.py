@@ -30,7 +30,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from .interface import IReport
+from .interface import IData
 
 from twisted.internet import defer, reactor
 from zope.interface import implementer
@@ -42,16 +42,16 @@ import array
 import sqlite3
 
 
-@implementer(IReport)
-class Report(object):
-    """Report class"""
+@implementer(IData)
+class Data(object):
+    """Data class"""
 
     def __init__(self, db):
         self._db = db
         self._create_tables()
 
 
-    def report(self, report):
+    def post(self, data):
         """Store reported location and corresponding data.
         """
         reactor.callLater(0, self._insert, report)

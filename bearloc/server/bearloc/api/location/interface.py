@@ -33,10 +33,10 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 from zope.interface import Interface
 
 
-class IMeta(Interface):
-    """Interface of BearLoc Metadata service"""
+class ILocation(Interface):
+    """Interface of BearLoc Localization service"""
 
-    def meta(request):
+    def get(request):
         """
-        Return a deferred returning a dictionary.
+        Return a deferred returning a tuple.
         """

@@ -30,7 +30,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from .interface import IReport
+from .interface import IData
 
 from twisted.web import resource, server
 from twisted.python import log, components
@@ -41,12 +41,12 @@ import httplib
 
 
 @implementer(resource.IResource)
-class ReportResource(resource.Resource):
-    """BearLoc Localize Report web-accessible resource"""
+class DataResource(resource.Resource):
+    """BearLoc Data web-accessible resource"""
 
-    def __init__(self, report):
+    def __init__(self, data):
         resource.Resource.__init__(self)
-        self._report = report
+        self._data = data
 
 
     def getChild(self, path, request):
@@ -71,7 +71,7 @@ class ReportResource(resource.Resource):
             # TODO: handle bad request
             return ""
 
-        d = self._report.report(content)
+        d = self._data.post(content)
         d.addCallback(self._succeed, request)
         d.addErrback(self._fail, request)
 
@@ -100,6 +100,6 @@ class ReportResource(resource.Resource):
         log.msg(request.getHost().host + " lost connection")
 
 
-components.registerAdapter(ReportResource,
-                           IReport,
+components.registerAdapter(DataResource,
+                           IData,
                            resource.IResource)

@@ -31,9 +31,9 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from .interface import IAPI
-from .report.resource import ReportResource
-from .loc.resource import LocResource
-from .meta.resource import MetaResource
+from .data.resource import DataResource
+from .location.resource import LocationResource
+from .candidate.resource import CandidateResource
 
 from twisted.web import resource, server
 from twisted.python import log, components
@@ -50,9 +50,9 @@ class APIResource(resource.Resource):
     def __init__(self, api):
         resource.Resource.__init__(self)
         self._api = api
-        self.putChild('report', ReportResource(self._api.report))
-        self.putChild('localize', LocResource(self._api.loc))
-        self.putChild('meta', MetaResource(self._api.meta))
+        self.putChild('data', DataResource(self._api.data))
+        self.putChild('location', LocationResource(self._api.location))
+        self.putChild('candidate', CandidateResource(self._api.candidate))
 
 
     def getChild(self, path, request):

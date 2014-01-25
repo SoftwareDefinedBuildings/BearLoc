@@ -30,7 +30,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from .interface import IMeta
+from .interface import ICandidate
 
 from twisted.internet import defer, reactor
 from twisted.python import log
@@ -42,9 +42,9 @@ from collections import Counter
 import time
 
 
-@implementer(IMeta)
-class Meta(object):
-    """Meta class"""
+@implementer(ICandidate)
+class Candidate(object):
+    """Candidate class"""
 
     def __init__(self, db):
         self._db = db
@@ -54,7 +54,7 @@ class Meta(object):
         self._sems = ("country", "state", "city", "street", "building", "floor", "room")
 
 
-    def meta(self, request):
+    def get(self, request):
         """Handle metadata request
 
         Return deferred that returns {semantic: [locations]}

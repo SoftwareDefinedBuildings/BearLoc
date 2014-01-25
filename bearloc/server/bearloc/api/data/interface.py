@@ -33,10 +33,10 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 from zope.interface import Interface
 
 
-class IReport(Interface):
+class IData(Interface):
     """Interface of BOSS Localization Report service"""
 
-    def report(report):
+    def post(data):
         """
         Return a deferred returning a boolean.
         """

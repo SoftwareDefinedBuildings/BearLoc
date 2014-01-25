@@ -30,7 +30,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from .interface import IMeta
+from .interface import ICandidate
 
 from twisted.web import resource, server
 from twisted.python import log, components
@@ -41,12 +41,12 @@ import httplib
 
 
 @implementer(resource.IResource)
-class MetaResource(resource.Resource):
-    """BearLoc Metadata web-accessible resource"""
+class CandidateResource(resource.Resource):
+    """BearLoc Candidate web-accessible resource"""
 
-    def __init__(self, meta):
+    def __init__(self, candidate):
         resource.Resource.__init__(self)
-        self._meta = meta
+        self._candidate = candidate
 
 
     def getChild(self, path, request):
@@ -71,7 +71,7 @@ class MetaResource(resource.Resource):
             # TODO: handle bad request
             return ""
 
-        d = self._meta.meta(content)
+        d = self._candidate.get(content)
         d.addCallback(self._succeed, request)
         d.addErrback(self._fail, request)
 
@@ -100,6 +100,6 @@ class MetaResource(resource.Resource):
         log.msg(request.getHost().host + " lost connection")
 
 
-components.registerAdapter(MetaResource,
-                           IMeta,
+components.registerAdapter(CandidateResource,
+                           ICandidate,
                            resource.IResource)

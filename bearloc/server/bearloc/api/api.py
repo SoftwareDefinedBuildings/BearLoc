@@ -31,9 +31,9 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from .interface import IAPI
-from .report.report import Report
-from .loc.loc import Loc
-from .meta.meta import Meta
+from .data.data import Data
+from .location.location import Location
+from .candidate.candidate import Candidate
 
 from twisted.application import service
 from twisted.internet import defer
@@ -47,6 +47,6 @@ class API(object):
 
     def __init__(self, db):
     	self._db = db
-        self.report = Report(self._db) # Report.__init__() create and write all data tables
-        self.loc = Loc(self._db)
-        self.meta = Meta(self._db)
+        self.data = Data(self._db) # Data.__init__() create and write all data tables
+        self.location = Location(self._db)
+        self.candidate = Candidate(self._db)

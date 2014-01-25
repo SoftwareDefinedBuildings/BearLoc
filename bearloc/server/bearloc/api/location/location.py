@@ -32,7 +32,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from .interface import ILoc
+from .interface import ILocation
 
 from twisted.internet import defer, reactor
 from twisted.python import log
@@ -46,8 +46,8 @@ import bisect
 import itertools
 
 
-@implementer(ILoc)
-class Loc(object):
+@implementer(ILocation)
+class Location(object):
     """Loc class"""
 
     def __init__(self, db):

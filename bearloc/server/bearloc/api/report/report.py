@@ -30,7 +30,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from bearloc.report.interface import IReport
+from .interface import IReport
 
 from twisted.internet import defer, reactor
 from zope.interface import implementer

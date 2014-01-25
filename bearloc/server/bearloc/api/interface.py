@@ -33,5 +33,5 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 from zope.interface import Interface
 
 
-class IBearLoc(Interface):
-    """Interface of BearLoc service"""
+class IAPI(Interface):
+    """Interface of API"""

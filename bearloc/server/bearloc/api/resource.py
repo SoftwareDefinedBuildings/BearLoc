@@ -30,7 +30,10 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from bearloc.loc.interface import ILoc
+from .interface import IAPI
+from .report.resource import ReportResource
+from .loc.resource import LocResource
+from .meta.resource import MetaResource
 
 from twisted.web import resource, server
 from twisted.python import log, components
@@ -41,12 +44,15 @@ import httplib
 
 
 @implementer(resource.IResource)
-class LocResource(resource.Resource):
-    """BearLoc Localize web-accessible resource"""
+class APIResource(resource.Resource):
+    """BearLoc API web-accessible resource"""
 
-    def __init__(self, loc):
+    def __init__(self, api):
         resource.Resource.__init__(self)
-        self._loc = loc
+        self._api = api
+        self.putChild('report', ReportResource(self._api.report))
+        self.putChild('localize', LocResource(self._api.loc))
+        self.putChild('meta', MetaResource(self._api.meta))
 
 
     def getChild(self, path, request):
@@ -57,49 +63,9 @@ class LocResource(resource.Resource):
 
 
     def render_GET(self, request):
-        return  self.__doc__ + ": POST JSON to me!"
+        return self.__doc__
 
 
-    def render_POST(self, request):
-        """POST localization request"""
-        log.msg("Received localization request from " + request.getHost().host)
-
-        request.setHeader('Content-type', 'application/json')
-        try:
-            content = json.load(request.content)
-        except:
-            # TODO: handle bad request
-            return ""
-
-        d = self._loc.localize(content)
-        d.addCallback(self._succeed, request)
-        d.addErrback(self._fail, request)
-
-        # cancel localize deferred if the connection is lost before it fires
-        request.notifyFinish().addErrback(self._cancel, d, request)
-
-        return server.NOT_DONE_YET
-
-
-    def _succeed(self, semlocinfo, request):
-        request.setResponseCode(httplib.OK)
-        request.write(json.dumps(semlocinfo))
-        request.finish()
-        log.msg(request.getHost().host + " is localized")
-
-
-    def _fail(self, err, request):
-        if err.check(defer.CancelledError):
-            log.msg(request.getHost().host + " localization canceled")
-        else:
-            pass
-
-
-    def _cancel(self, err, deferred, request):
-        deferred.cancel()
-        log.msg(request.getHost().host + " lost connection")
-
-
-components.registerAdapter(LocResource,
-                           ILoc,
+components.registerAdapter(APIResource,
+                           IAPI,
                            resource.IResource)

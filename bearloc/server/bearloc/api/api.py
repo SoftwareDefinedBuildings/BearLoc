@@ -30,8 +30,23 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from zope.interface import Interface
+from .interface import IAPI
+from .report.report import Report
+from .loc.loc import Loc
+from .meta.meta import Meta
+
+from twisted.application import service
+from twisted.internet import defer
+from zope.interface import implementer
+import sqlite3
 
 
-class IBearLoc(Interface):
-    """Interface of BearLoc service"""
+@implementer(IAPI)
+class API(object):
+    """API"""
+
+    def __init__(self, db):
+    	self._db = db
+        self.report = Report(self._db) # Report.__init__() create and write all data tables
+        self.loc = Loc(self._db)
+        self.meta = Meta(self._db)

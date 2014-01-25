@@ -30,10 +30,8 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from bearloc.interface import IBearLocService
-from bearloc.report.report import Report
-from bearloc.loc.loc import Loc
-from bearloc.meta.meta import Meta
+from .interface import IBearLoc
+from .api.api import API
 
 from twisted.application import service
 from twisted.internet import defer
@@ -41,21 +39,10 @@ from zope.interface import implementer
 import sqlite3
 
 
-@implementer(IBearLocService)
-class BearLocService(service.Service):
+@implementer(IBearLoc)
+class BearLoc(service.Service):
     """BearLoc service"""
 
-    def __init__(self, db, content):
-        self._db = sqlite3.connect(database = db)  # No need to use aync DB for now
-        self._content = content
-
-        if 'report' in self._content:
-            self.report = Report(self._db) # Report.__init__() create and write all data tables
-        if 'localize' in self._content:
-            self.loc = Loc(self._db)
-        if 'meta' in self._content:
-            self.meta = Meta(self._db)
-
-
-    def content(self):
-        return self._content
+    def __init__(self, dbname):
+        self._db = sqlite3.connect(database = dbname)  # TODO: use MongoDB
+        self.api = API(self._db)

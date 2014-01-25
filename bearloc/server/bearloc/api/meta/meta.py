@@ -30,7 +30,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from bearloc.meta.interface import IMeta
+from .interface import IMeta
 
 from twisted.internet import defer, reactor
 from twisted.python import log

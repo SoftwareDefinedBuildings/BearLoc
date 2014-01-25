@@ -33,12 +33,12 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 from twisted.application import internet, service
 from twisted.web import resource, server
 
-from bearloc.service import BearLocService
+from bearloc.bearloc import BearLoc
 import bearloc.resource
 
 
 application = service.Application('bearloc')
-bearloc = BearLocService(db="bearloc.db", content=['report', 'localize', 'meta'])
+bearloc = BearLoc(dbname="bearloc.db")
 serviceCollection = service.IServiceCollection(application)
 # HTTP service
 site = server.Site(resource.IResource(bearloc))

@@ -30,7 +30,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from bearloc.meta.interface import IMeta
+from .interface import IMeta
 
 from twisted.web import resource, server
 from twisted.python import log, components
@@ -57,7 +57,7 @@ class MetaResource(resource.Resource):
 
 
     def render_GET(self, request):
-        return  self.__doc__ + ": POST JSON to me!"
+        return  self.__doc__
 
 
     def render_POST(self, request):

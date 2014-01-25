@@ -1,5 +1,5 @@
-Android App Interface
-=====================
+Android Library Interface
+=========================
 
 BearLoc has an Android library that takes care of all communication and data collection, providing simple interfaces for Android applications using an Android service [`ref <http://developer.android.com/guide/components/services.html>`__]. This section describes how to build your application using BearLoc Android library.
 
@@ -30,7 +30,7 @@ Your application needs to bind to BearLocService in order to use it. The details
    };
 
 
-After doing this in your application's Activity or Service, you can access the functionalies that BearLocService provides indicated in interface **SemLocService**, which is introduced in following part. Quick examples of calling BealocService are as follows.
+After doing this in your application's Activity or Service, you can access the functionalities that BearLocService provides indicated in interface **SemLocService**, which is introduced in following part. Quick examples of calling BealocService are as follows.
 
 .. code-block:: java
 
@@ -70,7 +70,7 @@ There is one method
 
    public abstract void onSemLocInfoReturned(JSONObject semLocInfo);
 
-in this interface, which will be called by BearLocService when location is returned by localziation service, and the parameter semLocInfo contains all the information of returned semantic location. 
+in this interface, which will be called by BearLocService when location is returned by localization service, and the parameter semLocInfo contains all the information of returned semantic location. 
 
 **semLocInfo** is a **JSONObject** [`ref1 <http://www.json.org/>`__, `ref2 <http://developer.android.com/reference/org/json/JSONObject.html>`__], which has following structure (as an example). 
 
@@ -131,6 +131,7 @@ in this interface, which will be called by BearLocService when location is retur
            }
          }
        }
+     }
    }
 
 
@@ -173,7 +174,7 @@ in this interface, which will be called by BearLocService when metadata is retur
    }
 
 
-In each semantic, it is a list of all known locations on server that are under the same semantic and **location context** of the semantic location that your application provides. **Location context** means the list of locations that are under the semantics that are higher than the semantic of the location your are talking about (targeting) in the semantic tree. For example, **["US", "CA", "Berkeley", "Leroy Ave"]** is the location context of **"Soda Hall"**, but not the location context of "Floor 4" or "Cory Hall". A location context and location consist of one concrete location on the world.
+In each semantic, it is a list of all known locations on server that are siblings of the give semantic location from your application. 
 
 
 
@@ -201,7 +202,7 @@ The first method is for localization request.
    public abstract boolean localize(SemLocListener listener);
 
 
-Your application can call it after binding to BearLocServie as we described above. When calling this methid, you should pass an instance of **SemLocListener** to it. The method **onSemLocInfoReturned** in SemLocListener will be called when the location is returned from server.
+Your application can call it after binding to BearLocServie as we described above. When calling this method, you should pass an instance of **SemLocListener** to it. The method **onSemLocInfoReturned** in SemLocListener will be called when the location is returned from server.
 
 This ``localize`` method returns a boolean indicating whether it successfully scheduled a localization request for caller. If it returns **true**, then **onSemLocInfoReturned** is guaranteed to be called later for this localization request. If it returns **false**, then **onSemLocInfoReturned** is guaranteed NOT to be called later for this localization request.
 
@@ -216,7 +217,7 @@ The second method is used for reporting your current location.
    public abstract boolean report(JSONObject semloc);
 
 
-Your application must try best to ensure this **semloc** is correct locaton, such as taking the semantic location from user input.
+Your application must try best to ensure this **semloc** is correct location, such as taking the semantic location from user input.
 
 **semloc** is an **JSONObject**. As an exmaple, the structure of **semloc** should be
 
@@ -233,7 +234,7 @@ Your application must try best to ensure this **semloc** is correct locaton, suc
    }
 
 
-It is not required to include all semantics in the **semloc**, but semantics in **semloc** has to start from top-level semantic all the way fown to the lowest-level semantic in your **semloc**. In other words, **semloc** cannot have hole in its semantics. For example, if your application is sure the device is in building *Soda Hall*, but not sure which floor and room it is, then it can just call ``report`` with **semloc**
+It is not required to include all semantics in the **semloc**, but semantics in **semloc** has to start from top-level semantic all the way down to the lowest-level semantic in your **semloc**. In other words, **semloc** cannot have hole in its semantics. For example, if your application is sure the device is in building *Soda Hall*, but not sure which floor and room it is, then it can just call ``report`` with **semloc**
 
 .. code-block:: json
 
@@ -256,6 +257,18 @@ But it cannot report **semloc**
 
 
 Intuitively this requirement is valid, because the user should know the locations in the higher semantics. Like she/he must know *Soda Hall* is in *Berkeley* and on *Leroy Ave*. Otherwise it is not possible for our system to distinguish another possible *Soda Hall* at some other place in the world.
+
+
+meta
+""""
+The third method is to get metadata of a semantic location.
+
+.. code-block:: java
+
+   public abstract boolean meta(JSONObject semloc, MetaListener listener);
+
+
+The **semloc** you should pass to ``meta`` has the same restrictions as the ``report``. And the returned **meta** in MetaListener is described before in MetaListener section.
 
 
 Utilities

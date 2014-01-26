@@ -36,7 +36,7 @@ from zope.interface import Interface
 class IData(Interface):
     """Interface of BOSS Localization Report service"""
 
-    def post(data):
+    def add(data):
         """
         Return a deferred returning a boolean.
         """

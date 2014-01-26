@@ -71,7 +71,7 @@ class DataResource(resource.Resource):
             self._client_error(request, http.BAD_REQUEST, "400 Bad Request")
             return server.NOT_DONE_YET
 
-        d = self._data.post(content)
+        d = self._data.add(content)
         d.addCallback(self._succeed, request)
         d.addErrback(self._fail, request)
 
@@ -92,7 +92,7 @@ class DataResource(resource.Resource):
         if err.check(defer.CancelledError):
             log.msg(request.getHost().host + " report canceled")
         else:
-            pass
+            self._client_error(request, http.BAD_REQUEST, "400 Bad Request")
 
 
     def _cancel(self, err, deferred, request):

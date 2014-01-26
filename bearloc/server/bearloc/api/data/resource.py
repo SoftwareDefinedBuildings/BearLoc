@@ -32,12 +32,11 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .interface import IData
 
-from twisted.web import resource, server
+from twisted.web import resource, server, http
 from twisted.python import log, components
 from twisted.internet import defer
 from zope.interface import implementer
 import simplejson as json
-import httplib
 
 
 @implementer(resource.IResource)
@@ -61,15 +60,16 @@ class DataResource(resource.Resource):
 
 
     def render_POST(self, request):
-        """POST localization report"""
-        log.msg("Received report from " + request.getHost().host)
+        """POST data"""
+        log.msg("Received data from " + request.getHost().host)
 
         request.setHeader('Content-type', 'application/json')
         try:
             content = json.load(request.content)
         except:
-            # TODO: handle bad request
-            return ""
+            # handle bad request
+            self._client_error(request, http.BAD_REQUEST, "400 Bad Request")
+            return server.NOT_DONE_YET
 
         d = self._data.post(content)
         d.addCallback(self._succeed, request)
@@ -82,7 +82,7 @@ class DataResource(resource.Resource):
 
 
     def _succeed(self, response, request):
-        request.setResponseCode(httplib.OK)
+        request.setResponseCode(http.OK)
         request.write(json.dumps(response))
         request.finish()
         log.msg(request.getHost().host + " reported")
@@ -98,6 +98,14 @@ class DataResource(resource.Resource):
     def _cancel(self, err, deferred, request):
         deferred.cancel()
         log.msg(request.getHost().host + " lost connection")
+
+
+    def _client_error(self, request, status, content, mimetype='text/plain'):
+        request.setResponseCode(status)
+        request.setHeader("Content-Type", mimetype)
+        request.setHeader("Content-Length", str(len(content)))
+        request.write(content)
+        request.finish()
 
 
 components.registerAdapter(DataResource,

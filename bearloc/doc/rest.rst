@@ -26,7 +26,7 @@ Returns the semantic location (and its epoch time) of device with specified id p
 
 **Resource URL**
 
-http://bearloc.cal-sdb.org:20080/api/location/:id[/:epoch]
+http://bearloc.cal-sdb.org:10080/api/location/:id[/:epoch]
 
 
 **Parameters**
@@ -45,7 +45,7 @@ Return data is :ref:`an event JSON object with type "estimated semloc" <estimate
 **Example Request**
 
 ========================== ====================================================================================================
-GET                        http://bearloc.cal-sdb.org:20080/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66
+GET                        http://bearloc.cal-sdb.org:10080/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66
 Return Data                *(See Below)*
 ========================== ====================================================================================================
 
@@ -86,7 +86,7 @@ Add new sensor data of device with specified id parameter.
 
 **Resource URL**
 
-http://bearloc.cal-sdb.org:20080/api/data/:id
+http://bearloc.cal-sdb.org:10080/api/data/:id
 
 
 **Parameters**
@@ -109,7 +109,7 @@ Return data is an JSON object with keys **"reported"** and **"accepted"**. "repo
 **Example Request**
 
 ========================== ====================================================================================================
-POST                       http://bearloc.cal-sdb.org:20080/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66
+POST                       http://bearloc.cal-sdb.org:10080/api/location/1d352410-4a5e-11e3-8f96-0800200c9a66
 POST Data                  *(See Below)*
 ========================== ====================================================================================================
 
@@ -213,7 +213,7 @@ Returns the list of candidate locations in the lowest level of specified paramet
 
 **Resource URL**
 
-http://bearloc.cal-sdb.org:20080/api/candidate/[:country/[:state/[:city/[:street/[:building]]]]]
+http://bearloc.cal-sdb.org:10080/api/candidate/[:country/[:state/[:city/[:street/[:building]]]]]
 
 
 **Parameters**
@@ -235,7 +235,7 @@ Return data is an JSON array of strings of names of candidate locations.
 **Example Request**
 
 ========================== ===================================================================================================================================
-GET                        http://bearloc.cal-sdb.org:20080/api/candidate/US/CA/Berkeley/Leroy%20Ave/Soda%20Hall/
+GET                        http://bearloc.cal-sdb.org:10080/api/candidate/US/CA/Berkeley/Leroy%20Ave/Soda%20Hall/
 Return Data                *(See Below)*
 ========================== ===================================================================================================================================
 
@@ -254,7 +254,7 @@ Return Data                *(See Below)*
 **Example Request**
 
 ========================== ===================================================================================================================================
-GET                        http://bearloc.cal-sdb.org:20080/api/candidate/US/CA/Berkeley
+GET                        http://bearloc.cal-sdb.org:10080/api/candidate/US/CA/Berkeley
 Return Data                *(See Below)*
 ========================== ===================================================================================================================================
 

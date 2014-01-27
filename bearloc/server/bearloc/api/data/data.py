@@ -48,7 +48,7 @@ class Data(object):
 
     def __init__(self, db):
         self._db = db
-        self._data = db.data
+        self._data = self._db.data
 
 
     def add(self, data):

@@ -48,56 +48,33 @@ class Candidate(object):
 
     def __init__(self, db):
         self._db = db
+        self._data = self._db.data
 
-        # semantics list should be compatible with semantic tree in loc.py
         # hardcoded here
-        self._sems = ("country", "state", "city", "street", "building", "floor", "room")
+        self._sems = ("country", "state", "city", "street", "building", "locale")
 
 
     def get(self, request):
-        """Handle metadata request
+        """Handle candidate request, which is a list of locations
 
-        Return deferred that returns {semantic: [locations]}
+        Return deferred that returns [locations]
         """
         d = defer.Deferred()
-        reactor.callLater(0, self._meta, request, d)
+        reactor.callLater(0, self._get, request, d)
 
         return d
 
 
-    def _meta(self, request, d):
-        semloc = request.get("semloc")
-
-        country = self._locs(semloc, "country")
-        state = self._locs(semloc, "state")
-        city = self._locs(semloc, "city")
-        street = self._locs(semloc, "street")
-        building = self._locs(semloc, "building")
-        floor = self._locs(semloc, "floor")
-        room = self._locs(semloc, "room")
-
-        meta = {"country":country, "state":state, "city":city, "street":street, "building":building, \
-                "floor":floor, "room":room}
-
-        d.callback(meta)
-
-
-    def _locs(self, semloc, targetsem):
-        """Get list of locations under targetsem and semloc"""
-        cur = self._db.cursor()
-
-        condsems = self._sems[0:self._sems.index(targetsem)]
-        # if semloc miss some consems, we return empty list
-        if all([sem in semloc for sem in condsems]):
-            operation = "SELECT DISTINCT " + targetsem + " FROM " + "semloc"
-            conds = [sem+"='"+semloc[sem]+"'" for sem in condsems]
-            if conds:
-                operation += " WHERE " + " AND ".join(conds) + " AND " + targetsem + " IS NOT NULL"
-            else:
-                operation += " WHERE " + targetsem + " IS NOT NULL"
-            cur.execute(operation)
-            siblings = [x[0] for x in cur.fetchall()]
-
-            return siblings
+    def _get(self, request, d):
+        query_loc = zip(self._sems, request)
+        if len(query_loc) == len(self._sems):
+            # query is down to locale
+            candidate = []
         else:
-            return []
+            target_sem = self._sems[len(query_loc)]
+            query = {sem: loc for sem, loc in query_loc}
+            query['type'] = 'reported semloc'
+            result = self._data.find(query)
+            candidate = tuple(set([doc[target_sem] for doc in result if target_sem in doc]))
+
+        d.callback(candidate)

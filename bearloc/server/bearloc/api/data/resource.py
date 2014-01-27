@@ -51,8 +51,7 @@ class DataResource(resource.Resource):
     def getChild(self, path, request):
         if path == '':
             return self
-        else:
-            return resource.Resource.getChild(self, path, request)
+        return resource.Resource.getChild(self, path, request)
 
 
     def render_GET(self, request):

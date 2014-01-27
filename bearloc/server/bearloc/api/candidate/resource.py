@@ -50,54 +50,66 @@ class CandidateResource(resource.Resource):
 
 
     def getChild(self, path, request):
-        if path == '':
-            return self
-        else:
-            return resource.Resource.getChild(self, path, request)
+        log.msg("Received candidate request from " + request.getHost().host)
+        query = [path,] if path else []
+        return self._CandidatePage(query, self._candidate)
 
 
     def render_GET(self, request):
         return  self.__doc__
+    
+
+    class _CandidatePage(resource.Resource):
+
+        def __init__(self, query, candidate):
+            resource.Resource.__init__(self)
+            self._query = query
+            self._candidate = candidate
 
 
-    def render_POST(self, request):
-        """POST metadata request"""
-        log.msg("Received metadata request from " + request.getHost().host)
+        def getChild(self, path, request):
+            if path == '':
+                return self
 
-        request.setHeader('Content-type', 'application/json')
-        try:
-            content = json.load(request.content)
-        except:
-            # TODO: handle bad request
-            return ""
-
-        d = self._candidate.get(content)
-        d.addCallback(self._succeed, request)
-        d.addErrback(self._fail, request)
-
-        # cancel meta deferred if the connection is lost before it fires
-        request.notifyFinish().addErrback(self._cancel, d, request)
-
-        return server.NOT_DONE_YET
+            query = self._query + [path,]
+            return self._instance(query, self._candidate) 
 
 
-    def _succeed(self, meta, request):
-        request.setResponseCode(httplib.OK)
-        request.write(json.dumps(meta))
-        request.finish()
-        log.msg(request.getHost().host + " metadata request returned")
+        def render_GET(self, request):
+            request.setHeader('Content-type', 'application/json')
+            d = self._candidate.get(self._query)
+            d.addCallback(self._succeed, request)
+            d.addErrback(self._fail, request)
+
+            # cancel candidate deferred if the connection is lost before it fires
+            request.notifyFinish().addErrback(self._cancel, d, request)
+
+            return server.NOT_DONE_YET
 
 
-    def _fail(self, err, request):
-        if err.check(defer.CancelledError):
-            log.msg(request.getHost().host + " metadata request canceled")
-        else:
-            pass
+        @classmethod
+        def _instance(cls, query, candidate):
+            return cls(query, candidate)
 
 
-    def _cancel(self, err, deferred, request):
-        deferred.cancel()
-        log.msg(request.getHost().host + " lost connection")
+        def _succeed(self, candidate, request):
+            request.setResponseCode(httplib.OK)
+            request.write(json.dumps(candidate))
+            request.finish()
+            log.msg(request.getHost().host + " candidate request returned")
+
+
+        def _fail(self, err, request):
+            if err.check(defer.CancelledError):
+                log.msg(request.getHost().host + " candidate request canceled")
+            else:
+                # TODO: handle error
+                pass
+
+
+        def _cancel(self, err, deferred, request):
+            deferred.cancel()
+            log.msg(request.getHost().host + " lost connection")
 
 
 components.registerAdapter(CandidateResource,

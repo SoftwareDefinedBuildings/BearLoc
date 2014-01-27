@@ -205,26 +205,25 @@ Resource                                                                        
 
 .. _get-candidate-country:
 
-GET candidate/:country[/:state[/:city[/:street[/:building[/:locale]]]]]
+GET candidate/[:country/[:state/[:city/[:street/[:building]]]]]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Returns the list of candidate locations at the lowest level of specified parameter.
+Returns the list of candidate locations in the lowest level of specified parameter.
 
 
 **Resource URL**
 
-http://bearloc.cal-sdb.org:20080/api/candidate/:country[/:state[/:city[/:street[/:building[/:locale]]]]]
+http://bearloc.cal-sdb.org:20080/api/candidate/[:country/[:state/[:city/[:street/[:building]]]]]
 
 
 **Parameters**
 
 =============================== ===================================================================================================================================
-**country** *(required)*        The string of name of the country of the query location. (Example Value: "US")
+**country** *(optional)*        The string of name of the country of the query location. (Example Value: "US")
 **state** *(optional)*          The string of name of the state of the query location. (Example Value: "CA")
 **city** *(optional)*           The string of name of the state of the query location. (Example Value: "Berkeley")
 **street** *(optional)*         The string of name of the state of the query location. (Example Value: "Leroy Ave")
 **building** *(optional)*       The string of name of the state of the query location. (Example Value: "Soda Hall")
-**locale** *(optional)*         The string of name of the state of the query location. (Example Value: "494")
 =============================== ===================================================================================================================================
 
 
@@ -236,7 +235,7 @@ Return data is an JSON array of strings of names of candidate locations.
 **Example Request**
 
 ========================== ===================================================================================================================================
-GET                        http://bearloc.cal-sdb.org:20080/api/candidate/US/CA/Berkeley/Leroy%20Ave/Soda%20Hall/494
+GET                        http://bearloc.cal-sdb.org:20080/api/candidate/US/CA/Berkeley/Leroy%20Ave/Soda%20Hall/
 Return Data                *(See Below)*
 ========================== ===================================================================================================================================
 

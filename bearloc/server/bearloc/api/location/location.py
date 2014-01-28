@@ -44,310 +44,163 @@ import collections
 import time
 import bisect
 import itertools
+import pymongo
 
 
 @implementer(ILocation)
 class Location(object):
-    """Loc class"""
+    """Location class"""
 
     def __init__(self, db):
         self._db = db
-        self._train_interval = 30*60 # in second
+        self._data = self._db.data
 
-        self._clf_infos = {} # classifiers {(semloc, semantic): {"clf": clf, ...}}
+        self._train_itvl = 60*60 # in second
+        reactor.callLater(0, self._train)
 
-        self._geoloc_train_epoch_thld = 60*60*1000 # in ms, 1 hour
-        self._geoloc_predict_epoch_thld = 60*60*1000 # in ms, 1 hour
+        self._clf = None
+        self._bssids = None
         self._wifi_minrssi = -150
-        self._wifi_train_epoch_thld = 2000 # ms
+        self._wifi_min_itvl = 500
+        self._wifi_max_itvl = 2000
+        self._wifi_train_epoch_thld = 5000 # ms
         self._wifi_predict_epoch_thld = 5000 # ms
 
-        # semantics list should be compatible with semantic tree in loc.py
-        # hardcoded here
-        self._sems = ("country", "state", "city", "street", "building", "floor", "room")
+        # hardcoded
+        self._sems = ("country", "state", "city", "street", "building", "locale")
 
 
-    def localize(self, request):
-        """Execute localization service, which fuses results of multiple
-        localization services.
+    def get(self, query):
+        """Execute localization service.
 
-        Return {semloc: {semantic: loc} dict, alter: {semantic: {alternative location: confidence}}, sem: tree of semantic}
+        Return {semantic: location}
         """
         d = defer.Deferred()
-        reactor.callLater(0, self._localize, request, d)
+        reactor.callLater(0, self._get, query, d)
 
         return d
 
 
     # Maybe it is good to make this block to ensure fast response
-    def _localize(self, request, d):
-        device = request.get('device')
-        uuid = device.get('uuid') if device != None else None
-        locepoch = request.get('epoch')
+    def _get(self, query, d):
+        if not query or len(query) >= 3:
+            # TODO: more error info can be passed here
+            d.errback(Exception())
 
-        semloc = {}
-        alter = {}
-        if uuid != None and locepoch != None :
-            for sem in self._sems:
-                if self._predict(uuid, locepoch, (semloc, alter), sem) == False:
-                    break
+        query_id = query[0]
+        query_epoch = int(query[1]) if len(query) == 2 else time.time() * 1000
 
-        semlocinfo = self._aggr(semloc, alter)
+        est_loc = self._predict(query_id, query_epoch)
 
-        d.callback(semlocinfo)
+        d.callback(est_loc)
 
 
-    def _predict(self, uuid, locepoch, (semloc, alter), targetsem):
-        clf_info = self._clf_infos.get((frozenset(semloc.items()), targetsem))
-        if clf_info != None:
-            if targetsem not in ("floor", "room"):
-                (loc, alter_locs) = self._predict_geoloc(uuid, locepoch, clf_info)
-            else:
-                (loc, alter_locs) = self._predict_wifi(uuid, locepoch, clf_info)
+    def _predict(self, query_id, query_epoch):
+        est_loc = self._predict_wifi(query_id, query_epoch)
 
-            if loc != None and alter_locs != None:
-                semloc[targetsem] = loc
-                alter[targetsem] = alter_locs
-                return True
-
-        return False
+        return est_loc
 
 
-    def _predict_geoloc(self, uuid, locepoch, clf_info):
-        clf = clf_info["clf"]
+    def _predict_wifi(self, query_id, query_epoch):
+        if self._clf == None or self._bssids == None:
+            return None
 
-        cur = self._db.cursor()
-        # extract attributes and store in db
-        operation = "SELECT longitude, latitude FROM " + "geoloc" + \
-                    " WHERE uuid='" + str(uuid) + "'" + \
-                    " AND ABS(epoch-" + str(locepoch) + ") <= " + \
-                    str(self._geoloc_predict_epoch_thld) + \
-                    " ORDER BY ABS(epoch-" + str(locepoch) + ")" + \
-                    " LIMIT 1"
-        cur.execute(operation)
-        geoloc = cur.fetchall()
+        query = {'id': query_id}
+        query['epoch'] = {'$exists': True, '$type': 18, '$lte': query_epoch + self._wifi_predict_epoch_thld, '$gte': query_epoch - self._wifi_predict_epoch_thld} # type 18: 64-bit integer
+        query['BSSID'] = {'$exists': True, '$type': 2} # type 2: String
+        query['RSSI'] = {'$exists': True, '$type': 1, '$lt': 0} # type 1: Double
+        query['type'] = 'wifi'
 
-        if len(geoloc) == 0:
-            return (None, None)
+        wifis = [doc for doc in self._data.find(query).sort('epoch', pymongo.ASCENDING)] # 1: sort ascending
 
-        data = np.array(geoloc)
+        if len(wifis) == 0:
+            query['epoch'] = {'$exists': True, '$type': 18} # type 18: 64-bit integer
+            wifis = [doc for doc in self._data.find(query).sort('epoch', pymongo.DESCENDING).limit(50)] # 1: sort ascending
 
-        locations = clf.predict(data)
-        count = collections.Counter(locations)
-        location = count.most_common(1)[0][0]
-        alter = {loc: float(cnt)/len(locations) for loc, cnt in count.items()}
-        return (location, alter)
+            if len(wifis) == 0:
+                return None
 
+            query_epoch = wifis[0]['epoch']
 
-    def _predict_wifi(self, uuid, locepoch, clf_info):
-        bssids = clf_info["bssids"]
-        clf = clf_info["clf"]
+        self._wifi_calibrate_epoch(wifis)
 
-        cur = self._db.cursor()
-        # extract attributes and store in db
-        operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM " + "wifi" + \
-                    " WHERE uuid='" + str(uuid) + "'" + \
-                    " AND ABS(epoch-" + str(locepoch) + ") <= " + \
-                    str(self._wifi_predict_epoch_thld)
-        cur.execute(operation)
-        wifi = cur.fetchall()
-
-        if len(wifi) == 0:
-            return (None, None)
-
-        epochs = list(set(map(lambda x: x[0], wifi)))
+        epochs = list(set(map(lambda x: x['epoch'], wifis)))
         # sigs: {BSSID: RSSI}
         # TODO use itertools gourpby
-        sigs = [{w[1]: w[2] for w in wifi if w[0]==epoch} for epoch in epochs]
-        data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
+        sigs = [{w['BSSID']: w['RSSI'] for w in wifis if w['epoch']==epoch} for epoch in epochs]
+        data = [[sig.get(bssid, self._wifi_minrssi) for bssid in self._bssids] for sig in sigs]
         data = np.array(data)
 
-        locations = clf.predict(data)
+        locations = self._clf.predict(data)
         count = collections.Counter(locations)
         location = count.most_common(1)[0][0]
-        alter = {loc: float(cnt)/len(locations) for loc, cnt in count.items()}
-        return (location, alter)
+        location = eval(location) # should be evaluated as a dictionary
+        location['epoch'] = query_epoch
+        location['id'] = query_id
+        location['type'] = "estimated semloc"
+        return location
 
 
-    def _aggr(self, semloc, alter):
-        sem = self._sem()
-        semlocinfo = {"semloc": semloc, "alter": alter, "sem": sem}
-        return semlocinfo
-
-
-    def _sem(self):
-        # Kepp semantic tree linear, it is too much hassles to deal with different branches
-        # hardcoded here
-        sem = self._tree()
-        sem["country"]["state"]["city"]["street"]["building"]["floor"]["room"]
-        return sem
-
-
-    def _tree(self):
-        """Autovivification of tree.
-        ref http://recursive-labs.com/blog/2012/05/31/one-line-python-tree-explained/
-        """
-        return defaultdict(self._tree)
-
-
-    @defer.inlineCallbacks
-    def _train_all(self):
-        """Train model for all semantic."""
+    def _train(self):
+        """Train model."""
         # TODO online/incremental training
         log.msg("Started Loc training")
 
-        condsemlocs = [{}]
-        for sem in self._sems:
-            condsemlocs = yield self._train(condsemlocs, sem)
-            if len(condsemlocs) == 0:
-                break
+        self._train_wifi()
 
         # Only schedule next training task when this one finishes
-        reactor.callLater(self._train_interval, self._train_all)
+        reactor.callLater(self._train_itvl, self._train)
 
         log.msg("Stopped Loc training")
+        print self._clf
 
 
-    def _train(self, condsemlocs, targetsem):
-        """Build model for sem under conditional sems and semlocs.
+    def _train_wifi(self):
+        # only interested in location detailed in locale
+        query = {'id': {'$exists': True}}
+        query = {sem:{'$exists': True, '$type': 2} for sem in self._sems} # type 2: String
+        query['epoch'] = {'$exists': True, '$type': 18} # type 18: 64-bit integer
+        query['type'] = 'reported semloc'
+        all_locations = [doc for doc in self._data.find(query)]
+        device_ids = tuple(set([doc['id'] for doc in all_locations]))
 
-        return new conditional semlocs for lower level."""
-        cur = self._db.cursor()
-        operation = "SELECT DISTINCT uuid FROM device;"
-        cur.execute(operation)
-        uuids = cur.fetchall()
-
-        condsems = self._sems[0:self._sems.index(targetsem)]
-
-        new_condsemlocs = []
-
-        for condsemloc in condsemlocs:
-            if not all(condsem in condsemloc for condsem in condsems):
-                continue
-
-            uuidlocations = {}
-            for uuid, in uuids:
-                cur = self._db.cursor()
-                # extract locations stored in db
-                operation = "SELECT DISTINCT epoch, " + targetsem + " FROM " + "semloc" + \
-                            " WHERE uuid='" + uuid + "'"
-                conds = [condsem+"='"+condsemloc[condsem]+"'" for condsem in condsems]
-                if conds:
-                    operation += " AND " + " AND ".join(conds)
-                operation += " AND " + targetsem + " IS NOT NULL;"
-                cur.execute(operation)
-                locations = cur.fetchall()
-                uuidlocations[uuid] = locations
-
-            clf = None
-            if targetsem not in ("floor", "room"):
-                (clf, locations) = self._train_geoloc(uuidlocations)
-                if clf != None:
-                    self._clf_infos[(frozenset(condsemloc.items()), targetsem)] = {"clf": clf}
-            else:
-                (clf, locations, bssids) = self._train_wifi(uuidlocations)
-                if clf != None:
-                    self._clf_infos[(frozenset(condsemloc.items()), targetsem)] = {"clf": clf, "bssids": bssids}
-
-            if clf != None:
-                for location in set(locations):
-                    new_condsemloc = condsemloc.copy()
-                    new_condsemloc[targetsem] = location
-                    new_condsemlocs.append(new_condsemloc)
-
-        return new_condsemlocs
-
-
-    # TODO make this defer.inlineCallbacks
-    def _train_geoloc(self, uuidlocations):
-        cur = self._db.cursor()
-
-        uuidgeolocs = {}
-        for uuid in uuidlocations.keys():
-            # extract attributes stored in db
-            operation = "SELECT DISTINCT epoch, longitude, latitude FROM geoloc" + \
-                        " WHERE uuid='" + uuid + "'"
-            cur.execute(operation)
-            geolocs = cur.fetchall()
-            uuidgeolocs[uuid] = geolocs
-
-        data = []  # geoloc data
-        classes = []  # locations corresponding to data
-        getepoch_f = lambda x: x[0]
-        for uuid in uuidlocations.keys():
-            geolocs = uuidgeolocs[uuid]
-            locations = uuidlocations[uuid]
-
-            if len(geolocs) == 0 or len(locations) == 0:
-                continue
-
-            # sort geolocs and locations based on epoch
-            geolocs.sort(key=getepoch_f)
-            locations.sort(key=getepoch_f)
-
-            locepochs = [location[0] for location in locations]
-            for epoch, lon, lat in geolocs:
-                bisect_idx = bisect.bisect_left(locepochs, epoch)
-                low_idx = bisect_idx-1 if bisect_idx > 0 else 0
-                (epochdiff, cls) = min( \
-                                    [(abs(epoch - location[0]), location[1]) \
-                                     for location in locations[low_idx:bisect_idx+1]], \
-                                   key=getepoch_f)
-
-                if epochdiff <= self._geoloc_train_epoch_thld:
-                    data.append((lon, lat))
-                    classes.append(cls)
-
-        if len(data) == 0 or len(classes) == 0:
-            return (None, None)
-
-        data = np.array(data)
-        classes = np.array(classes)
-
-        clf = tree.DecisionTreeClassifier().fit(data, classes)
-
-        return (clf, classes)
-
-
-    def _train_wifi(self, uuidlocations):
-        cur = self._db.cursor()
-
-        uuidwifis = {}
-        for uuid in uuidlocations.keys():
-            # extract attributes and store in db
-            operation = "SELECT DISTINCT epoch, BSSID, RSSI FROM wifi" + \
-                        " WHERE uuid='" + uuid + "'"
-            cur.execute(operation)
-            wifis = cur.fetchall()
-            uuidwifis[uuid] = wifis
+        query = {'id': {'$exists': True, '$in': device_ids}}
+        query['epoch'] = {'$exists': True, '$type': 18} # type 18: 64-bit integer
+        query['BSSID'] = {'$exists': True, '$type': 2} # type 2: String
+        query['RSSI'] = {'$exists': True, '$type': 1, '$lt': 0} # type 1: Double
+        query['type'] = 'wifi'
+        all_wifis = [doc for doc in self._data.find(query)]
 
         sigs = [] # wifi signatures
-        classes = []  # locations corresponding to sigs
+        classes = [] # locations corresponding to sigs
         bssids = [] # BSSIDs of wifi data
-        getepoch_f = lambda x: x[0]
-        for uuid in uuidlocations.keys():
-            wifis = uuidwifis[uuid]
-            locations = uuidlocations[uuid]
+        for device_id in device_ids:
+            print device_id
+
+            locations = [doc for doc in all_locations if doc['id'] == device_id]
+            wifis = [doc for doc in all_wifis if doc['id'] == device_id]
 
             if len(wifis) == 0 or len(locations) == 0:
                 continue
 
-            # sort wifi and locations based on epoch
-            wifis.sort(key=getepoch_f)
-            locations.sort(key=getepoch_f)
+            # sort locations and wifi based on epoch
+            locations.sort(key=lambda x: x['epoch'])
+            wifis.sort(key=lambda x: x['epoch'])
 
-            # group wifi {BSSID:RSSI} by epoch
-            wifisigs = [(epoch, {bssid:rssi for (epoch, bssid, rssi) in group}) \
-                        for epoch, group in itertools.groupby(wifis, key=getepoch_f)]
+            self._wifi_calibrate_epoch(wifis)
 
-            locepochs = [location[0] for location in locations]
+            # group wifi {BSSID:RSSI, ...} by epoch
+            wifisigs = [(epoch, {doc['BSSID']:doc['RSSI'] for doc in group}) \
+                        for epoch, group in itertools.groupby(wifis, key=lambda x: x['epoch'])]
+
+            loc_epochs = [doc['epoch'] for doc in locations]
             for epoch, sig in wifisigs:
-                bisect_idx = bisect.bisect_left(locepochs, epoch)
+                bisect_idx = bisect.bisect_left(loc_epochs, epoch)
                 low_idx = bisect_idx-1 if bisect_idx > 0 else 0
-                (epochdiff, cls) = min( \
-                                    [(abs(epoch - location[0]), location[1]) \
-                                     for location in locations[low_idx:bisect_idx+1]], \
-                                   key=getepoch_f)
+                closest_location = min([location for location in locations[low_idx:bisect_idx+1]], \
+                                        key=lambda x: x['epoch'])
+                epochdiff = abs(epoch - closest_location['epoch'])
+                cls = str({sem:closest_location[sem] for sem in self._sems})
 
                 if epochdiff <= self._wifi_train_epoch_thld:
                     sigs.append(sig)
@@ -355,13 +208,26 @@ class Location(object):
                     bssids.extend(sig.keys())
 
         if len(sigs) == 0 or len(classes) == 0:
-            return (None, None, None)
+            return
 
-        bssids = tuple(set(bssids))
-        data = [[sig.get(bssid, self._wifi_minrssi) for bssid in bssids] for sig in sigs]
+        self._bssids = tuple(set(bssids))
+        data = [[sig.get(bssid, self._wifi_minrssi) for bssid in self._bssids] for sig in sigs]
         data = np.array(data)
         classes = np.array(classes)
 
-        clf = tree.DecisionTreeClassifier().fit(data, classes)
+        self._clf = tree.DecisionTreeClassifier().fit(data, classes)
 
-        return (clf, classes, bssids)
+
+    def _wifi_calibrate_epoch(self, wifis):
+        """Fix that some devices return result of same scan with slightly different timestamps"""
+        wifis.sort(key=lambda x: x['epoch'])
+        last_epoch = 0
+        adjust_wnd = self._wifi_min_itvl
+        for wifi in wifis:
+            epoch = wifi['epoch']
+            if 0 < epoch - last_epoch <= adjust_wnd:
+                wifi['epoch'] = last_epoch
+            else:
+                last_epoch = epoch
+
+

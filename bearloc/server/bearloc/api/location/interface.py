@@ -36,7 +36,7 @@ from zope.interface import Interface
 class ILocation(Interface):
     """Interface of BearLoc Localization service"""
 
-    def get(request):
+    def get(query):
         """
         Return a deferred returning a tuple.
         """

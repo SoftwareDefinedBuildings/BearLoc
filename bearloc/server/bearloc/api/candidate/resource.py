@@ -32,12 +32,11 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .interface import ICandidate
 
-from twisted.web import resource, server
+from twisted.web import resource, server, http
 from twisted.python import log, components
 from twisted.internet import defer
 from zope.interface import implementer
 import simplejson as json
-import httplib
 
 
 @implementer(resource.IResource)
@@ -93,7 +92,7 @@ class CandidateResource(resource.Resource):
 
 
         def _succeed(self, candidate, request):
-            request.setResponseCode(httplib.OK)
+            request.setResponseCode(http.OK)
             request.write(json.dumps(candidate))
             request.finish()
             log.msg(request.getHost().host + " candidate request returned")

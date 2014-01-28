@@ -32,12 +32,11 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .interface import ILocation
 
-from twisted.web import resource, server
+from twisted.web import resource, server, http
 from twisted.python import log, components
 from twisted.internet import defer
 from zope.interface import implementer
 import simplejson as json
-import httplib
 
 
 @implementer(resource.IResource)
@@ -52,51 +51,74 @@ class LocationResource(resource.Resource):
     def getChild(self, path, request):
         if path == '':
             return self
-        return resource.Resource.getChild(self, path, request)
+
+        log.msg("Received location request from " + request.getHost().host)
+        query = [path,]
+        return self._LocationPage(query, self._location)
 
 
     def render_GET(self, request):
         return  self.__doc__
 
 
-    def render_POST(self, request):
-        """POST localization request"""
-        log.msg("Received localization request from " + request.getHost().host)
+    class _LocationPage(resource.Resource):
 
-        request.setHeader('Content-type', 'application/json')
-        try:
-            content = json.load(request.content)
-        except:
-            # TODO: handle bad request
-            return ""
-
-        d = self._location.localize(content)
-        d.addCallback(self._succeed, request)
-        d.addErrback(self._fail, request)
-
-        # cancel localize deferred if the connection is lost before it fires
-        request.notifyFinish().addErrback(self._cancel, d, request)
-
-        return server.NOT_DONE_YET
+        def __init__(self, query, location):
+            resource.Resource.__init__(self)
+            self._query = query
+            self._location = location
 
 
-    def _succeed(self, semlocinfo, request):
-        request.setResponseCode(httplib.OK)
-        request.write(json.dumps(semlocinfo))
-        request.finish()
-        log.msg(request.getHost().host + " is localized")
+        def getChild(self, path, request):
+            if path == '':
+                return self
+
+            query = self._query + [path,]
+            return self._instance(query, self._location)
 
 
-    def _fail(self, err, request):
-        if err.check(defer.CancelledError):
-            log.msg(request.getHost().host + " localization canceled")
-        else:
-            pass
+        def render_GET(self, request):
+            request.setHeader('Content-type', 'application/json')
+            d = self._location.get(self._query)
+            d.addCallback(self._succeed, request)
+            d.addErrback(self._fail, request)
+
+            # cancel location deferred if the connection is lost before it fires
+            request.notifyFinish().addErrback(self._cancel, d, request)
+
+            return server.NOT_DONE_YET
 
 
-    def _cancel(self, err, deferred, request):
-        deferred.cancel()
-        log.msg(request.getHost().host + " lost connection")
+        @classmethod
+        def _instance(cls, query, location):
+            return cls(query, location)
+
+
+        def _succeed(self, location, request):
+            request.setResponseCode(http.OK)
+            request.write(json.dumps(location))
+            request.finish()
+            log.msg(request.getHost().host + " location request returned")
+
+
+        def _fail(self, err, request):
+            if err.check(defer.CancelledError):
+                log.msg(request.getHost().host + " location request canceled")
+            else:
+                self._client_error(request, http.BAD_REQUEST, "400 Bad Request")
+
+
+        def _cancel(self, err, deferred, request):
+            deferred.cancel()
+            log.msg(request.getHost().host + " lost connection")
+
+
+        def _client_error(self, request, status, content, mimetype='text/plain'):
+            request.setResponseCode(status)
+            request.setHeader("Content-Type", mimetype)
+            request.setHeader("Content-Length", str(len(content)))
+            request.write(content)
+            request.finish()
 
 
 components.registerAdapter(LocationResource,

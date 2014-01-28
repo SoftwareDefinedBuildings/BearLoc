@@ -50,25 +50,25 @@ class Candidate(object):
         self._db = db
         self._data = self._db.data
 
-        # hardcoded here
+        # hardcoded
         self._sems = ("country", "state", "city", "street", "building", "locale")
 
 
-    def get(self, request):
-        """Handle candidate request, which is a list of locations
+    def get(self, query):
+        """Handle candidate query, which is a list of locations
 
         Return deferred that returns [locations]
         """
         d = defer.Deferred()
-        reactor.callLater(0, self._get, request, d)
+        reactor.callLater(0, self._get, query, d)
 
         return d
 
 
-    def _get(self, request, d):
-        query_loc = zip(self._sems, request)
+    def _get(self, query, d):
+        query_loc = zip(self._sems, query)
         if len(query_loc) == len(self._sems):
-            # query is down to locale
+            # query is down to locale or longer
             candidate = []
         else:
             target_sem = self._sems[len(query_loc)]

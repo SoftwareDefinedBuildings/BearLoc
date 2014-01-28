@@ -36,7 +36,7 @@ from zope.interface import Interface
 class ICandidate(Interface):
     """Interface of BearLoc Metadata service"""
 
-    def get(request):
+    def get(query):
         """
         Return a deferred returning a dictionary.
         """

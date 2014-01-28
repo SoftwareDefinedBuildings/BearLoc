@@ -73,6 +73,7 @@ class Candidate(object):
         else:
             target_sem = self._sems[len(query_loc)]
             query = {sem: loc for sem, loc in query_loc}
+            query[target_sem] = {'$exists': True, '$type': 2} # type 2: String
             query['type'] = 'reported semloc'
             result = self._data.find(query)
             candidate = tuple(set([doc[target_sem] for doc in result if target_sem in doc]))

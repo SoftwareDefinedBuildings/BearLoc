@@ -51,15 +51,17 @@ class Data(object):
         self._data = self._db.data
 
 
-    def add(self, data):
+    def add(self, query, data):
         """Store reported location and corresponding data.
         """
+        device_id = query[0] if query else None
+
         d = defer.Deferred()
-        reactor.callLater(0, self._add, data, d)
+        reactor.callLater(0, self._add, device_id, data, d)
         return d
 
 
-    def _add(self, data, d):
+    def _add(self, device_id, data, d):
         """Insert data to database"""
         if not isinstance(data, list):
             # TODO: more error info can be passed here
@@ -68,7 +70,8 @@ class Data(object):
         accept_cnt = 0
         for event in data:
             if isinstance(event, dict) \
-               and 'type' in event and 'id' in event:
+               and 'type' in event and 'id' in event \
+               and event['id'] == device_id:
                 self._data.insert(event)
                 accept_cnt += 1
 

@@ -203,18 +203,18 @@ public class BearLocSampler {
 
     public void sample() {
         mWifi.start();
-        mAudio.start();
-        mGeoLoc.start();
-        mAcc.start();
-        mLAcc.start();
-        mGravity.start();
-        mGyro.start();
-        mRotation.start();
-        mMag.start();
-        mLight.start();
-        mTemp.start();
-        mPressure.start();
-        mProximity.start();
-        mHumidity.start();
+		// mAudio.start();
+		// mGeoLoc.start();
+		// mAcc.start();
+		// mLAcc.start();
+		// mGravity.start();
+		// mGyro.start();
+		// mRotation.start();
+		// mMag.start();
+		// mLight.start();
+		// mTemp.start();
+		// mPressure.start();
+		// mProximity.start();
+		// mHumidity.start();
     }
 }

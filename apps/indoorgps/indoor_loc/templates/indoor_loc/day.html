@@ -1,0 +1,16 @@
+{% extends "indoor_loc/base.html" %}
+{% block title %}{{ username }} Activity for {{ date }}{% endblock %}
+{% block head %}{{ username }} <br /> Activity for {{ date }}{% endblock %}
+{% block content %}
+<p> Activity Log: {{ date }}
+	<!-- Activity Type: {{ activity.name }} <br /> -->
+	<!-- Calories Per Minutes: {{ activity_type.caloriesPerMinute }} </p> -->
+	<div id = 'main'>
+		{% for key, value in locations %}
+			<p> <strong>{{key}}</strong> <br />
+				{{value.0}} ----- {{value.1}} <br />
+			</p>
+		{% endfor %}
+	</div>
+</p>
+{% endblock %}

@@ -1,0 +1,25 @@
+Provide interface for streaming of accelerometer, gyroscope, compass data
+Provide interface for RESTful HTTP Post request (JSON) of format type, username, device_id
+
+RESTful for compass, accelerometer, gyro, register
+
+Separate table for these data
+
+Room 465 [123]
+Room 463 [126]
+
+Now, query for accelerometer data, compass data, between these times.
+
+curl post request
+
+
+Look for commercial building in India (many wi-fi access points)
+
+k-means algorithm
+
+
+Registration Interface
+
+	Submit request with device id, type, username
+
+	

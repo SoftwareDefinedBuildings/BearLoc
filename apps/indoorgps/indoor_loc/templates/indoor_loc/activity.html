@@ -1,0 +1,9 @@
+{% extends "indoor_loc/base.html" %}
+{% block title %}BearLoc Activity - Activity: {{ activity.name }}{% endblock %}
+{% block head %}BearLoc Activity - Activity: {{ activity.name }}{% endblock %}
+{% block content %}
+		<p> Activity Type: {{ activity.name }} <br />
+			Calories Per Minutes: {{ activity_type.caloriesPerMinute }} 
+		</p>
+		<a href='/logout/'>LOGOUT</a>
+{% endblock %}

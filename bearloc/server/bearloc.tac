@@ -38,7 +38,7 @@ import bearloc.resource
 
 
 application = service.Application('bearloc')
-bearloc = BearLoc(dbname="bearloc.db")
+bearloc = BearLoc()
 serviceCollection = service.IServiceCollection(application)
 # HTTP service
 site = server.Site(resource.IResource(bearloc))

@@ -43,7 +43,7 @@ from pymongo import MongoClient
 class BearLoc(service.Service):
     """BearLoc service"""
 
-    def __init__(self, dbname):
-    	client = MongoClient()
+    def __init__(self):
+        client = MongoClient()
         self._db = client.bearloc
         self.api = API(self._db)

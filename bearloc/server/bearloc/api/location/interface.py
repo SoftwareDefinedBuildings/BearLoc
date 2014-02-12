@@ -30,23 +30,13 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from .interface import IAPI
-from .data.data import Data
-from .location.location import Location
-from .candidate.candidate import Candidate
-
-from twisted.application import service
-from twisted.internet import defer
-from zope.interface import implementer
-import sqlite3
+from zope.interface import Interface
 
 
-@implementer(IAPI)
-class API(object):
-    """API"""
+class ILocation(Interface):
+    """Interface of BearLoc Localization service"""
 
-    def __init__(self, db):
-        self._db = db
-        self.data = Data(self._db) # Data.__init__() create and write all data tables
-        self.location = Location(self._db)
-        self.candidate = Candidate(self._db)
+    def get(query):
+        """
+        Return a deferred returning a tuple.
+        """

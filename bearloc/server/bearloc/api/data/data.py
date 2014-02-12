@@ -30,23 +30,50 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from .interface import IAPI
-from .data.data import Data
-from .location.location import Location
-from .candidate.candidate import Candidate
+from .interface import IData
 
-from twisted.application import service
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 from zope.interface import implementer
+import os
+import glob
+import shutil
+import simplejson as json
+import array
 import sqlite3
 
 
-@implementer(IAPI)
-class API(object):
-    """API"""
+@implementer(IData)
+class Data(object):
+    """Data class"""
 
     def __init__(self, db):
         self._db = db
-        self.data = Data(self._db) # Data.__init__() create and write all data tables
-        self.location = Location(self._db)
-        self.candidate = Candidate(self._db)
+        self._data = self._db.data
+
+
+    def add(self, query, data):
+        """Store reported location and corresponding data.
+        """
+        device_id = query[0] if query else None
+
+        d = defer.Deferred()
+        reactor.callLater(0, self._add, device_id, data, d)
+        return d
+
+
+    def _add(self, device_id, data, d):
+        """Insert data to database"""
+        if not isinstance(data, list):
+            # TODO: more error info can be passed here
+            d.errback(Exception())
+
+        accept_cnt = 0
+        for event in data:
+            if isinstance(event, dict) \
+               and 'type' in event and 'id' in event \
+               and event['id'] == device_id:
+                self._data.insert(event)
+                accept_cnt += 1
+
+        response = {'reported': len(data), 'accepted': accept_cnt}
+        d.callback(response)

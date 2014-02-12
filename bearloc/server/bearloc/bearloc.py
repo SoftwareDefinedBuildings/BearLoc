@@ -36,13 +36,14 @@ from .api.api import API
 from twisted.application import service
 from twisted.internet import defer
 from zope.interface import implementer
-import sqlite3
+from pymongo import MongoClient
 
 
 @implementer(IBearLoc)
 class BearLoc(service.Service):
     """BearLoc service"""
 
-    def __init__(self, dbname):
-        self._db = sqlite3.connect(database = dbname)  # TODO: use MongoDB
+    def __init__(self):
+        client = MongoClient()
+        self._db = client.bearloc
         self.api = API(self._db)

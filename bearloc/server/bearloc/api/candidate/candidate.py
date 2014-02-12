@@ -30,13 +30,52 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 @author Kaifei Chen <kaifei@eecs.berkeley.edu>
 """
 
-from zope.interface import Interface
+from .interface import ICandidate
+
+from twisted.internet import defer, reactor
+from twisted.python import log
+from zope.interface import implementer
+from collections import defaultdict
+import numpy as np
+from sklearn import tree
+from collections import Counter
+import time
 
 
-class IMeta(Interface):
-    """Interface of BearLoc Metadata service"""
+@implementer(ICandidate)
+class Candidate(object):
+    """Candidate class"""
 
-    def meta(request):
+    def __init__(self, db):
+        self._db = db
+        self._data = self._db.data
+
+        # hardcoded
+        self._sems = ("country", "state", "city", "street", "building", "locale")
+
+
+    def get(self, query):
+        """Handle candidate query, which is a list of locations
+
+        Return deferred that returns [locations]
         """
-        Return a deferred returning a dictionary.
-        """
+        d = defer.Deferred()
+        reactor.callLater(0, self._get, query, d)
+
+        return d
+
+
+    def _get(self, query, d):
+        query_loc = zip(self._sems, query)
+        if len(query_loc) == len(self._sems):
+            # query is down to locale or longer
+            candidate = []
+        else:
+            target_sem = self._sems[len(query_loc)]
+            query = {sem: loc for sem, loc in query_loc}
+            query[target_sem] = {'$exists': True, '$type': 2} # type 2: String
+            query['type'] = 'reported semloc'
+            result = self._data.find(query)
+            candidate = tuple(set([doc[target_sem] for doc in result if target_sem in doc]))
+
+        d.callback(candidate)

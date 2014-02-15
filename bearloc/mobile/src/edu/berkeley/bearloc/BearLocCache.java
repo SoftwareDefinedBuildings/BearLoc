@@ -46,33 +46,51 @@ import android.content.Context;
 import android.util.Pair;
 
 public class BearLocCache {
-    private final Map<String, List<Pair<Object, JSONObject>>> mDataMap;
+	private final Map<String, List<Pair<Object, JSONObject>>> mDataMap;
 
-    public BearLocCache(final Context context) {
-        mDataMap = new HashMap<String, List<Pair<Object, JSONObject>>>();
-    }
+	// TODO make all events in one list
+	public BearLocCache(final Context context) {
+		mDataMap = new HashMap<String, List<Pair<Object, JSONObject>>>();
+	}
 
-    public void put(final String type, final Object data, final JSONObject meta) {
-        if (!mDataMap.containsKey(type)) {
-            mDataMap.put(type, new LinkedList<Pair<Object, JSONObject>>());
-        }
-        final List<Pair<Object, JSONObject>> list = mDataMap.get(type);
+	public void put(final String type, final Object data, final JSONObject meta) {
+		if (!mDataMap.containsKey(type)) {
+			mDataMap.put(type, new LinkedList<Pair<Object, JSONObject>>());
+		}
+		final List<Pair<Object, JSONObject>> list = mDataMap.get(type);
+		list.add(new Pair<Object, JSONObject>(data, meta));
+	}
 
-        list.add(new Pair<Object, JSONObject>(data, meta));
-    }
+	public void add(Map<String, List<Pair<Object, JSONObject>>> data) {
+		final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = data
+				.entrySet().iterator();
+		while (it.hasNext()) {
+			final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it
+					.next();
+			final String type = entry.getKey();
+			final List<Pair<Object, JSONObject>> events = entry.getValue();
+			if (!mDataMap.containsKey(type)) {
+				mDataMap.put(type, new LinkedList<Pair<Object, JSONObject>>());
+			}
+			final List<Pair<Object, JSONObject>> list = mDataMap.get(type);
+			for (Pair<Object, JSONObject> event : events) {
+				list.add(event);
+			}
+		}
+	}
 
-    public Map<String, List<Pair<Object, JSONObject>>> get() {
-        return mDataMap;
-    }
+	public Map<String, List<Pair<Object, JSONObject>>> get() {
+		return mDataMap;
+	}
 
-    public void clear() {
-        final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = mDataMap
-                .entrySet().iterator();
-        while (it.hasNext()) {
-            final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it
-                    .next();
-            final List<Pair<Object, JSONObject>> events = entry.getValue();
-            events.clear();
-        }
-    }
+	public void clear() {
+		final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = mDataMap
+				.entrySet().iterator();
+		while (it.hasNext()) {
+			final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it
+					.next();
+			final List<Pair<Object, JSONObject>> events = entry.getValue();
+			events.clear();
+		}
+	}
 }

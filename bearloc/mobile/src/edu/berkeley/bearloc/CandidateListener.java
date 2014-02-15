@@ -35,6 +35,6 @@ package edu.berkeley.bearloc;
 
 import org.json.JSONObject;
 
-public interface MetaListener {
-    public abstract void onMetaReturned(JSONObject meta);
+public interface CandidateListener {
+	public abstract void onCandidateReturned(JSONObject candidate);
 }

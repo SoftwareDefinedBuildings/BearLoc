@@ -61,7 +61,7 @@ public class BearLocCache {
 		list.add(new Pair<Object, JSONObject>(data, meta));
 	}
 
-	public void add(Map<String, List<Pair<Object, JSONObject>>> data) {
+	public void add(final Map<String, List<Pair<Object, JSONObject>>> data) {
 		final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = data
 				.entrySet().iterator();
 		while (it.hasNext()) {
@@ -73,14 +73,19 @@ public class BearLocCache {
 				mDataMap.put(type, new LinkedList<Pair<Object, JSONObject>>());
 			}
 			final List<Pair<Object, JSONObject>> list = mDataMap.get(type);
-			for (Pair<Object, JSONObject> event : events) {
+			for (final Pair<Object, JSONObject> event : events) {
 				list.add(event);
 			}
 		}
 	}
 
+	/**
+	 * Get a new copy of the current data in cache.
+	 * 
+	 * @return a new copy of current data in cache.
+	 */
 	public Map<String, List<Pair<Object, JSONObject>>> get() {
-		return mDataMap;
+		return new HashMap<String, List<Pair<Object, JSONObject>>>(mDataMap);
 	}
 
 	public void clear() {

@@ -38,12 +38,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.RejectedExecutionException;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -62,32 +62,41 @@ import edu.berkeley.bearloc.util.JSONHttpPostTask;
 import edu.berkeley.bearloc.util.JSONHttpPostTask.onJSONHttpPostRespondedListener;
 import edu.berkeley.bearloc.util.ServerSettings;
 
-public class BearLocService extends Service implements SemLocService,
-		OnSampleEventListener {
+public class BearLocService extends Service
+		implements
+			LocService,
+			OnSampleEventListener {
 
 	private static final int DATA_SEND_ITVL = 100; // millisecond
+	private static final int LOC_DELAY = 300; // millisecond
 
 	private static final List<String> mSemantic = new LinkedList<String>(
-			Arrays.asList("country", "state", "city", "street", "building"));
+			Arrays.asList("country", "state", "city", "street", "building",
+					"locale"));
 
 	private IBinder mBinder;
-
-	private List<SemLocListener> mListeners;
 	private Handler mHandler;
-	private Integer mDataSendItvl = null; // Millisecond, null if not scheduled
+	// in millisecond, null if nothing is scheduled
+	private Integer mDataSendItvl = null;
 
 	private BearLocCache mCache;
 	private BearLocSampler mSampler;
 	private BearLocFormat mFormat;
 
-	private final Runnable mSendLocRequestTask = new Runnable() {
+	private class SendLocRequestTask implements Runnable {
+		private final LocListener mListener;
+
+		public SendLocRequestTask(final LocListener listener) {
+			mListener = listener;
+		}
+
 		@Override
 		public void run() {
-			sendLocRequest();
+			sendLocRequest(mListener);
 		}
 	};
 
-	private final Runnable mSendDataTask = new Runnable() {
+	private class SendDataTask implements Runnable {
 		@Override
 		public void run() {
 			sendData();
@@ -96,8 +105,7 @@ public class BearLocService extends Service implements SemLocService,
 
 	public class BearLocBinder extends Binder {
 		public BearLocService getService() {
-			// Return this instance of LocalService so clients can call public
-			// methods
+			// Return this instance so clients can call public methods
 			return BearLocService.this;
 		}
 	}
@@ -105,7 +113,6 @@ public class BearLocService extends Service implements SemLocService,
 	@Override
 	public void onCreate() {
 		mBinder = new BearLocBinder();
-		mListeners = new LinkedList<SemLocListener>();
 		mHandler = new Handler();
 		mCache = new BearLocCache(this);
 		mSampler = new BearLocSampler(this, this);
@@ -118,61 +125,20 @@ public class BearLocService extends Service implements SemLocService,
 	}
 
 	@Override
-	public boolean getLocation(final SemLocListener listener) {
-		if (listener != null) {
-			mListeners.add(listener);
+	public boolean getLocation(final LocListener listener) {
+		if (listener == null) {
+			return false;
 		}
 
 		mSampler.sample();
-
-		// Post localization request after 1500 milliseconds
-		mHandler.postDelayed(mSendLocRequestTask, 1500);
+		mHandler.postDelayed(new SendLocRequestTask(listener),
+				BearLocService.LOC_DELAY);
 
 		return true;
 	}
 
-	private void sendLocRequest() {
-		try {
-			final String path = "/api/location/"
-					+ DeviceUUID.getDeviceUUID(this).toString() + "/"
-					+ Long.toString(System.currentTimeMillis());
-			final URL url = getHttpURL(path);
-
-			new JSONHttpGetTask(new onJSONHttpGetRespondedListener() {
-				@Override
-				public void onJSONHttpGetResponded(final JSONObject response) {
-					if (response == null) {
-						Toast.makeText(BearLocService.this,
-								R.string.bearloc_server_no_respond,
-								Toast.LENGTH_SHORT).show();
-						return;
-					}
-
-					for (final SemLocListener listener : mListeners) {
-						if (listener != null) {
-							try {
-								// Generate new copy of response as it calls
-								// back to several
-								// listeners
-								listener.onSemLocInfoReturned(new JSONObject(
-										response.toString()));
-							} catch (final JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-					}
-					mListeners.clear();
-				}
-			}).execute(url);
-		} catch (final RejectedExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 	@Override
-	public boolean postLocation(final JSONObject semloc) {
+	public boolean postData(final String type, final JSONObject data) {
 		final JSONObject meta = new JSONObject();
 		try {
 			meta.put("epoch", System.currentTimeMillis());
@@ -181,31 +147,34 @@ public class BearLocService extends Service implements SemLocService,
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		mCache.put("semloc", semloc, meta);
-
+		mCache.put(type, data, meta);
 		mSampler.sample();
 
 		return true;
 	}
 
 	@Override
-	public boolean getCandidate(final JSONObject semloc,
+	public boolean getCandidate(final JSONObject loc,
 			final CandidateListener listener) {
 		try {
 			String path = "/api/candidate/";
+			String locStr;
 			for (final String semantic : mSemantic) {
-				path += semloc.getString(semantic) + "/";
+				locStr = loc.optString(semantic);
+				if (locStr.length() == 0) {
+					break;
+				}
+				path += locStr + "/";
 			}
 			final URL url = getHttpURL(path);
 
 			new JSONHttpGetTask(new onJSONHttpGetRespondedListener() {
 				@Override
-				public void onJSONHttpGetResponded(final JSONObject response) {
+				public void onJSONHttpGetResponded(final JSONArray response) {
 					if (response == null) {
 						Toast.makeText(BearLocService.this,
 								R.string.bearloc_server_no_respond,
 								Toast.LENGTH_SHORT).show();
-						return;
 					}
 
 					if (listener != null) {
@@ -215,49 +184,12 @@ public class BearLocService extends Service implements SemLocService,
 			}).execute(url);
 
 			return true;
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (final RejectedExecutionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		return false;
-	}
-
-	private void sendData() {
-		final String path = "/api/data/"
-				+ DeviceUUID.getDeviceUUID(this).toString();
-		final URL url = getHttpURL(path);
-
-		final Map<String, List<Pair<Object, JSONObject>>> cache = new HashMap<String, List<Pair<Object, JSONObject>>>(
-				mCache.get());
-		mCache.clear();
-		final JSONObject data = mFormat.dump(cache);
-
-		if (data.length() > 0) {
-			try {
-				new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
-					@Override
-					public void onJSONHttpPostResponded(
-							final JSONObject response) {
-						if (response == null) {
-							mCache.add(cache);
-							Toast.makeText(BearLocService.this,
-									R.string.bearloc_server_no_respond,
-									Toast.LENGTH_SHORT).show();
-						}
-					}
-				}).execute(url, data);
-			} catch (final RejectedExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			mHandler.postDelayed(mSendDataTask, mDataSendItvl);
-		} else {
-			mDataSendItvl = null;
-		}
 	}
 
 	@Override
@@ -274,7 +206,68 @@ public class BearLocService extends Service implements SemLocService,
 
 		if (mDataSendItvl == null) {
 			mDataSendItvl = BearLocService.DATA_SEND_ITVL;
-			mHandler.postDelayed(mSendDataTask, mDataSendItvl);
+			mHandler.postDelayed(new SendDataTask(), mDataSendItvl);
+		}
+	}
+
+	private void sendLocRequest(final LocListener listener) {
+		try {
+			// TODO make all these string macro/variable
+			// TODO add API for application to specify uuid and time
+			final String path = "/api/location/"
+					+ DeviceUUID.getDeviceUUID(this).toString() + "/"
+					+ Long.toString(System.currentTimeMillis());
+			final URL url = getHttpURL(path);
+
+			new JSONHttpGetTask(new onJSONHttpGetRespondedListener() {
+				@Override
+				public void onJSONHttpGetResponded(final JSONArray response) {
+					if (response == null) {
+						Toast.makeText(BearLocService.this,
+								R.string.bearloc_server_no_respond,
+								Toast.LENGTH_SHORT).show();
+					}
+
+					if (listener != null) {
+						listener.onLocEventReturned(response);
+					}
+				}
+			}).execute(url);
+		} catch (final RejectedExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void sendData() {
+		final String path = "/api/data/"
+				+ DeviceUUID.getDeviceUUID(this).toString();
+		final URL url = getHttpURL(path);
+
+		final Map<String, List<Pair<Object, JSONObject>>> cache = mCache.get();
+		mCache.clear();
+		final JSONArray data = mFormat.dump(cache);
+
+		if (data.length() > 0) {
+			try {
+				new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
+					@Override
+					public void onJSONHttpPostResponded(final JSONArray response) {
+						if (response == null) {
+							mCache.add(cache);
+							Toast.makeText(BearLocService.this,
+									R.string.bearloc_server_no_respond,
+									Toast.LENGTH_SHORT).show();
+						}
+					}
+				}).execute(url, data);
+			} catch (final RejectedExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			mHandler.postDelayed(new SendDataTask(), mDataSendItvl);
+		} else {
+			mDataSendItvl = null;
 		}
 	}
 

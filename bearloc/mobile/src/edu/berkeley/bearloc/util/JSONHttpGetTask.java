@@ -41,20 +41,20 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.os.AsyncTask;
 
 /* 
- * HTTP Get Task posts with JSON Object and gets JSON Object returned
+ * HTTP Get Task posts with JSON Array and gets JSON Array returned
  */
-public class JSONHttpGetTask extends AsyncTask<Object, Void, JSONObject> {
+public class JSONHttpGetTask extends AsyncTask<Object, Void, JSONArray> {
 
 	private final onJSONHttpGetRespondedListener listener;
 
 	public static interface onJSONHttpGetRespondedListener {
-		void onJSONHttpGetResponded(JSONObject response);
+		void onJSONHttpGetResponded(JSONArray response);
 	}
 
 	public JSONHttpGetTask(final onJSONHttpGetRespondedListener listener) {
@@ -64,7 +64,7 @@ public class JSONHttpGetTask extends AsyncTask<Object, Void, JSONObject> {
 	private InputStream httpGet(final HttpURLConnection connection,
 			final URL url) throws IOException {
 		connection.setRequestMethod("GET");
-		
+
 		final InputStream in = new BufferedInputStream(
 				connection.getInputStream());
 
@@ -72,7 +72,7 @@ public class JSONHttpGetTask extends AsyncTask<Object, Void, JSONObject> {
 	}
 
 	@Override
-	protected JSONObject doInBackground(final Object... params) {
+	protected JSONArray doInBackground(final Object... params) {
 		final URL url = (URL) params[0];
 
 		if (url == null) {
@@ -95,7 +95,7 @@ public class JSONHttpGetTask extends AsyncTask<Object, Void, JSONObject> {
 			}
 			reader.close();
 
-			return new JSONObject(sb.toString());
+			return new JSONArray(sb.toString());
 		} catch (final IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -112,7 +112,7 @@ public class JSONHttpGetTask extends AsyncTask<Object, Void, JSONObject> {
 	}
 
 	@Override
-	protected void onPostExecute(final JSONObject response) {
+	protected void onPostExecute(final JSONArray response) {
 		if (!isCancelled() && listener != null) {
 			listener.onJSONHttpGetResponded(response);
 		}

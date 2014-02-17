@@ -63,13 +63,13 @@ public class BearLocFormat {
 
 	public BearLocFormat(final Context context) {
 		mContext = context;
-		mDeviceInfo = getDeviceMeta();
-		mSensorInfo = getSensorMetaList();
+		mDeviceInfo = getDeviceInfo();
+		mSensorInfo = getSensorInfoList();
 	}
 
-	public JSONObject dump(
+	public JSONArray dump(
 			final Map<String, List<Pair<Object, JSONObject>>> dataMap) {
-		final JSONObject dumpObj = new JSONObject();
+		final JSONArray dumpArr = new JSONArray();
 		// add "device" and data
 		try {
 			final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = dataMap
@@ -80,53 +80,50 @@ public class BearLocFormat {
 				final String type = entry.getKey();
 				final List<Pair<Object, JSONObject>> list = entry.getValue();
 
-				final JSONArray eventArr = new JSONArray();
 				for (final Pair<Object, JSONObject> event : list) {
 					final Object data = event.first;
 					final JSONObject meta = event.second;
 					final JSONArray formated = format(type, data, meta);
 					for (int i = 0; i < formated.length(); i++) {
-						eventArr.put(formated.get(i));
+						dumpArr.put(formated.getJSONObject(i));
 					}
 				}
+			}
 
-				if (eventArr.length() > 0) {
-					dumpObj.put(type, eventArr);
+			if (dumpArr.length() > 0) {
+				dumpArr.put(mDeviceInfo);
+				for (int i = 0; i < mSensorInfo.length(); i++) {
+					dumpArr.put(mSensorInfo.getJSONObject(i));
 				}
 			}
-
-			if (dumpObj.length() > 0) {
-				dumpObj.put("device", mDeviceInfo);
-				dumpObj.put("sensormeta", mSensorInfo);
-			}
 		} catch (final JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		return dumpObj;
+		return dumpArr;
 	}
 
-	public JSONObject getDeviceMeta() {
-		final JSONObject deviceMeta = new JSONObject();
+	public JSONObject getDeviceInfo() {
+		final JSONObject deviceInfo = new JSONObject();
 		try {
 			// Device Info
-			deviceMeta.put("type", "device meta");
-			deviceMeta.put("id", DeviceUUID.getDeviceUUID(mContext));
-			deviceMeta.put("make", Build.MANUFACTURER);
-			deviceMeta.put("model", Build.MODEL);
+			deviceInfo.put("type", "device info");
+			deviceInfo.put("id", DeviceUUID.getDeviceUUID(mContext));
+			deviceInfo.put("make", Build.MANUFACTURER);
+			deviceInfo.put("model", Build.MODEL);
 		} catch (final JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		return deviceMeta;
+		return deviceInfo;
 	}
 
 	// Only call getMinDelay() before Gingerbread
 	@SuppressLint("NewApi")
-	private JSONArray getSensorMetaList() {
-		final JSONArray sensorMetaList = new JSONArray();
+	private JSONArray getSensorInfoList() {
+		final JSONArray sensorInfoList = new JSONArray();
 		try {
 			// Sensor Info
 			final SensorManager sensorMgr = (SensorManager) mContext
@@ -139,46 +136,46 @@ public class BearLocFormat {
 
 				String type = null;
 				switch (sensor.getType()) {
-				case Sensor.TYPE_ACCELEROMETER:
-					type = "acc";
-					break;
-				case Sensor.TYPE_AMBIENT_TEMPERATURE:
-					type = "temp";
-					break;
-				case Sensor.TYPE_GRAVITY:
-					type = "gravity";
-					break;
-				case Sensor.TYPE_GYROSCOPE:
-					type = "gyro";
-					break;
-				case Sensor.TYPE_LIGHT:
-					type = "light";
-					break;
-				case Sensor.TYPE_LINEAR_ACCELERATION:
-					type = "lacc";
-					break;
-				case Sensor.TYPE_MAGNETIC_FIELD:
-					type = "magnetic";
-					break;
-				case Sensor.TYPE_PRESSURE:
-					type = "pressure";
-					break;
-				case Sensor.TYPE_PROXIMITY:
-					type = "proximity";
-					break;
-				case Sensor.TYPE_RELATIVE_HUMIDITY:
-					type = "humidity";
-					break;
-				case Sensor.TYPE_ROTATION_VECTOR:
-					type = "rotation";
-					break;
-				default:
-					break;
+					case Sensor.TYPE_ACCELEROMETER :
+						type = "acc";
+						break;
+					case Sensor.TYPE_AMBIENT_TEMPERATURE :
+						type = "temp";
+						break;
+					case Sensor.TYPE_GRAVITY :
+						type = "gravity";
+						break;
+					case Sensor.TYPE_GYROSCOPE :
+						type = "gyro";
+						break;
+					case Sensor.TYPE_LIGHT :
+						type = "light";
+						break;
+					case Sensor.TYPE_LINEAR_ACCELERATION :
+						type = "lacc";
+						break;
+					case Sensor.TYPE_MAGNETIC_FIELD :
+						type = "magnetic";
+						break;
+					case Sensor.TYPE_PRESSURE :
+						type = "pressure";
+						break;
+					case Sensor.TYPE_PROXIMITY :
+						type = "proximity";
+						break;
+					case Sensor.TYPE_RELATIVE_HUMIDITY :
+						type = "humidity";
+						break;
+					case Sensor.TYPE_ROTATION_VECTOR :
+						type = "rotation";
+						break;
+					default :
+						break;
 				}
 
 				if (type != null) {
 					final JSONObject sensorMeta = new JSONObject();
-					sensorMeta.put("type", "sensor meta");
+					sensorMeta.put("type", "sensor info");
 					sensorMeta.put("id", DeviceUUID.getDeviceUUID(mContext));
 					sensorMeta.put("sensor", type);
 					sensorMeta.put("vendor", sensor.getVendor());
@@ -191,7 +188,7 @@ public class BearLocFormat {
 					sensorMeta.put("max range", sensor.getMaximumRange());
 					sensorMeta.put("resolution", sensor.getResolution());
 
-					sensorMetaList.put(sensorMeta);
+					sensorInfoList.put(sensorMeta);
 				}
 
 				// TODO add audio, wifi, and bluetooth info
@@ -201,7 +198,7 @@ public class BearLocFormat {
 			e.printStackTrace();
 		}
 
-		return sensorMetaList;
+		return sensorInfoList;
 	}
 
 	private JSONArray format(final String type, final Object data,
@@ -300,11 +297,14 @@ public class BearLocFormat {
 			event.put("type", "audio");
 			event.put("id", DeviceUUID.getDeviceUUID(mContext));
 			event.put("sysnano", meta.getLong("sysnano"));
-			final String source = (from.getInt("source") == AudioSource.CAMCORDER) ? "CAMCORDER"
+			final String source = (from.getInt("source") == AudioSource.CAMCORDER)
+					? "CAMCORDER"
 					: "MIC";
-			final int channel = (from.getInt("channel") == AudioFormat.CHANNEL_IN_MONO) ? 1
+			final int channel = (from.getInt("channel") == AudioFormat.CHANNEL_IN_MONO)
+					? 1
 					: 2;
-			final int sampwidth = (from.getInt("sampwidth") == AudioFormat.ENCODING_PCM_16BIT) ? 2
+			final int sampwidth = (from.getInt("sampwidth") == AudioFormat.ENCODING_PCM_16BIT)
+					? 2
 					: 1;
 			final int nframes = event.getJSONArray("raw").length()
 					/ (event.getInt("sampwidth") * event.getInt("channel"));

@@ -118,7 +118,7 @@ class Location(object):
             wifis = [doc for doc in self._data.find(query).sort('epoch', pymongo.DESCENDING).limit(50)] # 1: sort ascending
 
             if len(wifis) == 0:
-                return None
+                return {}
 
             query_epoch = wifis[0]['epoch']
 

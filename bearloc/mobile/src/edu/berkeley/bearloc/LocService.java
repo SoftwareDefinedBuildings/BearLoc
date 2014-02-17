@@ -35,6 +35,42 @@ package edu.berkeley.bearloc;
 
 import org.json.JSONObject;
 
-public interface SemLocListener {
-    public abstract void onSemLocInfoReturned(JSONObject semLocInfo);
+public interface LocService {
+	/**
+	 * Get location for this device.
+	 * 
+	 * @param listener
+	 *            listener of the event that location is returned by server
+	 * 
+	 * @return true if success, else false
+	 */
+	public abstract boolean getLocation(LocListener listener);
+
+	/**
+	 * Report any type of data on this phone to server. Currently only those
+	 * specified in specification will be processed.
+	 * 
+	 * @param type
+	 *            type of data to be posted
+	 * @param data
+	 *            data to be posted
+	 * 
+	 * @return true if success, else false
+	 */
+	public abstract boolean postData(String type, JSONObject data);
+
+	/**
+	 * Get candidates of locations at the lowest level in given location.
+	 * 
+	 * @param loc
+	 *            location for query
+	 * @param targetSem
+	 *            the semantic of which the list of candidate is
+	 * @param listener
+	 *            listener of the event that candidate is returned by server
+	 * 
+	 * @return true if success, else false
+	 */
+	public abstract boolean getCandidate(JSONObject loc,
+			CandidateListener listener);
 }

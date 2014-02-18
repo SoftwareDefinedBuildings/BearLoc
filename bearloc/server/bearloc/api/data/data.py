@@ -75,5 +75,10 @@ class Data(object):
                 self._data.insert(event)
                 accept_cnt += 1
 
-        response = {'reported': len(data), 'accepted': accept_cnt}
+        reception = {}
+        reception['type'] = "data reception"
+        reception['id'] = "0"
+        reception['reported'] = len(data)
+        reception['accepted'] = accept_cnt
+        response = [reception,]
         d.callback(response)

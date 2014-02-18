@@ -57,7 +57,7 @@ class Candidate(object):
     def get(self, query):
         """Handle candidate query, which is a list of locations
 
-        Return deferred that returns [locations]
+        Return deferred that returns location candidates
         """
         d = defer.Deferred()
         reactor.callLater(0, self._get, query, d)
@@ -67,15 +67,22 @@ class Candidate(object):
 
     def _get(self, query, d):
         query_loc = zip(self._sems, query)
+        candidate = {}
         if len(query_loc) == len(self._sems):
             # query is down to locale or longer
-            candidate = []
+            candidate["location candidates"] = []
         else:
-            target_sem = self._sems[len(query_loc)]
+            target_sem = self._sems[(len(query_loc) - 1) + 1]
             query = {sem: loc for sem, loc in query_loc}
+            candidate.update(query)
             query[target_sem] = {'$exists': True, '$type': 2} # type 2: String
             query['type'] = 'reported semloc'
             result = self._data.find(query)
-            candidate = tuple(set([doc[target_sem] for doc in result if target_sem in doc]))
+            candidate['target semantic'] = target_sem
+            candidate['location candidates'] = tuple(set([doc[target_sem] for doc in result if target_sem in doc]))
 
-        d.callback(candidate)
+        candidate['type'] = 'location candidates'
+        candidate['id'] = '0'
+        response = [candidate,]
+
+        d.callback(response)

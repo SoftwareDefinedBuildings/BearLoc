@@ -70,7 +70,7 @@ class Candidate(object):
         candidate = {}
         if len(query_loc) == len(self._sems):
             # query is down to locale or longer
-            candidate["location candidates"] = []
+            candidate["location candidate"] = []
         else:
             target_sem = self._sems[(len(query_loc) - 1) + 1]
             query = {sem: loc for sem, loc in query_loc}
@@ -79,9 +79,9 @@ class Candidate(object):
             query['type'] = 'reported semloc'
             result = self._data.find(query)
             candidate['target semantic'] = target_sem
-            candidate['location candidates'] = tuple(set([doc[target_sem] for doc in result if target_sem in doc]))
+            candidate['location candidate'] = tuple(set([doc[target_sem] for doc in result if target_sem in doc]))
 
-        candidate['type'] = 'location candidates'
+        candidate['type'] = 'location candidate'
         candidate['id'] = '0'
         response = [candidate,]
 

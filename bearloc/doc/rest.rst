@@ -1,7 +1,7 @@
 Server REST Resources
 ========================
 
-BearLoc server provides an RESTful interface for data post and get. 
+BearLoc server provides an RESTful interface for data post and get. All data between client and server are JSON array of JSON objects. A JSON object represents an event happened somewhere, mostly in client or server. Examples of event include a Wi-Fi access point signal strength aquisition, or user-reported location, or server-generated estiamted location of a device. We have some predefined :doc:`schema </schema>` of the JSON Obejct we are using for localization.
 
 
 Location
@@ -9,11 +9,11 @@ Location
 
 Location is the **estimated** semantic location of a device at a time. 
 
-========================================================= ====================================================================================================
-Resource                                                  Description
-========================================================= ====================================================================================================
-:ref:`GET location/:id[/:epoch] <get-location-id>`        Returns the semantic location (and its epoch time) of device with specified id parameter. The time of the location is the most recent time (if epoch parameter is not specified), or at the closest available time with the specified epoch time (if epoch parameter is specified).
-========================================================= ====================================================================================================
+====================================================== ====================================================================================================
+Resource                                               Description
+====================================================== ====================================================================================================
+:ref:`GET location/:id[/:epoch] <get-location-id>`     Returns the semantic location (and its epoch time) of device with specified id parameter. The time of the location is the most recent time (if epoch parameter is not specified), or at the closest available time with the specified epoch time (if epoch parameter is specified).
+====================================================== ====================================================================================================
 
 
 .. _get-location-id:
@@ -31,15 +31,15 @@ http://bearloc.cal-sdb.org:10080/api/location/:id[/:epoch]
 
 **Parameters**
 
-========================== ====================================================================================================
-**id** *(required)*        The string of UUID of the device. (Example Value: "1d352410-4a5e-11e3-8f96-0800200c9a66")
-**epoch** *(optional)*     The numerical value of epoch time in millisecond. (Example Value: 1384125523390)
-========================== ====================================================================================================
+============================ ====================================================================================================
+**id** *(required)*          The string of UUID of the device. (Example Value: "1d352410-4a5e-11e3-8f96-0800200c9a66")
+**epoch** *(optional)*       The numerical value of epoch time in millisecond. (Example Value: 1384125523390)
+============================ ====================================================================================================
 
 
 **Return Data**
 
-Return data is :ref:`an event JSON object with type "estimated semloc" <estimated-semantic-location>`.
+Return data is a one-element JSON array of :ref:`an event JSON object with type "estimated semloc" <estimated-semantic-location>`.
 
 
 **Example Request**
@@ -51,9 +51,11 @@ Return Data                *(See Below)*
 
 .. code-block:: json
 
-   {
+  [
+    {
       "type": "estimated semloc",
-      "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
+      "id": "3f2cd8d0-9831-11e3-a5e2-0800200c9a66",
+      "target id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
       "epoch": 1387670483532,
       "country": "US",
       "state": "CA",
@@ -61,19 +63,20 @@ Return Data                *(See Below)*
       "street": "Leroy Ave",
       "building": "Soda Hall",
       "locale": "494"
-   }
+    }
+  ]
 
 
 Data
 ----
 
-Data is the collections of data from all sensors, including the locations reported by users.
+Data is the collections of event from all sensors, including the locations reported by users. One event is conceptually represented as a JSON object. We provide some recommended :doc:`schema </schema>` of events.
 
-========================================================= ====================================================================================================
-Resource                                                  Description
-========================================================= ====================================================================================================
-:ref:`POST data/:id <post-data-id>`                       Add new sensor data of device with specified id parameter.
-========================================================= ====================================================================================================
+========================================= ====================================================================================================
+Resource                                  Description
+========================================= ====================================================================================================
+:ref:`POST data/:id <post-data-id>`       Add new sensor data of device with specified id parameter.
+========================================= ====================================================================================================
 
 
 .. _post-data-id:
@@ -103,7 +106,7 @@ POST data is an JSON array of JSON objects that represent events. The event JSON
 
 **Return Data**
 
-Return data is an JSON object with keys **"reported"** and **"accepted"**. "reported" has a number value indicating the number of events reported, and "accepted" has a number value indicating the number of events accepted.
+Return data is an one-element JSON Array of :ref:`an event JSON object with type "data reception" <data-reception>`.
 
 
 **Example Request**
@@ -117,7 +120,7 @@ POST Data                  *(See Below)*
  
    [
      {
-        "type": "sensor meta",
+        "type": "sensor info",
         "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
         "sensor": "accelerometer",
         "vendor": "st micro",
@@ -130,7 +133,7 @@ POST Data                  *(See Below)*
         "resolution": 1
      },
      {
-        "type": "device meta",
+        "type": "device info",
         "id": "1d352410-4a5e-11e3-8f96-0800200c9a66",
         "make": "LGE",
         "model": "VS910 4G"
@@ -184,36 +187,40 @@ Return Data                *(See Below)*
 .. code-block:: json
 
 
-  {
-    "reported": 6,
-    "accepted": 6
-  }
+  [
+    {
+      "type": "data reception",
+      "id": "3f2cd8d0-9831-11e3-a5e2-0800200c9a66",
+      "posted": 6,
+      "accepted": 6
+    }
+  ]
 
 
 
-Candidate
----------
+Candidates
+----------
 
-Candidate is the list of locations given all upper level locations.
+Candidates is the list of candidate locations given all upper level locations.
 
 ======================================================================================================= ====================================================================================================
 Resource                                                                                                Description
 ======================================================================================================= ====================================================================================================
-:ref:`GET candidate/:country[/:state[/:city[/:street[/:building[/:locale]]]]] <get-candidate-country>`  Returns the list of candidate locations at the lowest level of specified parameter.
+:ref:`GET candidates/:country[/:state[/:city[/:street[/:building[/:locale]]]]] <get-candidates>`        Returns the list of candidate locations at the lowest level of specified parameter.
 ======================================================================================================= ====================================================================================================
 
 
-.. _get-candidate-country:
+.. _get-candidates:
 
-GET candidate/[:country/[:state/[:city/[:street/[:building]]]]]
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+GET candidates/[:country/[:state/[:city/[:street/[:building]]]]]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Returns the list of candidate locations in the lowest level of specified parameter.
+Returns the list of candidate locations that exists in the lowest level of semantic in specified parameters.
 
 
 **Resource URL**
 
-http://bearloc.cal-sdb.org:10080/api/candidate/[:country/[:state/[:city/[:street/[:building]]]]]
+http://bearloc.cal-sdb.org:10080/api/candidates/[:country/[:state/[:city/[:street/[:building]]]]]
 
 
 **Parameters**
@@ -229,39 +236,49 @@ http://bearloc.cal-sdb.org:10080/api/candidate/[:country/[:state/[:city/[:street
 
 **Return Data**
 
-Return data is an JSON array of strings of names of candidate locations.
+Return data is an one-element JSON array of :ref:`an event JSON object with type "location candidates" <location-candidates>`.
 
 
 **Example Request**
 
 ========================== ===================================================================================================================================
-GET                        http://bearloc.cal-sdb.org:10080/api/candidate/US/CA/Berkeley/Leroy%20Ave/Soda%20Hall/
+GET                        http://bearloc.cal-sdb.org:10080/api/candidates/US/CA/Berkeley/Leroy%20Ave/Soda%20Hall
 Return Data                *(See Below)*
 ========================== ===================================================================================================================================
 
 .. code-block:: json
  
   [
-    "410",
-    "494",
-    "RADLab Kitchen",
-    "417",
-    "415",
-    "Wozniak Lounge"
+    {
+      "type": "location candidates",
+      "id": "3f2cd8d0-9831-11e3-a5e2-0800200c9a66",
+      "country": "US",
+      "state": "CA",
+      "city": "Berkeley",
+      "street": "Leroy Ave",
+      "building": "Soda Hall",
+      "target semantic": "locale",
+      "location candidates": ["410", "494", "RADLab Kitchen", "417", "415", "Wozniak Lounge"]
+    }
   ]
 
 
 **Example Request**
 
 ========================== ===================================================================================================================================
-GET                        http://bearloc.cal-sdb.org:10080/api/candidate/US/CA/Berkeley
+GET                        http://bearloc.cal-sdb.org:10080/api/candidates/US/CA
 Return Data                *(See Below)*
 ========================== ===================================================================================================================================
 
 .. code-block:: json
- 
+
   [
-    "Berkeley",
-    "San Francisco",
-    "Mountain View"
+    {
+      "type": "location candidates",
+      "id": "3f2cd8d0-9831-11e3-a5e2-0800200c9a66",
+      "country": "US",
+      "state": "CA",
+      "target semantic": "city",
+      "location candidates": ["Berkeley", "San Francisco", "Mountain View"]
+    }
   ]

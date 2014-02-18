@@ -1,18 +1,18 @@
 Data Schema
 ===========
 
-The data exchanged between client and server are event JSON object, which is only required to have **"type"** and **"id"** keys. Here we describe several event JSON object definition we are using for localization service. In each event, we specify the value of "type", and the details of other fields.
+The data exchanged between client and server are always JSON array of JSON object of events. JSON object of event is only required to have **"type"** and **"id"** keys. **"type"** is a string that describes the type of the event. **"id"** is a string that describes the ID of creator (e.g. smart phone, server) of the event. Here we describe several event JSON object schema we are using for localization service. In each event, we specify the value of "type", and the details of other fields.
 
 
-Device Metadata
----------------
+Device Info
+-----------
 
-Device Metadata is information of devices reporting to the server.
+Device Info is information of devices reporting to the server.
 
 
 **Type**
 
-"device meta"
+"device info"
 
 
 **Keys**
@@ -25,15 +25,15 @@ model           string       The model of the device. (Example Value: "VS910 4G"
 =============== ============ ====================================================================================================
 
 
-Sensor Metadata
----------------
+Sensor Info
+-----------
 
-Sensor Metadata is metadata of sensors on a devices.
+Sensor Info is metadata of sensors on a devices.
 
 
 **Type**
 
-"sensor meta"
+"sensor info"
 
 
 **Keys**
@@ -71,6 +71,7 @@ Estimated Semantic Location is semantic location estimated by BearLoc server.
 =============== ============ ====================================================================================================
 Key             Value        Description
 =============== ============ ====================================================================================================
+target id       string       The ID of the device which the query of estimated location targets. Note that this is different of the **"id"** of this event. **"id"** of this event is the generator of this event and usually is a server. (Example Value: "1d352410-4a5e-11e3-8f96-0800200c9a66")
 epoch           number       The Unix time in millisecond, defined as the number of milliseconds that have elapsed since 00:00:00.000 Coordinated Universal Time (UTC), Thursday, 1 January 1970, not counting leap seconds. (Example Value: 1387670483532)
 country         string       The name of the country of the location. (Example Value: "US")
 state           string       The name of the state of the location. (Example Value: "CA")
@@ -350,3 +351,53 @@ proximity       number       Relative ambient air humidity in percent. (Example 
 accuracy        number       The accuracy of the sensor data (Example Value: 0.0)
 =============== ============ ====================================================================================================
 
+
+.. _data-reception:
+
+Data Reception
+--------------
+
+The event that data are received by server.
+
+
+**Type**
+
+"data reception"
+
+
+**Keys**
+
+=============== ============ ====================================================================================================
+Key             Value        Description
+=============== ============ ====================================================================================================
+posted          number       The number of event received by server. (Example Value: 5)
+accepted        number       The number of event accepted by server. This value will not be larger than **"posted"**. (Example Value: 4)
+=============== ============ ====================================================================================================
+
+
+.. _location-candidates:
+
+Location Candidates
+-------------------
+
+The event that location candidates of a given location is generated.
+
+
+**Type**
+
+"location candidates"
+
+
+**Keys**
+
+=============== ============ ====================================================================================================
+Key             Value        Description
+=============== ============ ====================================================================================================
+country         string       The name of the country of the query location, if exists. (Example Value: "US")
+state           string       The name of the state of the query location, if exists. (Example Value: "CA")
+city            string       The name of the city of the query location, if exists. (Example Value: "Berkeley")
+street          string       The name of the street of the query location, if exists. (Example Value: "Leroy Ave")
+building        string       The name of the building of the query location, if exists. (Example Value: "Soda Hall")
+target semantic string       The name of the semantic of location to query. (Example Value: "building")
+candidates      array        The array of candidates, which is a JSON array of strings. (Example Value: ["410", "494", "RADLab Kitchen", "417", "415", "Wozniak Lounge"])
+=============== ============ ====================================================================================================

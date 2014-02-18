@@ -40,7 +40,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.json.JSONArray;
@@ -116,7 +115,7 @@ public class BearLocService extends Service
 		mHandler = new Handler();
 		mCache = new BearLocCache(this);
 		mSampler = new BearLocSampler(this, this);
-		mFormat = new BearLocFormat(this);
+		mFormat = new BearLocFormat(this, mCache);
 	}
 
 	@Override
@@ -147,7 +146,7 @@ public class BearLocService extends Service
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		mCache.put(type, data, meta);
+		mCache.add(type, data, meta);
 		mSampler.sample();
 
 		return true;
@@ -202,7 +201,7 @@ public class BearLocService extends Service
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		mCache.put(type, data, meta);
+		mCache.add(type, data, meta);
 
 		if (mDataSendItvl == null) {
 			mDataSendItvl = BearLocService.DATA_SEND_ITVL;
@@ -244,9 +243,9 @@ public class BearLocService extends Service
 				+ DeviceUUID.getDeviceUUID(this).toString();
 		final URL url = getHttpURL(path);
 
-		final Map<String, List<Pair<Object, JSONObject>>> cache = mCache.get();
+		final List<Pair<Object, JSONObject>> eventList = mCache.getCopy();
 		mCache.clear();
-		final JSONArray data = mFormat.dump(cache);
+		final JSONArray data = mFormat.dump(eventList);
 
 		if (data.length() > 0) {
 			try {
@@ -254,7 +253,7 @@ public class BearLocService extends Service
 					@Override
 					public void onJSONHttpPostResponded(final JSONArray response) {
 						if (response == null) {
-							mCache.add(cache);
+							mCache.addAll(eventList);
 							Toast.makeText(BearLocService.this,
 									R.string.bearloc_server_no_respond,
 									Toast.LENGTH_SHORT).show();

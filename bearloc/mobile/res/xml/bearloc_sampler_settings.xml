@@ -151,42 +151,42 @@
             android:title="@string/bearloc_pref_audio_format" />
     </PreferenceCategory>
     <PreferenceCategory
-        android:key="bearloc_pref_geoloc_settings_key"
-        android:title="@string/bearloc_pref_geoloc_title" >
+        android:key="bearloc_pref__geocoord__settings_key"
+        android:title="@string/bearloc_pref_geocoord_title" >
         <CheckBoxPreference
-            android:defaultValue="@string/bearloc_default_geoloc_enable"
-            android:key="bearloc_pref_geoloc_enable_key"
-            android:summary="@string/bearloc_pref_geoloc_enable_summ"
-            android:title="@string/bearloc_pref_geoloc_enable" />
+            android:defaultValue="@string/bearloc_default_geocoord_enable"
+            android:key="bearloc_pref_geocoord_enable_key"
+            android:summary="@string/bearloc_pref_geocoord_enable_summ"
+            android:title="@string/bearloc_pref_geocoord_enable" />
 
         <EditTextPreference
-            android:defaultValue="@string/bearloc_default_geoloc_duration"
-            android:dependency="bearloc_pref_geoloc_enable_key"
+            android:defaultValue="@string/bearloc_default_geocoord_duration"
+            android:dependency="bearloc_pref_geocoord_enable_key"
             android:inputType="number"
-            android:key="bearloc_pref_geoloc_duration_key"
-            android:summary="@string/bearloc_pref_geoloc_duration_summ"
-            android:title="@string/bearloc_pref_geoloc_duration" />
+            android:key="bearloc_pref_geocoord_duration_key"
+            android:summary="@string/bearloc_pref_geocoord_duration_summ"
+            android:title="@string/bearloc_pref_geocoord_duration" />
         <EditTextPreference
-            android:defaultValue="@string/bearloc_default_geoloc_cnt"
-            android:dependency="bearloc_pref_geoloc_enable_key"
+            android:defaultValue="@string/bearloc_default_geocoord_cnt"
+            android:dependency="bearloc_pref_geocoord_enable_key"
             android:inputType="number"
-            android:key="bearloc_pref_geoloc_cnt_key"
-            android:summary="@string/bearloc_pref_geoloc_cnt_summ"
-            android:title="@string/bearloc_pref_geoloc_cnt" />
+            android:key="bearloc_pref_geocoord_cnt_key"
+            android:summary="@string/bearloc_pref_geocoord_cnt_summ"
+            android:title="@string/bearloc_pref_geocoord_cnt" />
         <EditTextPreference
-            android:defaultValue="@string/bearloc_default_geoloc_min_delay"
-            android:dependency="bearloc_pref_geoloc_enable_key"
+            android:defaultValue="@string/bearloc_default_geocoord_min_delay"
+            android:dependency="bearloc_pref_geocoord_enable_key"
             android:inputType="number"
-            android:key="bearloc_pref_geoloc_min_delay_key"
-            android:summary="@string/bearloc_pref_geoloc_min_delay_summ"
-            android:title="@string/bearloc_pref_geoloc_min_delay" />
+            android:key="bearloc_pref_geocoord_min_delay_key"
+            android:summary="@string/bearloc_pref_geocoord_min_delay_summ"
+            android:title="@string/bearloc_pref_geocoord_min_delay" />
         <EditTextPreference
-            android:defaultValue="@string/bearloc_default_geoloc_min_dist"
-            android:dependency="bearloc_pref_geoloc_enable_key"
+            android:defaultValue="@string/bearloc_default_geocoord_min_dist"
+            android:dependency="bearloc_pref_geocoord_enable_key"
             android:inputType="numberDecimal"
-            android:key="bearloc_pref_geoloc_min_dist_key"
-            android:summary="@string/bearloc_pref_geoloc_min_dist_summ"
-            android:title="@string/bearloc_pref_geoloc_min_dist" />
+            android:key="bearloc_pref_geocoord_min_dist_key"
+            android:summary="@string/bearloc_pref_geocoord_min_dist_summ"
+            android:title="@string/bearloc_pref_geocoord_min_dist" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="bearloc_pref_gravity_settings_key"

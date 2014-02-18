@@ -33,69 +33,53 @@
 
 package edu.berkeley.bearloc;
 
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
 import android.util.Pair;
 
 public class BearLocCache {
-	private final Map<String, List<Pair<Object, JSONObject>>> mDataMap;
+	private final List<Pair<Object, JSONObject>> mEventList;
 
 	// TODO make all events in one list
 	public BearLocCache(final Context context) {
-		mDataMap = new HashMap<String, List<Pair<Object, JSONObject>>>();
+		mEventList = new LinkedList<Pair<Object, JSONObject>>();
 	}
 
-	public void put(final String type, final Object data, final JSONObject meta) {
-		if (!mDataMap.containsKey(type)) {
-			mDataMap.put(type, new LinkedList<Pair<Object, JSONObject>>());
+	public void add(final String type, final Object data, final JSONObject meta) {
+		if (type == null || data == null || meta == null) {
+			return;
 		}
-		final List<Pair<Object, JSONObject>> list = mDataMap.get(type);
-		list.add(new Pair<Object, JSONObject>(data, meta));
+		try {
+			meta.put("type", type);
+			mEventList.add(new Pair<Object, JSONObject>(data, meta));
+		} catch (final JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	public void add(final Map<String, List<Pair<Object, JSONObject>>> data) {
-		final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = data
-				.entrySet().iterator();
-		while (it.hasNext()) {
-			final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it
-					.next();
-			final String type = entry.getKey();
-			final List<Pair<Object, JSONObject>> events = entry.getValue();
-			if (!mDataMap.containsKey(type)) {
-				mDataMap.put(type, new LinkedList<Pair<Object, JSONObject>>());
-			}
-			final List<Pair<Object, JSONObject>> list = mDataMap.get(type);
-			for (final Pair<Object, JSONObject> event : events) {
-				list.add(event);
-			}
+	public void addAll(final List<Pair<Object, JSONObject>> eventList) {
+		if (eventList == null) {
+			return;
 		}
+		mEventList.addAll(eventList);
 	}
 
 	/**
-	 * Get a new copy of the current data in cache.
+	 * Get a new copy of the current data list in cache.
 	 * 
-	 * @return a new copy of current data in cache.
+	 * @return a new copy of current data list in cache.
 	 */
-	public Map<String, List<Pair<Object, JSONObject>>> get() {
-		return new HashMap<String, List<Pair<Object, JSONObject>>>(mDataMap);
+	public List<Pair<Object, JSONObject>> getCopy() {
+		return new LinkedList<Pair<Object, JSONObject>>(mEventList);
 	}
 
 	public void clear() {
-		final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = mDataMap
-				.entrySet().iterator();
-		while (it.hasNext()) {
-			final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it
-					.next();
-			final List<Pair<Object, JSONObject>> events = entry.getValue();
-			events.clear();
-		}
+		mEventList.clear();
 	}
 }

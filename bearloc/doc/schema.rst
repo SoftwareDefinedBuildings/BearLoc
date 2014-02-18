@@ -375,29 +375,29 @@ accepted        number       The number of event accepted by server. This value 
 =============== ============ ====================================================================================================
 
 
-.. _location-candidates:
+.. _location-candidate:
 
-Location Candidates
--------------------
+Location Candidate
+------------------
 
-The event that location candidates of a given location is generated.
+The event that location candidate of a given location is generated.
 
 
 **Type**
 
-"location candidates"
+"location candidate"
 
 
 **Keys**
 
-=============== ============ ====================================================================================================
-Key             Value        Description
-=============== ============ ====================================================================================================
-country         string       The name of the country of the query location, if exists. (Example Value: "US")
-state           string       The name of the state of the query location, if exists. (Example Value: "CA")
-city            string       The name of the city of the query location, if exists. (Example Value: "Berkeley")
-street          string       The name of the street of the query location, if exists. (Example Value: "Leroy Ave")
-building        string       The name of the building of the query location, if exists. (Example Value: "Soda Hall")
-target semantic string       The name of the semantic of location to query. (Example Value: "building")
-candidates      array        The array of candidates, which is a JSON array of strings. (Example Value: ["410", "494", "RADLab Kitchen", "417", "415", "Wozniak Lounge"])
-=============== ============ ====================================================================================================
+================ ============ ====================================================================================================
+Key              Value        Description
+================ ============ ====================================================================================================
+country          string       The name of the country of the query location, if exists. (Example Value: "US")
+state            string       The name of the state of the query location, if exists. (Example Value: "CA")
+city             string       The name of the city of the query location, if exists. (Example Value: "Berkeley")
+street           string       The name of the street of the query location, if exists. (Example Value: "Leroy Ave")
+building         string       The name of the building of the query location, if exists. (Example Value: "Soda Hall")
+target semantic  string       The name of the semantic of location to query. (Example Value: "building")
+candidate        array        The array of candidate, which is a JSON array of strings. (Example Value: ["410", "494", "RADLab Kitchen", "417", "415", "Wozniak Lounge"])
+================ ============ ====================================================================================================

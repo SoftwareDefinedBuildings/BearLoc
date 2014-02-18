@@ -198,21 +198,21 @@ Return Data                *(See Below)*
 
 
 
-Candidates
-----------
+Candidate
+---------
 
-Candidates is the list of candidate locations given all upper level locations.
+Candidate is the list of candidate locations given all upper level locations.
 
 ======================================================================================================= ====================================================================================================
 Resource                                                                                                Description
 ======================================================================================================= ====================================================================================================
-:ref:`GET candidates/:country[/:state[/:city[/:street[/:building[/:locale]]]]] <get-candidates>`        Returns the list of candidate locations at the lowest level of specified parameter.
+:ref:`GET candidate/:country[/:state[/:city[/:street[/:building[/:locale]]]]] <get-candidate>`          Returns the list of candidate locations at the lowest level of specified parameter.
 ======================================================================================================= ====================================================================================================
 
 
-.. _get-candidates:
+.. _get-candidate:
 
-GET candidates/[:country/[:state/[:city/[:street/[:building]]]]]
+GET candidate/[:country/[:state/[:city/[:street/[:building]]]]]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Returns the list of candidate locations that exists in the lowest level of semantic in specified parameters.
@@ -220,7 +220,7 @@ Returns the list of candidate locations that exists in the lowest level of seman
 
 **Resource URL**
 
-http://bearloc.cal-sdb.org:10080/api/candidates/[:country/[:state/[:city/[:street/[:building]]]]]
+http://bearloc.cal-sdb.org:10080/api/candidate/[:country/[:state/[:city/[:street/[:building]]]]]
 
 
 **Parameters**
@@ -236,13 +236,13 @@ http://bearloc.cal-sdb.org:10080/api/candidates/[:country/[:state/[:city/[:stree
 
 **Return Data**
 
-Return data is an one-element JSON array of :ref:`an event JSON object with type "location candidates" <location-candidates>`.
+Return data is an one-element JSON array of :ref:`an event JSON object with type "location candidate" <location-candidate>`.
 
 
 **Example Request**
 
 ========================== ===================================================================================================================================
-GET                        http://bearloc.cal-sdb.org:10080/api/candidates/US/CA/Berkeley/Leroy%20Ave/Soda%20Hall
+GET                        http://bearloc.cal-sdb.org:10080/api/candidate/US/CA/Berkeley/Leroy%20Ave/Soda%20Hall
 Return Data                *(See Below)*
 ========================== ===================================================================================================================================
 
@@ -250,7 +250,7 @@ Return Data                *(See Below)*
  
   [
     {
-      "type": "location candidates",
+      "type": "location candidate",
       "id": "3f2cd8d0-9831-11e3-a5e2-0800200c9a66",
       "country": "US",
       "state": "CA",
@@ -258,7 +258,7 @@ Return Data                *(See Below)*
       "street": "Leroy Ave",
       "building": "Soda Hall",
       "target semantic": "locale",
-      "location candidates": ["410", "494", "RADLab Kitchen", "417", "415", "Wozniak Lounge"]
+      "location candidate": ["410", "494", "RADLab Kitchen", "417", "415", "Wozniak Lounge"]
     }
   ]
 
@@ -274,11 +274,11 @@ Return Data                *(See Below)*
 
   [
     {
-      "type": "location candidates",
+      "type": "location candidate",
       "id": "3f2cd8d0-9831-11e3-a5e2-0800200c9a66",
       "country": "US",
       "state": "CA",
       "target semantic": "city",
-      "location candidates": ["Berkeley", "San Francisco", "Mountain View"]
+      "location candidate": ["Berkeley", "San Francisco", "Mountain View"]
     }
   ]

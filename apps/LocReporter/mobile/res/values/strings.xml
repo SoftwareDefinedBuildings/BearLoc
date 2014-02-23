@@ -15,7 +15,8 @@
     <string name="cancel">Cancel</string>
     <string name="loc_updated">Location Updated</string>
     <string name="meta_updated">Location Candidates Updated</string>
-
+    <string name="server_no_respond">Server Not Responding</string>
+    
     <!-- Settings strings -->
     <string name="pref_general_category_summ">General settings</string>
     <string name="pref_general_category">General</string>
@@ -26,9 +27,23 @@
     <string name="pref_server_category">Server</string>
     <string name="pref_sampler_category_summ">Sampler settings</string>
     <string name="pref_sampler_category">Sampler</string>
-    
+
     <!-- Overwrite bearloc strings -->
-    <string name="bearloc_default_server_addr">54.242.57.128</string>
+    <string name="bearloc_default_server_addr">bearloc.cal-sdb.org</string>
     <string name="bearloc_default_server_port">10080</string>
+    <string name="bearloc_default_acc_enable">false</string>
+    <string name="bearloc_default_temp_enable">false</string>
+    <string name="bearloc_default_pressure_enable">false</string>
+    <string name="bearloc_default_audio_enable">false</string>
+    <string name="bearloc_default_humidity_enable">false</string>
+    <string name="bearloc_default_geoloc_enable">false</string>
+    <string name="bearloc_default_gravity_enable">false</string>
+    <string name="bearloc_default_gyro_enable">false</string>
+    <string name="bearloc_default_light_enable">false</string>
+    <string name="bearloc_default_lacc_enable">false</string>
+    <string name="bearloc_default_magnetic_enable">false</string>
+    <string name="bearloc_default_proximity_enable">false</string>
+    <string name="bearloc_default_rotation_enable">false</string>
+    <string name="bearloc_default_wifi_enable">true</string>
 
 </resources>

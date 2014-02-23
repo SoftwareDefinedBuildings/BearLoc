@@ -84,6 +84,7 @@ public class BearLocFormat {
 			e.printStackTrace();
 		}
 	}
+
 	public JSONArray dump(final List<Pair<Object, JSONObject>> eventList) {
 		final JSONArray dumpArr = new JSONArray();
 
@@ -237,7 +238,7 @@ public class BearLocFormat {
 		final JSONObject to = new JSONObject();
 		final JSONObject from = (JSONObject) data;
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.optLong("epoch"));
 			to.put("sysnano", meta.optLong("sysnano"));
@@ -255,7 +256,7 @@ public class BearLocFormat {
 		final JSONObject to = new JSONObject();
 		final JSONObject from = (JSONObject) data;
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.optLong("epoch"));
 			to.put("sysnano", meta.optLong("sysnano"));
@@ -278,7 +279,7 @@ public class BearLocFormat {
 		final JSONObject to = new JSONObject();
 		final JSONObject from = (JSONObject) data;
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -301,7 +302,7 @@ public class BearLocFormat {
 		final ScanResult from = (ScanResult) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -323,7 +324,7 @@ public class BearLocFormat {
 		final JSONObject from = (JSONObject) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("sysnano", meta.getLong("sysnano"));
 			final String source = (from.getInt("source") == AudioSource.CAMCORDER)
@@ -354,7 +355,7 @@ public class BearLocFormat {
 		final Location from = (Location) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", from.getTime());
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -378,7 +379,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -400,7 +401,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -422,7 +423,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -444,7 +445,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -466,7 +467,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -494,7 +495,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -516,7 +517,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -536,7 +537,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -556,7 +557,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -576,7 +577,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));
@@ -596,7 +597,7 @@ public class BearLocFormat {
 		final SensorEvent from = (SensorEvent) data;
 
 		try {
-			to.put("type", meta.getLong("type"));
+			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("epoch", meta.getLong("epoch"));
 			to.put("sysnano", meta.getLong("sysnano"));

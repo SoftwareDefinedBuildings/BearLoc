@@ -40,6 +40,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.json.JSONArray;
@@ -52,7 +53,6 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Pair;
-import android.widget.Toast;
 import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
 import edu.berkeley.bearloc.util.DeviceUUID;
 import edu.berkeley.bearloc.util.JSONHttpGetTask;
@@ -130,10 +130,16 @@ public class BearLocService extends Service
 		}
 
 		mSampler.sample();
-		mHandler.postDelayed(new SendLocRequestTask(listener),
+		// TODO true doesn't mean it will be called, what a "G00d" design.
+		return mHandler.postDelayed(new SendLocRequestTask(listener),
 				BearLocService.LOC_DELAY);
+	}
 
-		return true;
+	@Override
+	public boolean getLocation(final UUID id, final Long time,
+			final LocListener listener) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override
@@ -155,6 +161,10 @@ public class BearLocService extends Service
 	@Override
 	public boolean getCandidate(final JSONObject loc,
 			final CandidateListener listener) {
+		if (listener == null) {
+			return false;
+		}
+
 		try {
 			String path = "/api/candidate/";
 			String locStr;
@@ -170,15 +180,7 @@ public class BearLocService extends Service
 			new JSONHttpGetTask(new onJSONHttpGetRespondedListener() {
 				@Override
 				public void onJSONHttpGetResponded(final JSONArray response) {
-					if (response == null) {
-						Toast.makeText(BearLocService.this,
-								R.string.bearloc_server_no_respond,
-								Toast.LENGTH_SHORT).show();
-					}
-
-					if (listener != null) {
-						listener.onCandidateReturned(response);
-					}
+					listener.onCandidateEventReturned(response);
 				}
 			}).execute(url);
 
@@ -190,7 +192,6 @@ public class BearLocService extends Service
 
 		return false;
 	}
-
 	@Override
 	public void onSampleEvent(final String type, final Object data) {
 		final JSONObject meta = new JSONObject();
@@ -210,6 +211,10 @@ public class BearLocService extends Service
 	}
 
 	private void sendLocRequest(final LocListener listener) {
+		if (listener == null) {
+			return;
+		}
+
 		try {
 			// TODO make all these string macro/variable
 			// TODO add API for application to specify uuid and time
@@ -221,15 +226,7 @@ public class BearLocService extends Service
 			new JSONHttpGetTask(new onJSONHttpGetRespondedListener() {
 				@Override
 				public void onJSONHttpGetResponded(final JSONArray response) {
-					if (response == null) {
-						Toast.makeText(BearLocService.this,
-								R.string.bearloc_server_no_respond,
-								Toast.LENGTH_SHORT).show();
-					}
-
-					if (listener != null) {
-						listener.onLocEventReturned(response);
-					}
+					listener.onLocEventReturned(response);
 				}
 			}).execute(url);
 		} catch (final RejectedExecutionException e) {
@@ -254,9 +251,6 @@ public class BearLocService extends Service
 					public void onJSONHttpPostResponded(final JSONArray response) {
 						if (response == null) {
 							mCache.addAll(eventList);
-							Toast.makeText(BearLocService.this,
-									R.string.bearloc_server_no_respond,
-									Toast.LENGTH_SHORT).show();
 						}
 					}
 				}).execute(url, data);
@@ -281,12 +275,8 @@ public class BearLocService extends Service
 			url = uri.toURL();
 		} catch (final URISyntaxException e) {
 			e.printStackTrace();
-			Toast.makeText(this, R.string.bearloc_url_error, Toast.LENGTH_SHORT)
-					.show();
 		} catch (final MalformedURLException e) {
 			e.printStackTrace();
-			Toast.makeText(this, R.string.bearloc_url_error, Toast.LENGTH_SHORT)
-					.show();
 		}
 
 		return url;

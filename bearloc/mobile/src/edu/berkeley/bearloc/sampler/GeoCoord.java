@@ -39,8 +39,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.widget.Toast;
-import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class GeoCoord implements Sampler, LocationListener {
@@ -78,8 +76,6 @@ public class GeoCoord implements Sampler, LocationListener {
 				&& SamplerSettings.getGeoCoordEnable(mContext) == true) {
 			if (mLocManager == null) {
 				SamplerSettings.setGeoCoordEnable(mContext, false);
-				Toast.makeText(mContext, R.string.bearloc_geocoord_error,
-						Toast.LENGTH_SHORT).show();
 				return false;
 			}
 

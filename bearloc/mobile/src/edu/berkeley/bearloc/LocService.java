@@ -33,6 +33,8 @@
 
 package edu.berkeley.bearloc;
 
+import java.util.UUID;
+
 import org.json.JSONObject;
 
 public interface LocService {
@@ -45,6 +47,21 @@ public interface LocService {
 	 * @return true if success, else false
 	 */
 	public abstract boolean getLocation(LocListener listener);
+
+	/**
+	 * Get location for this device with given id at given time.
+	 * 
+	 * @param id
+	 *            UUID of target device
+	 * @param time
+	 *            UNIX timestamp in millisecond for location query
+	 * @param listener
+	 *            listener of the event that location is returned by server
+	 * 
+	 * @return true if success, else false
+	 */
+	// TODO Currently unimplemented
+	public abstract boolean getLocation(UUID id, Long time, LocListener listener);
 
 	/**
 	 * Report any type of data on this phone to server. Currently only those

@@ -40,5 +40,5 @@ public interface CandidateListener {
 	 * @param candidate
 	 *            candidate returned by server
 	 */
-	public abstract void onCandidateReturned(JSONArray candidate);
+	public abstract void onCandidateEventReturned(JSONArray candidateEvent);
 }

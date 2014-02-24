@@ -123,7 +123,9 @@ public class LocReporterActivity extends Activity
 		// Set default setting values
 		PreferenceManager.setDefaultValues(this, R.xml.general_settings, false);
 
+		mCurLoc = new JSONObject();
 		mCurSem = LocReporterService.Semantics[LocReporterService.Semantics.length - 1];
+		mCurCandidate = new JSONArray();
 
 		mListView = (ListView) findViewById(R.id.list);
 		mArrayAdapter = new ArrayAdapter<String>(this,
@@ -347,15 +349,16 @@ public class LocReporterActivity extends Activity
 
 		final JSONObject oldLoc = mCurLoc;
 		try {
-			mCurLoc = locEvent.getJSONObject(0);
-			Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT)
-					.show();
+			mCurLoc = locEvent.getJSONObject(0); // The response is JSON Array
 			if (oldLoc == null
 					|| oldLoc.toString().equals(mCurLoc.toString()) == false) {
 				if (getCandidate() == false) {
-					Toast.makeText(this, R.string.server_no_respond,
-							Toast.LENGTH_SHORT).show();
 					mCurLoc = oldLoc;
+					Toast.makeText(this, R.string.loc_not_updated,
+							Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(this, R.string.loc_updated,
+							Toast.LENGTH_SHORT).show();
 				}
 			}
 		} catch (final JSONException e) {
@@ -391,11 +394,16 @@ public class LocReporterActivity extends Activity
 					break;
 				}
 				if (mCurLoc.has(sem) == false) {
-					break;
+					return false;
 				}
 				queryLoc.put(sem, mCurLoc.getString(sem));
 			}
-			return mService.getCandidate(queryLoc, this);
+			final boolean rv = mService.getCandidate(queryLoc, this);
+			if (rv == false) {
+				Toast.makeText(this, R.string.server_no_respond,
+						Toast.LENGTH_SHORT).show();
+			}
+			return rv;
 		} catch (final JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -403,7 +411,6 @@ public class LocReporterActivity extends Activity
 
 		return false;
 	}
-
 	public String getLocStr(final JSONObject loc, final String[] sems,
 			final String endSem) {
 		String locStr = "";

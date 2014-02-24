@@ -171,6 +171,7 @@ public class LocReporterService extends Service implements SensorEventListener {
 					LocReporterService.AUTO_REPORT_ITVL);
 		}
 	}
+
 	@Override
 	public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
 		// TODO Auto-generated method stub

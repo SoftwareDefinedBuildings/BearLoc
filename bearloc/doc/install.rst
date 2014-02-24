@@ -14,18 +14,22 @@ To run our server codes on your machine, you need to install some prerequisite p
 
 * `python 2.7 <http://www.python.org>`__
 * `pip <http://www.pip-installer.org/>`__
+* `MongoDB <http://www.mongodb.org/>`__
 * `twisted <http://www.twistedmatrix.com>`__
-* `zope.interface <http://pypi.python.org/pypi/zope.interface>`__
-* `numpy <http://www.numpy.org/>`__
 * `scipy <http://www.scipy.org/>`__
+* `numpy <http://www.numpy.org/>`__
 * `scikit-learn <http://scikit-learn.org/>`__
+* `zope.interface <http://pypi.python.org/pypi/zope.interface>`__
+* `simplejson <https://pypi.python.org/pypi/simplejson/>`__
+* `pymongo <http://api.mongodb.org/python/current/>`__
+
 
 On debian, you can install these with apt and pip:
 
 .. code-block:: bash
 
-   apt-get install build-essential python-dev python-scipy python-pip
-   pip install twisted numpy scikit-learn zope.interface simplejson
+   apt-get install build-essential python-dev python-scipy python-pip mongodb
+   pip install twisted numpy scikit-learn zope.interface simplejson pymongo
 
 
 On Mac OS X, you can install these with using `Homebrew <http://brew.sh/>`__ and pip. 
@@ -34,7 +38,7 @@ On Mac OS X, you can install these with using `Homebrew <http://brew.sh/>`__ and
 Run Server
 ^^^^^^^^^^
 
-After getting all prerequisite packages, in terminal, go to /bearloc/server, and execute
+After getting all prerequisite packages, in terminal, go to */bearloc/server*, and execute
 
 .. code-block:: bash
 

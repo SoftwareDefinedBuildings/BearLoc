@@ -37,7 +37,7 @@
     <string name="bearloc_default_pressure_enable">false</string>
     <string name="bearloc_default_audio_enable">false</string>
     <string name="bearloc_default_humidity_enable">false</string>
-    <string name="bearloc_default_geoloc_enable">false</string>
+    <string name="bearloc_default_geocoord_enable">false</string>
     <string name="bearloc_default_gravity_enable">false</string>
     <string name="bearloc_default_gyro_enable">false</string>
     <string name="bearloc_default_light_enable">false</string>

@@ -112,7 +112,7 @@ class Location(object):
         query = {'id': query_id}
         query['epoch'] = {'$exists': True, '$type': 18, '$lte': query_epoch + self._wifi_predict_epoch_thld, '$gte': query_epoch - self._wifi_predict_epoch_thld} # type 18: 64-bit integer
         query['BSSID'] = {'$exists': True, '$type': 2} # type 2: String
-        query['RSSI'] = {'$exists': True, '$type': 1, '$lt': 0} # type 1: Double
+        query['RSSI'] = {'$exists': True, '$type': 16, '$lt': 0} # type 16: 32-bit integer
         query['type'] = 'wifi'
 
         wifis = [doc for doc in self._data.find(query).sort('epoch', pymongo.ASCENDING)] # 1: sort ascending
@@ -170,7 +170,7 @@ class Location(object):
         query = {'id': {'$exists': True, '$in': device_ids}}
         query['epoch'] = {'$exists': True, '$type': 18} # type 18: 64-bit integer
         query['BSSID'] = {'$exists': True, '$type': 2} # type 2: String
-        query['RSSI'] = {'$exists': True, '$type': 1, '$lt': 0} # type 1: Double
+        query['RSSI'] = {'$exists': True, '$type': 16, '$lt': 0} # type 16: 32-bit integer
         query['type'] = 'wifi'
         all_wifis = [doc for doc in self._data.find(query)]
 

@@ -37,10 +37,13 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -49,244 +52,233 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.widget.Toast;
+import android.util.Pair;
 import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
+import edu.berkeley.bearloc.util.DeviceUUID;
+import edu.berkeley.bearloc.util.JSONHttpGetTask;
+import edu.berkeley.bearloc.util.JSONHttpGetTask.onJSONHttpGetRespondedListener;
 import edu.berkeley.bearloc.util.JSONHttpPostTask;
 import edu.berkeley.bearloc.util.JSONHttpPostTask.onJSONHttpPostRespondedListener;
 import edu.berkeley.bearloc.util.ServerSettings;
 
-public class BearLocService extends Service implements SemLocService,
-        OnSampleEventListener {
+public class BearLocService extends Service
+		implements
+			LocService,
+			OnSampleEventListener {
 
-    private static final int DATA_SEND_ITVL = 100; // millisecond
+	private static final int DATA_SEND_ITVL = 100; // millisecond
+	private static final int LOC_DELAY = 300; // millisecond
 
-    private IBinder mBinder;
+	private static final List<String> mSemantic = new LinkedList<String>(
+			Arrays.asList("country", "state", "city", "street", "building",
+					"locale"));
 
-    private List<SemLocListener> mListeners;
-    private Handler mHandler;
-    private Integer mDataSendItvl = null; // Millisecond, null if not scheduled
+	private IBinder mBinder;
+	private Handler mHandler;
+	// in millisecond, null if nothing is scheduled
+	private Integer mDataSendItvl = null;
 
-    private BearLocCache mCache;
-    private BearLocSampler mSampler;
-    private BearLocFormat mFormat;
+	private BearLocCache mCache;
+	private BearLocSampler mSampler;
+	private BearLocFormat mFormat;
 
-    private final Runnable mSendLocRequestTask = new Runnable() {
-        @Override
-        public void run() {
-            sendLocRequest();
-        }
-    };
+	private class SendLocRequestTask implements Runnable {
+		private final LocListener mListener;
 
-    private final Runnable mSendDataTask = new Runnable() {
-        @Override
-        public void run() {
-            sendData();
-        }
-    };
+		public SendLocRequestTask(final LocListener listener) {
+			mListener = listener;
+		}
 
-    public class BearLocBinder extends Binder {
-        public BearLocService getService() {
-            // Return this instance of LocalService so clients can call public
-            // methods
-            return BearLocService.this;
-        }
-    }
+		@Override
+		public void run() {
+			sendLocRequest(mListener);
+		}
+	};
 
-    @Override
-    public void onCreate() {
-        mBinder = new BearLocBinder();
-        mListeners = new LinkedList<SemLocListener>();
-        mHandler = new Handler();
-        mCache = new BearLocCache(this);
-        mSampler = new BearLocSampler(this, this);
-        mFormat = new BearLocFormat(this);
-    }
+	private class SendDataTask implements Runnable {
+		@Override
+		public void run() {
+			sendData();
+		}
+	};
 
-    @Override
-    public IBinder onBind(final Intent intent) {
-        return mBinder;
-    }
+	public class BearLocBinder extends Binder {
+		public BearLocService getService() {
+			// Return this instance so clients can call public methods
+			return BearLocService.this;
+		}
+	}
 
-    @Override
-    public boolean localize(final SemLocListener listener) {
-        if (listener != null) {
-            mListeners.add(listener);
-        }
+	@Override
+	public void onCreate() {
+		mBinder = new BearLocBinder();
+		mHandler = new Handler();
+		mCache = new BearLocCache(this);
+		mSampler = new BearLocSampler(this, this);
+		mFormat = new BearLocFormat(this, mCache);
+	}
 
-        mSampler.sample();
+	@Override
+	public IBinder onBind(final Intent intent) {
+		return mBinder;
+	}
 
-        // Post localization request after 1500 milliseconds
-        mHandler.postDelayed(mSendLocRequestTask, 1500);
+	@Override
+	public boolean getLocation(final LocListener listener) {
+		if (listener == null) {
+			return false;
+		}
 
-        return true;
-    }
+		mSampler.sample();
+		// TODO true doesn't mean it will be called, what a "G00d" design.
+		return mHandler.postDelayed(new SendLocRequestTask(listener),
+				BearLocService.LOC_DELAY);
+	}
 
-    private void sendLocRequest() {
-        try {
-            final String path = "/localize";
-            final URL url = getHttpURL(path);
+	@Override
+	public boolean getLocation(final UUID id, final Long time,
+			final LocListener listener) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
-            final JSONObject request = new JSONObject();
-            request.put("epoch", System.currentTimeMillis());
-            request.put("device", BearLocFormat.getDeviceInfo(this));
+	@Override
+	public boolean postData(final String type, final JSONObject data) {
+		final JSONObject meta = new JSONObject();
+		try {
+			meta.put("epoch", System.currentTimeMillis());
+			meta.put("sysnano", System.nanoTime());
+		} catch (final JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		mCache.add(type, data, meta);
+		mSampler.sample();
 
-            new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
-                @Override
-                public void onJSONHttpPostResponded(final JSONObject response) {
-                    if (response == null) {
-                        Toast.makeText(BearLocService.this,
-                                R.string.bearloc_server_no_respond,
-                                Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+		return true;
+	}
 
-                    for (final SemLocListener listener : mListeners) {
-                        if (listener != null) {
-                            try {
-                                // Generate new copy of response as it calls
-                                // back to several
-                                // listeners
-                                listener.onSemLocInfoReturned(new JSONObject(
-                                        response.toString()));
-                            } catch (final JSONException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                    mListeners.clear();
-                }
-            }).execute(url, request);
-        } catch (final JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (final RejectedExecutionException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
+	@Override
+	public boolean getCandidate(final JSONObject loc,
+			final CandidateListener listener) {
+		if (listener == null) {
+			return false;
+		}
 
-    @Override
-    public boolean report(final JSONObject semloc) {
-        final JSONObject meta = new JSONObject();
-        try {
-            meta.put("epoch", System.currentTimeMillis());
-            meta.put("sysnano", System.nanoTime());
-        } catch (final JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        mCache.put("semloc", semloc, meta);
+		try {
+			String path = "/api/candidate/";
+			String locStr;
+			for (final String semantic : mSemantic) {
+				locStr = loc.optString(semantic);
+				if (locStr.length() == 0) {
+					break;
+				}
+				path += locStr + "/";
+			}
+			final URL url = getHttpURL(path);
 
-        mSampler.sample();
+			new JSONHttpGetTask(new onJSONHttpGetRespondedListener() {
+				@Override
+				public void onJSONHttpGetResponded(final JSONArray response) {
+					listener.onCandidateEventReturned(response);
+				}
+			}).execute(url);
 
-        return true;
-    }
+			return true;
+		} catch (final RejectedExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-    @Override
-    public boolean meta(final JSONObject semloc, final MetaListener listener) {
-        try {
-            final String path = "/meta";
-            final URL url = getHttpURL(path);
+		return false;
+	}
+	@Override
+	public void onSampleEvent(final String type, final Object data) {
+		final JSONObject meta = new JSONObject();
+		try {
+			meta.put("epoch", System.currentTimeMillis());
+			meta.put("sysnano", System.nanoTime());
+		} catch (final JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		mCache.add(type, data, meta);
 
-            final JSONObject request = new JSONObject();
-            request.put("semloc", semloc);
+		if (mDataSendItvl == null) {
+			mDataSendItvl = BearLocService.DATA_SEND_ITVL;
+			mHandler.postDelayed(new SendDataTask(), mDataSendItvl);
+		}
+	}
 
-            new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
-                @Override
-                public void onJSONHttpPostResponded(final JSONObject response) {
-                    if (response == null) {
-                        Toast.makeText(BearLocService.this,
-                                R.string.bearloc_server_no_respond,
-                                Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+	private void sendLocRequest(final LocListener listener) {
+		if (listener == null) {
+			return;
+		}
 
-                    if (listener != null) {
-                        listener.onMetaReturned(response);
-                    }
-                }
-            }).execute(url, request);
+		try {
+			// TODO make all these string macro/variable
+			// TODO add API for application to specify uuid and time
+			final String path = "/api/location/"
+					+ DeviceUUID.getDeviceUUID(this).toString() + "/"
+					+ Long.toString(System.currentTimeMillis());
+			final URL url = getHttpURL(path);
 
-            return true;
-        } catch (final JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (final RejectedExecutionException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+			new JSONHttpGetTask(new onJSONHttpGetRespondedListener() {
+				@Override
+				public void onJSONHttpGetResponded(final JSONArray response) {
+					listener.onLocEventReturned(response);
+				}
+			}).execute(url);
+		} catch (final RejectedExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
-        return false;
-    }
+	private void sendData() {
+		final String path = "/api/data/"
+				+ DeviceUUID.getDeviceUUID(this).toString();
+		final URL url = getHttpURL(path);
 
-    private void sendData() {
-        final String path = "/report";
-        final URL url = getHttpURL(path);
+		final List<Pair<Object, JSONObject>> eventList = mCache.getCopy();
+		mCache.clear();
+		final JSONArray data = mFormat.dump(eventList);
 
-        final JSONObject report = mFormat.dump(mCache.get());
-        mCache.clear();
+		if (data.length() > 0) {
+			try {
+				new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
+					@Override
+					public void onJSONHttpPostResponded(final JSONArray response) {
+						if (response == null) {
+							mCache.addAll(eventList);
+						}
+					}
+				}).execute(url, data);
+			} catch (final RejectedExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			mHandler.postDelayed(new SendDataTask(), mDataSendItvl);
+		} else {
+			mDataSendItvl = null;
+		}
+	}
 
-        if (report.length() > 0) {
-            try {
-                new JSONHttpPostTask(new onJSONHttpPostRespondedListener() {
-                    @Override
-                    public void onJSONHttpPostResponded(
-                            final JSONObject response) {
-                        if (response == null) {
-                            Toast.makeText(BearLocService.this,
-                                    R.string.bearloc_server_no_respond,
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }).execute(url, report);
-            } catch (final RejectedExecutionException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            mHandler.postDelayed(mSendDataTask, mDataSendItvl);
-        } else {
-            mDataSendItvl = null;
-        }
-    }
+	private URL getHttpURL(final String path) {
+		URL url = null;
+		try {
+			final String serverHost = ServerSettings.getServerAddr(this);
+			final int serverPort = ServerSettings.getServerPort(this);
+			// TODO handle the exception of using IP address
+			final URI uri = new URI("http", null, serverHost, serverPort, path,
+					null, null);
+			url = uri.toURL();
+		} catch (final URISyntaxException e) {
+			e.printStackTrace();
+		} catch (final MalformedURLException e) {
+			e.printStackTrace();
+		}
 
-    @Override
-    public void onSampleEvent(final String type, final Object data) {
-        final JSONObject meta = new JSONObject();
-        try {
-            meta.put("epoch", System.currentTimeMillis());
-            meta.put("sysnano", System.nanoTime());
-        } catch (final JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        mCache.put(type, data, meta);
-
-        if (mDataSendItvl == null) {
-            mDataSendItvl = BearLocService.DATA_SEND_ITVL;
-            mHandler.postDelayed(mSendDataTask, mDataSendItvl);
-        }
-    }
-
-    private URL getHttpURL(final String path) {
-        URL url = null;
-        try {
-            final String serverHost = ServerSettings.getServerAddr(this);
-            final int serverPort = ServerSettings.getServerPort(this);
-            // TODO handle the exception of using IP address
-            final URI uri = new URI("http", null, serverHost, serverPort, path,
-                    null, null);
-            url = uri.toURL();
-        } catch (final URISyntaxException e) {
-            e.printStackTrace();
-            Toast.makeText(this, R.string.bearloc_url_error, Toast.LENGTH_SHORT)
-                    .show();
-        } catch (final MalformedURLException e) {
-            e.printStackTrace();
-            Toast.makeText(this, R.string.bearloc_url_error, Toast.LENGTH_SHORT)
-                    .show();
-        }
-
-        return url;
-    }
+		return url;
+	}
 }

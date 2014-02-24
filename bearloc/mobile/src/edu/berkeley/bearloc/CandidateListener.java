@@ -33,13 +33,12 @@
 
 package edu.berkeley.bearloc;
 
-import org.json.JSONObject;
+import org.json.JSONArray;
 
-public interface SemLocService {
-    public abstract boolean localize(SemLocListener listener);
-
-    // report semloc data
-    public abstract boolean report(JSONObject semloc);
-
-    public abstract boolean meta(JSONObject semloc, MetaListener listener);
+public interface CandidateListener {
+	/**
+	 * @param candidate
+	 *            candidate returned by server
+	 */
+	public abstract void onCandidateEventReturned(JSONArray candidateEvent);
 }

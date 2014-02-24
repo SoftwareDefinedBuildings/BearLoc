@@ -111,23 +111,23 @@
     <string name="bearloc_pref_humidity_delay">Speed (Delay)</string>
     <string name="bearloc_default_humidity_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL</string>
 
-    <!-- Geographic Location settings strings -->
-    <string name="bearloc_pref_geoloc_title">Geographic Location</string>
-    <string name="bearloc_pref_geoloc_enable_summ">Enable geolocation sampling</string>
-    <string name="bearloc_pref_geoloc_enable">Sample GeoLocation</string>
-    <string name="bearloc_default_geoloc_enable">true</string>
-    <string name="bearloc_pref_geoloc_duration_summ">Max sample duration in milliseconds</string>
-    <string name="bearloc_pref_geoloc_duration">Duration</string>
-    <string name="bearloc_default_geoloc_duration">1000</string>
-    <string name="bearloc_pref_geoloc_cnt_summ">Max sample count in one duration</string>
-    <string name="bearloc_pref_geoloc_cnt">Count</string>
-    <string name="bearloc_default_geoloc_cnt">1</string>
-    <string name="bearloc_pref_geoloc_min_delay_summ">Minimum delay of updates in milliseconds</string>
-    <string name="bearloc_pref_geoloc_min_delay">Minimum Delay</string>
-    <string name="bearloc_default_geoloc_min_delay">0</string>
-    <string name="bearloc_pref_geoloc_min_dist_summ">Minimum distance of updates in meters</string>
-    <string name="bearloc_pref_geoloc_min_dist">Minimum Distance</string>
-    <string name="bearloc_default_geoloc_min_dist">0</string>
+    <!-- Geographic Coordinate settings strings -->
+    <string name="bearloc_pref_geocoord_title">Geographic Location</string>
+    <string name="bearloc_pref_geocoord_enable_summ">Enable geolocation sampling</string>
+    <string name="bearloc_pref_geocoord_enable">Sample GeoLocation</string>
+    <string name="bearloc_default_geocoord_enable">true</string>
+    <string name="bearloc_pref_geocoord_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_geocoord_duration">Duration</string>
+    <string name="bearloc_default_geocoord_duration">1000</string>
+    <string name="bearloc_pref_geocoord_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_geocoord_cnt">Count</string>
+    <string name="bearloc_default_geocoord_cnt">1</string>
+    <string name="bearloc_pref_geocoord_min_delay_summ">Minimum delay of updates in milliseconds</string>
+    <string name="bearloc_pref_geocoord_min_delay">Minimum Delay</string>
+    <string name="bearloc_default_geocoord_min_delay">0</string>
+    <string name="bearloc_pref_geocoord_min_dist_summ">Minimum distance of updates in meters</string>
+    <string name="bearloc_pref_geocoord_min_dist">Minimum Distance</string>
+    <string name="bearloc_default_geocoord_min_dist">0</string>
 
     <!-- Gravity settings strings -->
     <string name="bearloc_pref_gravity_title">Gravity</string>

@@ -33,8 +33,12 @@
 
 package edu.berkeley.bearloc;
 
-import org.json.JSONObject;
+import org.json.JSONArray;
 
-public interface SemLocListener {
-    public abstract void onSemLocInfoReturned(JSONObject semLocInfo);
+public interface LocListener {
+	/**
+	 * @param locEvent
+	 *            estimated location event returned by server
+	 */
+	public abstract void onLocEventReturned(JSONArray locEvent);
 }

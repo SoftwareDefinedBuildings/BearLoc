@@ -40,167 +40,164 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.media.AudioRecord;
 import android.os.Handler;
-import android.widget.Toast;
 import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Audio implements Sampler {
 
-    private int mSrc;
-    private int mSampleRate;
-    private int mChannel;
-    private int mFormat;
+	private int mSrc;
+	private int mSampleRate;
+	private int mChannel;
+	private int mFormat;
 
-    private boolean mBusy;
+	private boolean mBusy;
 
-    private final Context mContext;
-    private final SamplerListener mListener;
-    private final Handler mHandler;
+	private final Context mContext;
+	private final SamplerListener mListener;
+	private final Handler mHandler;
 
-    public static interface SamplerListener {
-        public abstract void onAudioEvent(JSONObject audio);
-    }
+	public static interface SamplerListener {
+		public abstract void onAudioEvent(JSONObject audio);
+	}
 
-    private AudioRecordThread mAudioRecordThread;
+	private AudioRecordThread mAudioRecordThread;
 
-    private class AudioRecordThread extends Thread {
+	private class AudioRecordThread extends Thread {
 
-        private volatile boolean mRun = true;
-        private Long mStartEpoch;
-        private AudioRecord mRecorder;
-        private final JSONArray mRaw = new JSONArray();
+		private volatile boolean mRun = true;
+		private Long mStartEpoch;
+		private AudioRecord mRecorder;
+		private final JSONArray mRaw = new JSONArray();
 
-        @Override
-        public void run() {
-            try {
-                final int bufferSize = AudioRecord.getMinBufferSize(
-                        mSampleRate, mChannel, mFormat);
-                mRecorder = new AudioRecord(mSrc, mSampleRate, mChannel,
-                        mFormat, bufferSize);
+		@Override
+		public void run() {
+			try {
+				final int bufferSize = AudioRecord.getMinBufferSize(
+						mSampleRate, mChannel, mFormat);
+				mRecorder = new AudioRecord(mSrc, mSampleRate, mChannel,
+						mFormat, bufferSize);
 
-                mStartEpoch = System.currentTimeMillis();
-                mRecorder.startRecording();
+				mStartEpoch = System.currentTimeMillis();
+				mRecorder.startRecording();
 
-                while (mRun == true) {
-                    final byte[] buffer = new byte[bufferSize];
-                    // blocking read, which returns when buffer.length bytes are
-                    // recorded
-                    mRecorder.read(buffer, 0, buffer.length); // Bytes
-                    for (final byte data : buffer) {
-                        mRaw.put(data);
-                    }
-                }
+				while (mRun == true) {
+					final byte[] buffer = new byte[bufferSize];
+					// blocking read, which returns when buffer.length bytes are
+					// recorded
+					mRecorder.read(buffer, 0, buffer.length); // Bytes
+					for (final byte data : buffer) {
+						mRaw.put(data);
+					}
+				}
 
-                mRecorder.stop();
-                mRecorder.release();
+				mRecorder.stop();
+				mRecorder.release();
 
-                mListener.onAudioEvent(dump());
-            } catch (final Exception e) {
-                e.printStackTrace();
-            }
-        }
+				mListener.onAudioEvent(dump());
+			} catch (final Exception e) {
+				e.printStackTrace();
+			}
+		}
 
-        public void terminate() {
-            mRun = false;
-        }
+		public void terminate() {
+			mRun = false;
+		}
 
-        private JSONObject dump() {
-            final JSONObject audioEvent = new JSONObject();
+		private JSONObject dump() {
+			final JSONObject audioEvent = new JSONObject();
 
-            try {
-                audioEvent.put("raw", mRaw);
-                audioEvent.put("epoch", mStartEpoch);
-                audioEvent.put("source", mSrc);
-                audioEvent.put("channel", mChannel);
-                audioEvent.put("sampwidth", mFormat);
-                audioEvent.put("framerate", mSampleRate);
-            } catch (final JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+			try {
+				audioEvent.put("raw", mRaw);
+				audioEvent.put("epoch", mStartEpoch);
+				audioEvent.put("source", mSrc);
+				audioEvent.put("channel", mChannel);
+				audioEvent.put("sampwidth", mFormat);
+				audioEvent.put("framerate", mSampleRate);
+			} catch (final JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
-            return audioEvent;
-        }
-    }
+			return audioEvent;
+		}
+	}
 
-    public Audio(final Context context, final SamplerListener listener) {
-        mContext = context;
-        mListener = listener;
-        mHandler = new Handler();
-    }
+	public Audio(final Context context, final SamplerListener listener) {
+		mContext = context;
+		mListener = listener;
+		mHandler = new Handler();
+	}
 
-    private final Runnable mPauseTask = new Runnable() {
-        @Override
-        public void run() {
-            pause();
-        }
-    };
+	private final Runnable mPauseTask = new Runnable() {
+		@Override
+		public void run() {
+			pause();
+		}
+	};
 
-    @Override
-    public boolean start() {
-        if (mBusy == false && SamplerSettings.getAudioEnable(mContext) == true) {
-            if (validate() == false) {
-                return false;
-            }
+	@Override
+	public boolean start() {
+		if (mBusy == false && SamplerSettings.getAudioEnable(mContext) == true) {
+			if (validate() == false) {
+				return false;
+			}
 
-            final long duration = SamplerSettings.getAudioDuration(mContext);
-            mAudioRecordThread = new AudioRecordThread();
-            mAudioRecordThread.start();
-            mHandler.postDelayed(mPauseTask, duration);
-            mBusy = true;
-            return true;
-        } else {
-            return false;
-        }
-    }
+			final long duration = SamplerSettings.getAudioDuration(mContext);
+			mAudioRecordThread = new AudioRecordThread();
+			mAudioRecordThread.start();
+			mHandler.postDelayed(mPauseTask, duration);
+			mBusy = true;
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-    private void pause() {
-        if (mBusy == true) {
-            mBusy = false;
-            mAudioRecordThread.terminate();
-            try {
-                mAudioRecordThread.join();
-            } catch (final InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            mHandler.removeCallbacks(mPauseTask);
-        }
-    }
+	private void pause() {
+		if (mBusy == true) {
+			mBusy = false;
+			mAudioRecordThread.terminate();
+			try {
+				mAudioRecordThread.join();
+			} catch (final InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			mHandler.removeCallbacks(mPauseTask);
+		}
+	}
 
-    private boolean validate() {
-        // TODO use listener to do it
-        mSrc = SamplerSettings.getAudioSrc(mContext);
-        mSampleRate = SamplerSettings.getAudioSampleRate(mContext);
-        mChannel = SamplerSettings.getAudioChannel(mContext);
-        mFormat = SamplerSettings.getAudioFormat(mContext);
+	private boolean validate() {
+		// TODO use listener to do it
+		mSrc = SamplerSettings.getAudioSrc(mContext);
+		mSampleRate = SamplerSettings.getAudioSampleRate(mContext);
+		mChannel = SamplerSettings.getAudioChannel(mContext);
+		mFormat = SamplerSettings.getAudioFormat(mContext);
 
-        int bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel,
-                mFormat);
+		int bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel,
+				mFormat);
 
-        if (bufferSize <= 0) {
-            mSampleRate = Integer
-                    .parseInt(mContext
-                            .getString(R.string.bearloc_default_audio_sample_rate_value));
-            mChannel = Integer.parseInt(mContext
-                    .getString(R.string.bearloc_default_audio_channel_value));
-            mFormat = Integer.parseInt(mContext
-                    .getString(R.string.bearloc_default_audio_format_value));
+		if (bufferSize <= 0) {
+			mSampleRate = Integer
+					.parseInt(mContext
+							.getString(R.string.bearloc_default_audio_sample_rate_value));
+			mChannel = Integer.parseInt(mContext
+					.getString(R.string.bearloc_default_audio_channel_value));
+			mFormat = Integer.parseInt(mContext
+					.getString(R.string.bearloc_default_audio_format_value));
 
-            bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel,
-                    mFormat);
-            if (bufferSize <= 0) {
-                SamplerSettings.setAudioEnable(mContext, false);
-                Toast.makeText(mContext, R.string.bearloc_audio_error,
-                        Toast.LENGTH_SHORT).show();
-                return false;
-            }
+			bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel,
+					mFormat);
+			if (bufferSize <= 0) {
+				SamplerSettings.setAudioEnable(mContext, false);
+				return false;
+			}
 
-            SamplerSettings.setAudioSampleRate(mContext, mSampleRate);
-            SamplerSettings.setAudioChannel(mContext, mChannel);
-            SamplerSettings.setAudioFormat(mContext, mFormat);
-        }
+			SamplerSettings.setAudioSampleRate(mContext, mSampleRate);
+			SamplerSettings.setAudioChannel(mContext, mChannel);
+			SamplerSettings.setAudioFormat(mContext, mFormat);
+		}
 
-        return true;
-    }
+		return true;
+	}
 }

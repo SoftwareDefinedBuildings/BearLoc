@@ -34,12 +34,10 @@
 package edu.berkeley.bearloc.util;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -49,36 +47,23 @@ import org.json.JSONException;
 import android.os.AsyncTask;
 
 /* 
- * HTTP Post Task posts with JSON Array and gets JSON Array returned
+ * HTTP Get Task posts with JSON Array and gets JSON Array returned
  */
-public class JSONHttpPostTask extends AsyncTask<Object, Void, JSONArray> {
+public class JSONHttpGetTask extends AsyncTask<Object, Void, JSONArray> {
 
-	private final onJSONHttpPostRespondedListener listener;
+	private final onJSONHttpGetRespondedListener listener;
 
-	public static interface onJSONHttpPostRespondedListener {
-		void onJSONHttpPostResponded(JSONArray response);
+	public static interface onJSONHttpGetRespondedListener {
+		void onJSONHttpGetResponded(JSONArray response);
 	}
 
-	public JSONHttpPostTask(final onJSONHttpPostRespondedListener listener) {
+	public JSONHttpGetTask(final onJSONHttpGetRespondedListener listener) {
 		this.listener = listener;
 	}
 
-	private InputStream httpPost(final HttpURLConnection connection,
-			final URL url, final JSONArray entity) throws IOException {
-		final int contentLength = entity.toString().getBytes().length;
-		connection.setRequestMethod("POST");
-		connection.setRequestProperty("Content-Type", "application/json");
-		connection.setRequestProperty("Content-Length",
-				Integer.toString(contentLength));
-		connection.setFixedLengthStreamingMode(contentLength);
-		connection.setDoInput(true);
-		connection.setDoOutput(true);
-
-		final OutputStream out = new BufferedOutputStream(
-				connection.getOutputStream());
-		out.write(entity.toString().getBytes());
-		out.flush();
-		out.close();
+	private InputStream httpGet(final HttpURLConnection connection,
+			final URL url) throws IOException {
+		connection.setRequestMethod("GET");
 
 		final InputStream in = new BufferedInputStream(
 				connection.getInputStream());
@@ -89,9 +74,8 @@ public class JSONHttpPostTask extends AsyncTask<Object, Void, JSONArray> {
 	@Override
 	protected JSONArray doInBackground(final Object... params) {
 		final URL url = (URL) params[0];
-		final JSONArray entity = (JSONArray) params[1];
 
-		if (url == null || entity == null) {
+		if (url == null) {
 			return null;
 		}
 
@@ -99,7 +83,7 @@ public class JSONHttpPostTask extends AsyncTask<Object, Void, JSONArray> {
 		HttpURLConnection connection = null;
 		try {
 			connection = (HttpURLConnection) url.openConnection();
-			final InputStream in = httpPost(connection, url, entity);
+			final InputStream in = httpGet(connection, url);
 
 			final BufferedReader reader = new BufferedReader(
 					new InputStreamReader(in));
@@ -130,7 +114,7 @@ public class JSONHttpPostTask extends AsyncTask<Object, Void, JSONArray> {
 	@Override
 	protected void onPostExecute(final JSONArray response) {
 		if (!isCancelled() && listener != null) {
-			listener.onJSONHttpPostResponded(response);
+			listener.onJSONHttpGetResponded(response);
 		}
 	}
 }

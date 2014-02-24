@@ -56,7 +56,7 @@ class Location(object):
         self._data = self._db.data
 
         self._train_itvl = 60*60 # in second
-        reactor.callLater(0, self._train)
+        reactor.callLater(10, self._train)
 
         self._clf = None
         self._bssids = None
@@ -91,8 +91,12 @@ class Location(object):
         query_epoch = int(query[1]) if len(query) == 2 else time.time() * 1000
 
         est_loc = self._predict(query_id, query_epoch)
+        if est_loc:
+            est_loc['type'] = "estimated semloc"
+            est_loc['id'] = "0" # TODO add uuid for server
+        response = [est_loc,]
 
-        d.callback(est_loc)
+        d.callback(response)
 
 
     def _predict(self, query_id, query_epoch):
@@ -103,12 +107,12 @@ class Location(object):
 
     def _predict_wifi(self, query_id, query_epoch):
         if self._clf == None or self._bssids == None:
-            return None
+            return {}
 
         query = {'id': query_id}
         query['epoch'] = {'$exists': True, '$type': 18, '$lte': query_epoch + self._wifi_predict_epoch_thld, '$gte': query_epoch - self._wifi_predict_epoch_thld} # type 18: 64-bit integer
         query['BSSID'] = {'$exists': True, '$type': 2} # type 2: String
-        query['RSSI'] = {'$exists': True, '$type': 1, '$lt': 0} # type 1: Double
+        query['RSSI'] = {'$exists': True, '$type': 16, '$lt': 0} # type 16: 32-bit integer
         query['type'] = 'wifi'
 
         wifis = [doc for doc in self._data.find(query).sort('epoch', pymongo.ASCENDING)] # 1: sort ascending
@@ -118,7 +122,7 @@ class Location(object):
             wifis = [doc for doc in self._data.find(query).sort('epoch', pymongo.DESCENDING).limit(50)] # 1: sort ascending
 
             if len(wifis) == 0:
-                return None
+                return {}
 
             query_epoch = wifis[0]['epoch']
 
@@ -136,8 +140,7 @@ class Location(object):
         location = count.most_common(1)[0][0]
         location = eval(location) # should be evaluated as a dictionary
         location['epoch'] = query_epoch
-        location['id'] = query_id
-        location['type'] = "estimated semloc"
+        location['target id'] = query_id
         return location
 
 
@@ -167,7 +170,7 @@ class Location(object):
         query = {'id': {'$exists': True, '$in': device_ids}}
         query['epoch'] = {'$exists': True, '$type': 18} # type 18: 64-bit integer
         query['BSSID'] = {'$exists': True, '$type': 2} # type 2: String
-        query['RSSI'] = {'$exists': True, '$type': 1, '$lt': 0} # type 1: Double
+        query['RSSI'] = {'$exists': True, '$type': 16, '$lt': 0} # type 16: 32-bit integer
         query['type'] = 'wifi'
         all_wifis = [doc for doc in self._data.find(query)]
 

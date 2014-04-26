@@ -2,28 +2,20 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <Preference
-        android:summary="@string/pref_general_category_summ"
-        android:title="@string/pref_general_category" >
-        <intent
-            android:action="edu.berkeley.locreporter.PREF_GENERAL"
-            android:targetClass="edu.berkeley.locreporter.LocReporterSettingsActivity"
-            android:targetPackage="edu.berkeley.locreporter" />
-    </Preference>
-    <Preference
         android:summary="@string/pref_server_category_summ"
         android:title="@string/pref_server_category" >
         <intent
             android:action="edu.berkeley.bearloc.PREF_SERVER"
-            android:targetClass="edu.berkeley.locreporter.LocReporterSettingsActivity"
-            android:targetPackage="edu.berkeley.locreporter" />
+            android:targetClass="edu.berkeley.contreporter.ContReporterSettingsActivity"
+            android:targetPackage="edu.berkeley.contreporter" />
     </Preference>
     <Preference
         android:summary="@string/pref_sampler_category_summ"
         android:title="@string/pref_sampler_category" >
         <intent
             android:action="edu.berkeley.bearloc.PREF_SAMPLER"
-            android:targetClass="edu.berkeley.locreporter.LocReporterSettingsActivity"
-            android:targetPackage="edu.berkeley.locreporter" />
+            android:targetClass="edu.berkeley.contreporter.ContReporterSettingsActivity"
+            android:targetPackage="edu.berkeley.contreporter" />
     </Preference>
 
 </PreferenceScreen>

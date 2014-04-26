@@ -2,15 +2,7 @@
 <preference-headers xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <header
-        android:fragment="edu.berkeley.locreporter.LocReporterSettingsActivity$SettingsFragment"
-        android:summary="@string/pref_general_category_summ"
-        android:title="@string/pref_general_category" >
-        <extra
-            android:name="settings"
-            android:value="general" />
-    </header>
-    <header
-        android:fragment="edu.berkeley.locreporter.LocReporterSettingsActivity$SettingsFragment"
+        android:fragment="edu.berkeley.contreporter.ContReporterSettingsActivity$SettingsFragment"
         android:summary="@string/pref_server_category_summ"
         android:title="@string/pref_server_category" >
         <extra
@@ -18,7 +10,7 @@
             android:value="server" />
     </header>
     <header
-        android:fragment="edu.berkeley.locreporter.LocReporterSettingsActivity$SettingsFragment"
+        android:fragment="edu.berkeley.contreporter.ContReporterSettingsActivity$SettingsFragment"
         android:summary="@string/pref_sampler_category_summ"
         android:title="@string/pref_sampler_category" >
         <extra

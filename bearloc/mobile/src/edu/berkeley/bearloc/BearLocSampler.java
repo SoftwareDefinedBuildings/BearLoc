@@ -114,7 +114,7 @@ public class BearLocSampler {
 		mAcc = new Acc(mContext, new Acc.SamplerListener() {
 			@Override
 			public void onAccEvent(final SensorEvent event) {
-				final String type = "acc";
+				final String type = "accelerometer";
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -122,7 +122,7 @@ public class BearLocSampler {
 		mLAcc = new LinearAcc(mContext, new LinearAcc.SamplerListener() {
 			@Override
 			public void onLinearAccEvent(final SensorEvent event) {
-				final String type = "lacc";
+				final String type = "linear accelerometer";
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -138,7 +138,7 @@ public class BearLocSampler {
 		mGyro = new Gyro(mContext, new Gyro.SamplerListener() {
 			@Override
 			public void onGyroEvent(final SensorEvent event) {
-				final String type = "gyro";
+				final String type = "gyroscope";
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -170,7 +170,7 @@ public class BearLocSampler {
 		mTemp = new Temp(mContext, new Temp.SamplerListener() {
 			@Override
 			public void onTempEvent(final SensorEvent event) {
-				final String type = "temp";
+				final String type = "temperature";
 				mListener.onSampleEvent(type, event);
 			}
 		});

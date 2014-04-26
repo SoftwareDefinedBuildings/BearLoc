@@ -44,8 +44,8 @@ import edu.berkeley.bearloc.util.SamplerSettings;
 public class Acc implements Sampler, SensorEventListener {
 
 	private boolean mBusy;
-//	private int mSampleCap;
-//	private int nSampleNum;
+	// private int mSampleCap;
+	// private int nSampleNum;
 
 	private final Context mContext;
 	private final SamplerListener mListener;

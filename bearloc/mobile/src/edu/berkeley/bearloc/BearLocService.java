@@ -94,6 +94,11 @@ public class BearLocService extends Service implements LocService,
 	}
 
 	@Override
+	public void onDestroy() {
+		mSampler.stop();
+	}
+
+	@Override
 	public IBinder onBind(final Intent intent) {
 		return mBinder;
 	}

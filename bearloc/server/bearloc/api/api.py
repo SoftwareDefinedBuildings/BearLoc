@@ -48,5 +48,5 @@ class API(object):
     def __init__(self, db):
         self._db = db
         self.data = Data(self._db) # Data.__init__() create and write all data tables
-        self.location = Location(self._db)
-        self.candidate = Candidate(self._db)
+        #self.location = Location(self._db)
+        #self.candidate = Candidate(self._db)

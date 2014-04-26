@@ -51,8 +51,8 @@ class APIResource(resource.Resource):
         resource.Resource.__init__(self)
         self._api = api
         self.putChild('data', DataResource(self._api.data))
-        self.putChild('location', LocationResource(self._api.location))
-        self.putChild('candidate', CandidateResource(self._api.candidate))
+        #self.putChild('location', LocationResource(self._api.location))
+        #self.putChild('candidate', CandidateResource(self._api.candidate))
 
 
     def getChild(self, path, request):

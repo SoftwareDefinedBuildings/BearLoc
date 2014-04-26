@@ -43,86 +43,92 @@ import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Magnetic implements Sampler, SensorEventListener {
 
-    private boolean mBusy;
-    private int mSampleCap;
-    private int nSampleNum;
+	private boolean mBusy;
+	// private int mSampleCap;
+	// private int nSampleNum;
 
-    private final Context mContext;
-    private final SamplerListener mListener;
-    private final Handler mHandler;
-    private final SensorManager mSensorManager;
-    private final Sensor mMag;
+	private final Context mContext;
+	private final SamplerListener mListener;
+	private final Handler mHandler;
+	private final SensorManager mSensorManager;
+	private final Sensor mMag;
 
-    public static interface SamplerListener {
-        public abstract void onMagneticEvent(SensorEvent event);
-    }
+	public static interface SamplerListener {
+		public abstract void onMagneticEvent(SensorEvent event);
+	}
 
-    private final Runnable mPauseTask = new Runnable() {
-        @Override
-        public void run() {
-            pause();
-        }
-    };
+	private final Runnable mPauseTask = new Runnable() {
+		@Override
+		public void run() {
+			pause();
+		}
+	};
 
-    public Magnetic(final Context context, final SamplerListener listener) {
-        mContext = context;
-        mListener = listener;
-        mHandler = new Handler();
-        mSensorManager = (SensorManager) context
-                .getSystemService(Context.SENSOR_SERVICE);
-        mMag = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-    }
+	public Magnetic(final Context context, final SamplerListener listener) {
+		mContext = context;
+		mListener = listener;
+		mHandler = new Handler();
+		mSensorManager = (SensorManager) context
+				.getSystemService(Context.SENSOR_SERVICE);
+		mMag = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+	}
 
-    @Override
-    public boolean start() {
-        if (mBusy == false
-                && SamplerSettings.getMagneticEnable(mContext) == true) {
-            if (mMag == null) {
-                SamplerSettings.setMagneticEnable(mContext, false);
-                return false;
-            }
+	@Override
+	public boolean start() {
+		if (mBusy == false
+				&& SamplerSettings.getMagneticEnable(mContext) == true) {
+			if (mMag == null) {
+				SamplerSettings.setMagneticEnable(mContext, false);
+				return false;
+			}
 
-            final long duration = SamplerSettings.getMagneticDuration(mContext);
-            final int num = SamplerSettings.getMagneticCnt(mContext);
-            final int delay = SamplerSettings.getMagneticDelay(mContext);
-            nSampleNum = 0;
-            mSampleCap = num;
-            mSensorManager.registerListener(this, mMag, delay);
-            mHandler.postDelayed(mPauseTask, duration);
-            mBusy = true;
-            return true;
-        } else {
-            return false;
-        }
-    }
+			// final long duration =
+			// SamplerSettings.getMagneticDuration(mContext);
+			// final int num = SamplerSettings.getMagneticCnt(mContext);
+			final int delay = SamplerSettings.getMagneticDelay(mContext);
+			// nSampleNum = 0;
+			// mSampleCap = num;
+			mSensorManager.registerListener(this, mMag, delay);
+			// mHandler.postDelayed(mPauseTask, duration);
+			mBusy = true;
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-    private void pause() {
-        if (mBusy == true) {
-            mBusy = false;
-            mSensorManager.unregisterListener(this);
-            mHandler.removeCallbacks(mPauseTask);
-        }
-    }
+	private void pause() {
+		if (mBusy == true) {
+			mBusy = false;
+			mSensorManager.unregisterListener(this);
+			mHandler.removeCallbacks(mPauseTask);
+		}
+	}
 
-    @Override
-    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-        // TODO Auto-generated method stub
+	@Override
+	public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
+		// TODO Auto-generated method stub
 
-    }
+	}
 
-    @Override
-    public void onSensorChanged(final SensorEvent event) {
-        if (event == null) {
-            return;
-        }
+	@Override
+	public void onSensorChanged(final SensorEvent event) {
+		if (event == null) {
+			return;
+		}
 
-        if (mListener != null) {
-            mListener.onMagneticEvent(event);
-        }
+		if (mListener != null) {
+			mListener.onMagneticEvent(event);
+		}
 
-        nSampleNum++;
-        if (nSampleNum >= mSampleCap) {
-            pause();
-        }
-    }
+		// nSampleNum++;
+		// if (nSampleNum >= mSampleCap) {
+		// pause();
+		// }
+	}
+	
+	@Override
+	public void stop() {
+		pause();
+	}
 }

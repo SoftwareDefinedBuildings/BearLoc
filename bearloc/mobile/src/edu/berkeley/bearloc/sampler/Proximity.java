@@ -43,87 +43,92 @@ import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Proximity implements Sampler, SensorEventListener {
 
-    private boolean mBusy;
-    private int mSampleCap;
-    private int nSampleNum;
+	private boolean mBusy;
+	// private int mSampleCap;
+	// private int nSampleNum;
 
-    private final Context mContext;
-    private final SamplerListener mListener;
-    private final Handler mHandler;
-    private final SensorManager mSensorManager;
-    private final Sensor mProximity;
+	private final Context mContext;
+	private final SamplerListener mListener;
+	private final Handler mHandler;
+	private final SensorManager mSensorManager;
+	private final Sensor mProximity;
 
-    public static interface SamplerListener {
-        public abstract void onProximityEvent(SensorEvent event);
-    }
+	public static interface SamplerListener {
+		public abstract void onProximityEvent(SensorEvent event);
+	}
 
-    private final Runnable mPauseTask = new Runnable() {
-        @Override
-        public void run() {
-            pause();
-        }
-    };
+	private final Runnable mPauseTask = new Runnable() {
+		@Override
+		public void run() {
+			pause();
+		}
+	};
 
-    public Proximity(final Context context, final SamplerListener listener) {
-        mContext = context;
-        mListener = listener;
-        mHandler = new Handler();
-        mSensorManager = (SensorManager) context
-                .getSystemService(Context.SENSOR_SERVICE);
-        mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-    }
+	public Proximity(final Context context, final SamplerListener listener) {
+		mContext = context;
+		mListener = listener;
+		mHandler = new Handler();
+		mSensorManager = (SensorManager) context
+				.getSystemService(Context.SENSOR_SERVICE);
+		mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+	}
 
-    @Override
-    public boolean start() {
-        if (mBusy == false
-                && SamplerSettings.getProximityEnable(mContext) == true) {
-            if (mProximity == null) {
-                SamplerSettings.setProximityEnable(mContext, false);
-                return false;
-            }
+	@Override
+	public boolean start() {
+		if (mBusy == false
+				&& SamplerSettings.getProximityEnable(mContext) == true) {
+			if (mProximity == null) {
+				SamplerSettings.setProximityEnable(mContext, false);
+				return false;
+			}
 
-            final long duration = SamplerSettings
-                    .getProximityDuration(mContext);
-            final int num = SamplerSettings.getProximityCnt(mContext);
-            final int delay = SamplerSettings.getProximityDelay(mContext);
-            nSampleNum = 0;
-            mSampleCap = num;
-            mSensorManager.registerListener(this, mProximity, delay);
-            mHandler.postDelayed(mPauseTask, duration);
-            mBusy = true;
-            return true;
-        } else {
-            return false;
-        }
-    }
+			// final long duration = SamplerSettings
+			// .getProximityDuration(mContext);
+			// final int num = SamplerSettings.getProximityCnt(mContext);
+			final int delay = SamplerSettings.getProximityDelay(mContext);
+			// nSampleNum = 0;
+			// mSampleCap = num;
+			mSensorManager.registerListener(this, mProximity, delay);
+			// mHandler.postDelayed(mPauseTask, duration);
+			mBusy = true;
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-    private void pause() {
-        if (mBusy == true) {
-            mBusy = false;
-            mSensorManager.unregisterListener(this);
-            mHandler.removeCallbacks(mPauseTask);
-        }
-    }
+	private void pause() {
+		if (mBusy == true) {
+			mBusy = false;
+			mSensorManager.unregisterListener(this);
+			mHandler.removeCallbacks(mPauseTask);
+		}
+	}
 
-    @Override
-    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-        // TODO Auto-generated method stub
+	@Override
+	public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
+		// TODO Auto-generated method stub
 
-    }
+	}
 
-    @Override
-    public void onSensorChanged(final SensorEvent event) {
-        if (event == null) {
-            return;
-        }
+	@Override
+	public void onSensorChanged(final SensorEvent event) {
+		if (event == null) {
+			return;
+		}
 
-        if (mListener != null) {
-            mListener.onProximityEvent(event);
-        }
+		if (mListener != null) {
+			mListener.onProximityEvent(event);
+		}
 
-        nSampleNum++;
-        if (nSampleNum >= mSampleCap) {
-            pause();
-        }
-    }
+		// nSampleNum++;
+		// if (nSampleNum >= mSampleCap) {
+		// pause();
+		// }
+	}
+
+	@Override
+	public void stop() {
+		pause();
+	}
 }

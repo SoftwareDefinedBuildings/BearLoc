@@ -43,7 +43,7 @@ import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class GeoCoord implements Sampler, LocationListener {
 	private boolean mBusy;
-	private int mSampleCap;
+	// private int mSampleCap;
 	private int nSampleNum;
 
 	private final Context mContext;
@@ -79,12 +79,13 @@ public class GeoCoord implements Sampler, LocationListener {
 				return false;
 			}
 
-			final long duration = SamplerSettings.getGeoCoordDuration(mContext);
-			final int num = SamplerSettings.getGeoCoordCnt(mContext);
+			// final long duration =
+			// SamplerSettings.getGeoCoordDuration(mContext);
+			// final int num = SamplerSettings.getGeoCoordCnt(mContext);
 			final int minDelay = SamplerSettings.getGeoCoordMinDelay(mContext);
 			final float minDist = SamplerSettings.getGeoCoordMinDist(mContext);
 			nSampleNum = 0;
-			mSampleCap = num;
+			// mSampleCap = num;
 			// TODO get last know geocoord
 			try {
 				mLocManager.requestLocationUpdates(
@@ -99,7 +100,7 @@ public class GeoCoord implements Sampler, LocationListener {
 			} catch (final IllegalArgumentException e) {
 				e.printStackTrace();
 			}
-			mHandler.postDelayed(mPauseTask, duration);
+			// mHandler.postDelayed(mPauseTask, duration);
 			mBusy = true;
 			return true;
 		} else {
@@ -150,9 +151,9 @@ public class GeoCoord implements Sampler, LocationListener {
 		}
 
 		nSampleNum++;
-		if (nSampleNum >= mSampleCap) {
-			pause();
-		}
+		// if (nSampleNum >= mSampleCap) {
+		// pause();
+		// }
 	}
 
 	@Override
@@ -172,5 +173,10 @@ public class GeoCoord implements Sampler, LocationListener {
 			final Bundle extras) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void stop() {
+		pause();
 	}
 }

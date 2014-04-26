@@ -217,4 +217,21 @@ public class BearLocSampler {
 		mProximity.start();
 		mHumidity.start();
 	}
+	
+	public void stop() {
+		mWifi.stop();
+		mAudio.stop();
+		mGeoLoc.stop();
+		mAcc.stop();
+		mLAcc.stop();
+		mGravity.stop();
+		mGyro.stop();
+		mRotation.stop();
+		mMag.stop();
+		mLight.stop();
+		mTemp.stop();
+		mPressure.stop();
+		mProximity.stop();
+		mHumidity.stop();
+	}
 }

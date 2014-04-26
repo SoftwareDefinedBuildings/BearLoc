@@ -50,7 +50,7 @@ public class Wifi implements Sampler {
 	private long mSampleItvl; // millisecond
 
 	private boolean mBusy;
-	private int mSampleCap;
+	// private int mSampleCap;
 	private int nSampleNum;
 
 	private final Context mContext;
@@ -74,11 +74,11 @@ public class Wifi implements Sampler {
 				}
 
 				nSampleNum++;
-				if (nSampleNum < mSampleCap) {
-					mHandler.postDelayed(mWifiScanTask, mSampleItvl);
-				} else {
-					pause();
-				}
+				// if (nSampleNum < mSampleCap) {
+				mHandler.postDelayed(mWifiScanTask, mSampleItvl);
+				// } else {
+				// pause();
+				// }
 			}
 		}
 	};
@@ -117,13 +117,13 @@ public class Wifi implements Sampler {
 				return false;
 			}
 
-			final long duration = SamplerSettings.getWifiDuration(mContext);
-			final int num = SamplerSettings.getWifiCnt(mContext);
+			// final long duration = SamplerSettings.getWifiDuration(mContext);
+			// final int num = SamplerSettings.getWifiCnt(mContext);
 			mSampleItvl = SamplerSettings.getWifiDelay(mContext);
 			nSampleNum = 0;
-			mSampleCap = num;
+			// mSampleCap = num;
 			mHandler.postDelayed(mWifiScanTask, 0);
-			mHandler.postDelayed(mPauseTask, duration);
+			// mHandler.postDelayed(mPauseTask, duration);
 			mBusy = true;
 			mWifiLock = mWifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL,
 					"BearLoc");
@@ -158,5 +158,10 @@ public class Wifi implements Sampler {
 		if (success == false) {
 			mHandler.postDelayed(mWifiScanTask, mSampleItvl);
 		}
+	}
+
+	@Override
+	public void stop() {
+		pause();
 	}
 }

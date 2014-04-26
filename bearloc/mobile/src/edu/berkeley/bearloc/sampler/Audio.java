@@ -200,4 +200,9 @@ public class Audio implements Sampler {
 
 		return true;
 	}
+	
+	@Override
+	public void stop() {
+		pause();
+	}
 }

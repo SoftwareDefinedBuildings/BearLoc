@@ -45,93 +45,99 @@ import edu.berkeley.bearloc.util.SamplerSettings;
 
 public class Humidity implements Sampler, SensorEventListener {
 
-    private boolean mBusy;
-    private int mSampleCap;
-    private int nSampleNum;
+	private boolean mBusy;
+	// private int mSampleCap;
+	// private int nSampleNum;
 
-    private final Context mContext;
-    private final SamplerListener mListener;
-    private final Handler mHandler;
-    private final SensorManager mSensorManager;
-    private final Sensor mHumidity;
+	private final Context mContext;
+	private final SamplerListener mListener;
+	private final Handler mHandler;
+	private final SensorManager mSensorManager;
+	private final Sensor mHumidity;
 
-    public static interface SamplerListener {
-        public abstract void onHumidityEvent(SensorEvent event);
-    }
+	public static interface SamplerListener {
+		public abstract void onHumidityEvent(SensorEvent event);
+	}
 
-    private final Runnable mPauseTask = new Runnable() {
-        @Override
-        public void run() {
-            pause();
-        }
-    };
+	private final Runnable mPauseTask = new Runnable() {
+		@Override
+		public void run() {
+			pause();
+		}
+	};
 
-    // get null for mHumidity if not available
-    @SuppressLint("InlinedApi")
-    public Humidity(final Context context, final SamplerListener listener) {
-        mContext = context;
-        mListener = listener;
-        mHandler = new Handler();
-        mSensorManager = (SensorManager) context
-                .getSystemService(Context.SENSOR_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            mHumidity = mSensorManager
-                    .getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY);
-        } else {
-            mHumidity = null;
-        }
-    }
+	// get null for mHumidity if not available
+	@SuppressLint("InlinedApi")
+	public Humidity(final Context context, final SamplerListener listener) {
+		mContext = context;
+		mListener = listener;
+		mHandler = new Handler();
+		mSensorManager = (SensorManager) context
+				.getSystemService(Context.SENSOR_SERVICE);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			mHumidity = mSensorManager
+					.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY);
+		} else {
+			mHumidity = null;
+		}
+	}
 
-    @Override
-    public boolean start() {
-        if (mBusy == false
-                && SamplerSettings.getHumidityEnable(mContext) == true) {
-            if (mHumidity == null) {
-                SamplerSettings.setHumidityEnable(mContext, false);
-                return false;
-            }
+	@Override
+	public boolean start() {
+		if (mBusy == false
+				&& SamplerSettings.getHumidityEnable(mContext) == true) {
+			if (mHumidity == null) {
+				SamplerSettings.setHumidityEnable(mContext, false);
+				return false;
+			}
 
-            final long duration = SamplerSettings.getHumidityDuration(mContext);
-            final int num = SamplerSettings.getHumidityCnt(mContext);
-            final int delay = SamplerSettings.getHumidityDelay(mContext);
-            nSampleNum = 0;
-            mSampleCap = num;
-            mSensorManager.registerListener(this, mHumidity, delay);
-            mHandler.postDelayed(mPauseTask, duration);
-            mBusy = true;
-            return true;
-        } else {
-            return false;
-        }
-    }
+			// final long duration =
+			// SamplerSettings.getHumidityDuration(mContext);
+			// final int num = SamplerSettings.getHumidityCnt(mContext);
+			final int delay = SamplerSettings.getHumidityDelay(mContext);
+			// nSampleNum = 0;
+			// mSampleCap = num;
+			mSensorManager.registerListener(this, mHumidity, delay);
+			// mHandler.postDelayed(mPauseTask, duration);
+			mBusy = true;
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-    private void pause() {
-        if (mBusy == true) {
-            mBusy = false;
-            mSensorManager.unregisterListener(this);
-            mHandler.removeCallbacks(mPauseTask);
-        }
-    }
+	private void pause() {
+		if (mBusy == true) {
+			mBusy = false;
+			mSensorManager.unregisterListener(this);
+			mHandler.removeCallbacks(mPauseTask);
+		}
+	}
 
-    @Override
-    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-        // TODO Auto-generated method stub
+	@Override
+	public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
+		// TODO Auto-generated method stub
 
-    }
+	}
 
-    @Override
-    public void onSensorChanged(final SensorEvent event) {
-        if (event == null) {
-            return;
-        }
+	@Override
+	public void onSensorChanged(final SensorEvent event) {
+		if (event == null) {
+			return;
+		}
 
-        if (mListener != null) {
-            mListener.onHumidityEvent(event);
-        }
+		if (mListener != null) {
+			mListener.onHumidityEvent(event);
+		}
 
-        nSampleNum++;
-        if (nSampleNum >= mSampleCap) {
-            pause();
-        }
-    }
+		// nSampleNum++;
+		// if (nSampleNum >= mSampleCap) {
+		// pause();
+		// }
+	}
+
+	@Override
+	public void stop() {
+		pause();
+	}
 }

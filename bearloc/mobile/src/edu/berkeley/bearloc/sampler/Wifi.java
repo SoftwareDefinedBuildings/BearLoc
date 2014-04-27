@@ -103,10 +103,6 @@ public class Wifi implements Sampler {
 		mHandler = new Handler();
 		mWifiManager = (WifiManager) context
 				.getSystemService(Context.WIFI_SERVICE);
-
-		final IntentFilter i = new IntentFilter();
-		i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-		context.registerReceiver(mOnScanDone, i);
 	}
 
 	@Override
@@ -116,6 +112,10 @@ public class Wifi implements Sampler {
 				SamplerSettings.setWifiEnable(mContext, false);
 				return false;
 			}
+
+			final IntentFilter i = new IntentFilter();
+			i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+			mContext.registerReceiver(mOnScanDone, i);
 
 			final long duration = SamplerSettings.getWifiDuration(mContext);
 			final int num = SamplerSettings.getWifiCnt(mContext);
@@ -149,6 +149,7 @@ public class Wifi implements Sampler {
 			mWifiLock = null;
 			mHandler.removeCallbacks(mWifiScanTask);
 			mHandler.removeCallbacks(mPauseTask);
+			mContext.unregisterReceiver(mOnScanDone);
 		}
 	}
 

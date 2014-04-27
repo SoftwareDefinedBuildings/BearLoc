@@ -88,7 +88,8 @@ public class BearLocSampler {
 		mWifi = new Wifi(mContext, new Wifi.SamplerListener() {
 			@Override
 			public void onWifiEvent(final List<ScanResult> results) {
-				final String type = "wifi";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_wifi);
 				for (final ScanResult result : results) {
 					mListener.onSampleEvent(type, result);
 				}
@@ -98,7 +99,8 @@ public class BearLocSampler {
 		mAudio = new Audio(mContext, new Audio.SamplerListener() {
 			@Override
 			public void onAudioEvent(final JSONObject audio) {
-				final String type = "audio";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_audio);
 				mListener.onSampleEvent(type, audio);
 			}
 		});
@@ -106,7 +108,8 @@ public class BearLocSampler {
 		mGeoLoc = new GeoCoord(mContext, new GeoCoord.SamplerListener() {
 			@Override
 			public void onGeoCoordEvent(final Location location) {
-				final String type = "geocoord";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_geocoord);
 				mListener.onSampleEvent(type, location);
 			}
 		});
@@ -114,7 +117,8 @@ public class BearLocSampler {
 		mAcc = new Acc(mContext, new Acc.SamplerListener() {
 			@Override
 			public void onAccEvent(final SensorEvent event) {
-				final String type = "acc";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_accelerometer);
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -122,7 +126,8 @@ public class BearLocSampler {
 		mLAcc = new LinearAcc(mContext, new LinearAcc.SamplerListener() {
 			@Override
 			public void onLinearAccEvent(final SensorEvent event) {
-				final String type = "lacc";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_linear_accelerometer);
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -130,7 +135,8 @@ public class BearLocSampler {
 		mGravity = new Gravity(mContext, new Gravity.SamplerListener() {
 			@Override
 			public void onGravityEvent(final SensorEvent event) {
-				final String type = "gravity";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_gravity);
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -138,7 +144,8 @@ public class BearLocSampler {
 		mGyro = new Gyro(mContext, new Gyro.SamplerListener() {
 			@Override
 			public void onGyroEvent(final SensorEvent event) {
-				final String type = "gyro";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_gyroscope);
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -146,7 +153,8 @@ public class BearLocSampler {
 		mRotation = new Rotation(mContext, new Rotation.SamplerListener() {
 			@Override
 			public void onRotationEvent(final SensorEvent event) {
-				final String type = "rotation";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_rotation);
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -154,7 +162,8 @@ public class BearLocSampler {
 		mMag = new Magnetic(mContext, new Magnetic.SamplerListener() {
 			@Override
 			public void onMagneticEvent(final SensorEvent event) {
-				final String type = "magnetic";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_magnetic);
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -162,7 +171,8 @@ public class BearLocSampler {
 		mLight = new Light(mContext, new Light.SamplerListener() {
 			@Override
 			public void onLightEvent(final SensorEvent event) {
-				final String type = "light";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_light);
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -170,7 +180,8 @@ public class BearLocSampler {
 		mTemp = new Temp(mContext, new Temp.SamplerListener() {
 			@Override
 			public void onTempEvent(final SensorEvent event) {
-				final String type = "temp";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_temperature);
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -179,7 +190,8 @@ public class BearLocSampler {
 
 			@Override
 			public void onPressureEvent(final SensorEvent event) {
-				final String type = "pressure";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_pressure);
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -187,7 +199,8 @@ public class BearLocSampler {
 		mProximity = new Proximity(mContext, new Proximity.SamplerListener() {
 			@Override
 			public void onProximityEvent(final SensorEvent event) {
-				final String type = "proximity";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_proximity);
 				mListener.onSampleEvent(type, event);
 			}
 		});
@@ -195,7 +208,8 @@ public class BearLocSampler {
 		mHumidity = new Humidity(mContext, new Humidity.SamplerListener() {
 			@Override
 			public void onHumidityEvent(final SensorEvent event) {
-				final String type = "humidity";
+				final String type = mContext.getResources().getString(
+						R.string.bearloc_humidity);
 				mListener.onSampleEvent(type, event);
 			}
 		});

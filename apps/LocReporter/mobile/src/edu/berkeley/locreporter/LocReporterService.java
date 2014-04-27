@@ -51,6 +51,7 @@ import edu.berkeley.bearloc.BearLocService;
 import edu.berkeley.bearloc.BearLocService.BearLocBinder;
 import edu.berkeley.bearloc.CandidateListener;
 import edu.berkeley.bearloc.LocListener;
+import edu.berkeley.bearloc.R;
 
 public class LocReporterService extends Service implements SensorEventListener {
 
@@ -73,8 +74,8 @@ public class LocReporterService extends Service implements SensorEventListener {
 		}
 	};
 
-	final public static String[] Semantics = new String[]{"country", "state",
-			"city", "street", "building", "locale"};
+	final public static String[] Semantics = new String[] { "country", "state",
+			"city", "street", "building", "locale" };
 
 	private IBinder mBinder;
 	private Handler mHandler;
@@ -88,6 +89,7 @@ public class LocReporterService extends Service implements SensorEventListener {
 		public LocReportTask(final JSONObject loc) {
 			mLoc = loc;
 		}
+
 		@Override
 		public void run() {
 			if (mAutoReport == true) {
@@ -160,7 +162,10 @@ public class LocReporterService extends Service implements SensorEventListener {
 			return;
 		}
 
-		mBearLocService.postData("reported semloc", loc);
+		mBearLocService
+				.postData(
+						getResources().getString(
+								R.string.bearloc_reported_semantic_loc), loc);
 
 		// start new auto report schedule if not yet
 		if (mAutoReport == false && mAcc != null

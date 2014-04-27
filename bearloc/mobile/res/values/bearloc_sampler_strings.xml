@@ -29,6 +29,25 @@
     <string name="bearloc_ENCODING_PCM_8BIT">3</string> <!-- android.media.AudioFormat.ENCODING_PCM_8BIT -->
 
 
+    <!-- BearLoc event type strings -->
+    <string name="bearloc_device_info">device info</string>
+    <string name="bearloc_sensor_info">sensor info</string>
+    <string name="bearloc_reported_semantic_loc">reported semloc</string>
+    <string name="bearloc_wifi">wifi</string>
+    <string name="bearloc_audio">audio</string>
+    <string name="bearloc_geocoord">geocoord</string>
+    <string name="bearloc_accelerometer">accelerometer</string>
+    <string name="bearloc_linear_accelerometer">linear accelerometer</string>
+    <string name="bearloc_gravity">gravity</string>
+    <string name="bearloc_gyroscope">gyroscope</string>
+    <string name="bearloc_rotation">rotation</string>
+    <string name="bearloc_magnetic">magnetic</string>
+    <string name="bearloc_light">light</string>
+    <string name="bearloc_temperature">temperature</string>
+    <string name="bearloc_pressure">pressure</string>
+    <string name="bearloc_proximity">proximity</string>
+    <string name="bearloc_humidity">humidity</string>
+
     <!-- Accelerometer settings strings -->
     <string name="bearloc_pref_acc_title">Accelerometer</string>
     <string name="bearloc_pref_acc_enable_summ">Enable accelerometer sampling</string>

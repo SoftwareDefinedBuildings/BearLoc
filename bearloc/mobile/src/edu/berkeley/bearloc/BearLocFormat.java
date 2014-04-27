@@ -63,14 +63,16 @@ public class BearLocFormat {
 		mCache = cache;
 
 		try {
-			String type = "device info";
+			String type = mContext.getResources().getString(
+					R.string.bearloc_device_info);
 			JSONObject meta = new JSONObject();
 			meta.put("epoch", System.currentTimeMillis());
 			meta.put("sysnano", System.nanoTime());
 			mCache.add(type, getDeviceInfo(), meta);
 
 			final JSONArray sensorInfoList = getSensorInfoList();
-			type = "sensor info";
+			type = mContext.getResources().getString(
+					R.string.bearloc_sensor_info);
 			for (int i = 0; i < sensorInfoList.length(); i++) {
 				final JSONObject sensorInfo = sensorInfoList.getJSONObject(i);
 
@@ -113,6 +115,7 @@ public class BearLocFormat {
 
 		return deviceInfo;
 	}
+
 	// Only call getMinDelay() before Gingerbread
 	@SuppressLint("NewApi")
 	private JSONArray getSensorInfoList() {
@@ -129,41 +132,52 @@ public class BearLocFormat {
 
 				String type = null;
 				switch (sensor.getType()) {
-					case Sensor.TYPE_ACCELEROMETER :
-						type = "accelerometer";
-						break;
-					case Sensor.TYPE_AMBIENT_TEMPERATURE :
-						type = "temperature";
-						break;
-					case Sensor.TYPE_GRAVITY :
-						type = "gravity";
-						break;
-					case Sensor.TYPE_GYROSCOPE :
-						type = "gyroscope";
-						break;
-					case Sensor.TYPE_LIGHT :
-						type = "light";
-						break;
-					case Sensor.TYPE_LINEAR_ACCELERATION :
-						type = "linear accelerometer";
-						break;
-					case Sensor.TYPE_MAGNETIC_FIELD :
-						type = "magnetic";
-						break;
-					case Sensor.TYPE_PRESSURE :
-						type = "pressure";
-						break;
-					case Sensor.TYPE_PROXIMITY :
-						type = "proximity";
-						break;
-					case Sensor.TYPE_RELATIVE_HUMIDITY :
-						type = "humidity";
-						break;
-					case Sensor.TYPE_ROTATION_VECTOR :
-						type = "rotation";
-						break;
-					default :
-						break;
+				case Sensor.TYPE_ACCELEROMETER:
+					type = mContext.getResources().getString(
+							R.string.bearloc_accelerometer);
+					break;
+				case Sensor.TYPE_AMBIENT_TEMPERATURE:
+					type = mContext.getResources().getString(
+							R.string.bearloc_temperature);
+					break;
+				case Sensor.TYPE_GRAVITY:
+					type = mContext.getResources().getString(
+							R.string.bearloc_gravity);
+					break;
+				case Sensor.TYPE_GYROSCOPE:
+					type = mContext.getResources().getString(
+							R.string.bearloc_gyroscope);
+					break;
+				case Sensor.TYPE_LIGHT:
+					type = mContext.getResources().getString(
+							R.string.bearloc_light);
+					break;
+				case Sensor.TYPE_LINEAR_ACCELERATION:
+					type = mContext.getResources().getString(
+							R.string.bearloc_linear_accelerometer);
+					break;
+				case Sensor.TYPE_MAGNETIC_FIELD:
+					type = mContext.getResources().getString(
+							R.string.bearloc_magnetic);
+					break;
+				case Sensor.TYPE_PRESSURE:
+					type = mContext.getResources().getString(
+							R.string.bearloc_pressure);
+					break;
+				case Sensor.TYPE_PROXIMITY:
+					type = mContext.getResources().getString(
+							R.string.bearloc_proximity);
+					break;
+				case Sensor.TYPE_RELATIVE_HUMIDITY:
+					type = mContext.getResources().getString(
+							R.string.bearloc_humidity);
+					break;
+				case Sensor.TYPE_ROTATION_VECTOR:
+					type = mContext.getResources().getString(
+							R.string.bearloc_rotation);
+					break;
+				default:
+					break;
 				}
 
 				if (type != null) {
@@ -195,39 +209,56 @@ public class BearLocFormat {
 	private JSONObject format(final Object data, final JSONObject meta) {
 		final String type = meta.optString("type");
 		// Android requires compiler compliance level 5.0 or 6.0
-		if (type == "device info") {
+		if (type == mContext.getResources().getString(
+				R.string.bearloc_device_info)) {
 			return formatDeviceInfo(data, meta);
-		} else if (type == "sensor info") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_sensor_info)) {
 			return formatSensorInfo(data, meta);
-		} else if (type == "reported semloc") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_reported_semantic_loc)) {
 			return formatSemLoc(data, meta);
-		} else if (type == "wifi") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_wifi)) {
 			return formatWifi(data, meta);
-		} else if (type == "audio") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_audio)) {
 			return formatAudio(data, meta);
-		} else if (type == "geocoord") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_geocoord)) {
 			return formatGeoCoord(data, meta);
-		} else if (type == "accelerometer") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_accelerometer)) {
 			return formatAcc(data, meta);
-		} else if (type == "linear accelerometer") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_linear_accelerometer)) {
 			return formatLinearAcc(data, meta);
-		} else if (type == "gravity") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_gravity)) {
 			return formatGravity(data, meta);
-		} else if (type == "gyroscope") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_gyroscope)) {
 			return formatGyro(data, meta);
-		} else if (type == "rotation") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_rotation)) {
 			return formatRotation(data, meta);
-		} else if (type == "magnetic") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_magnetic)) {
 			return formatMagnetic(data, meta);
-		} else if (type == "light") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_light)) {
 			return formatLight(data, meta);
-		} else if (type == "temperature") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_temperature)) {
 			return formatTemp(data, meta);
-		} else if (type == "pressure") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_pressure)) {
 			return formatPressure(data, meta);
-		} else if (type == "proximity") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_proximity)) {
 			return formatProximity(data, meta);
-		} else if (type == "humidity") {
+		} else if (type == mContext.getResources().getString(
+				R.string.bearloc_humidity)) {
 			return formatHumidity(data, meta);
 		}
 
@@ -275,6 +306,7 @@ public class BearLocFormat {
 
 		return to;
 	}
+
 	private JSONObject formatSemLoc(final Object data, final JSONObject meta) {
 		final JSONObject to = new JSONObject();
 		final JSONObject from = (JSONObject) data;
@@ -327,14 +359,11 @@ public class BearLocFormat {
 			to.put("type", meta.getString("type"));
 			to.put("id", DeviceUUID.getDeviceUUID(mContext));
 			to.put("sysnano", meta.getLong("sysnano"));
-			final String source = (from.getInt("source") == AudioSource.CAMCORDER)
-					? "CAMCORDER"
+			final String source = (from.getInt("source") == AudioSource.CAMCORDER) ? "CAMCORDER"
 					: "MIC";
-			final int channel = (from.getInt("channel") == AudioFormat.CHANNEL_IN_MONO)
-					? 1
+			final int channel = (from.getInt("channel") == AudioFormat.CHANNEL_IN_MONO) ? 1
 					: 2;
-			final int sampwidth = (from.getInt("sampwidth") == AudioFormat.ENCODING_PCM_16BIT)
-					? 2
+			final int sampwidth = (from.getInt("sampwidth") == AudioFormat.ENCODING_PCM_16BIT) ? 2
 					: 1;
 			final int nframes = from.getJSONArray("raw").length()
 					/ (from.getInt("sampwidth") * from.getInt("channel"));

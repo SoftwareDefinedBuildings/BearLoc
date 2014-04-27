@@ -55,589 +55,592 @@ import edu.berkeley.bearloc.util.DeviceUUID;
 
 public class BearLocFormat {
 
-	private final Context mContext;
-	private final BearLocCache mCache;
-
-	public BearLocFormat(final Context context, final BearLocCache cache) {
-		mContext = context;
-		mCache = cache;
-
-		try {
-			String type = mContext.getResources().getString(
-					R.string.bearloc_device_info);
-			JSONObject meta = new JSONObject();
-			meta.put("epoch", System.currentTimeMillis());
-			meta.put("sysnano", System.nanoTime());
-			mCache.add(type, getDeviceInfo(), meta);
-
-			final JSONArray sensorInfoList = getSensorInfoList();
-			type = mContext.getResources().getString(
-					R.string.bearloc_sensor_info);
-			for (int i = 0; i < sensorInfoList.length(); i++) {
-				final JSONObject sensorInfo = sensorInfoList.getJSONObject(i);
-
-				meta = new JSONObject();
-				meta.put("epoch", System.currentTimeMillis());
-				meta.put("sysnano", System.nanoTime());
-				mCache.add(type, sensorInfo, meta);
-			}
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public JSONArray dump(final List<Pair<Object, JSONObject>> eventList) {
-		final JSONArray dumpArr = new JSONArray();
-
-		for (final Pair<Object, JSONObject> event : eventList) {
-			final Object data = event.first;
-			final JSONObject meta = event.second;
-			final JSONObject formated = format(data, meta);
-			if (formated != null) {
-				dumpArr.put(formated);
-			}
-		}
-
-		return dumpArr;
-	}
-
-	private JSONObject getDeviceInfo() {
-		final JSONObject deviceInfo = new JSONObject();
-		try {
-			// Device Info
-			deviceInfo.put("make", Build.MANUFACTURER);
-			deviceInfo.put("model", Build.MODEL);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return deviceInfo;
-	}
-
-	// Only call getMinDelay() before Gingerbread
-	@SuppressLint("NewApi")
-	private JSONArray getSensorInfoList() {
-		final JSONArray sensorInfoList = new JSONArray();
-		try {
-			// Sensor Info
-			final SensorManager sensorMgr = (SensorManager) mContext
-					.getSystemService(Context.SENSOR_SERVICE);
-			final List<Sensor> sensorList = sensorMgr
-					.getSensorList(Sensor.TYPE_ALL);
-			final Iterator<Sensor> iterator = sensorList.iterator();
-			while (iterator.hasNext()) {
-				final Sensor sensor = iterator.next();
-
-				String type = null;
-				switch (sensor.getType()) {
-				case Sensor.TYPE_ACCELEROMETER:
-					type = mContext.getResources().getString(
-							R.string.bearloc_accelerometer);
-					break;
-				case Sensor.TYPE_AMBIENT_TEMPERATURE:
-					type = mContext.getResources().getString(
-							R.string.bearloc_temperature);
-					break;
-				case Sensor.TYPE_GRAVITY:
-					type = mContext.getResources().getString(
-							R.string.bearloc_gravity);
-					break;
-				case Sensor.TYPE_GYROSCOPE:
-					type = mContext.getResources().getString(
-							R.string.bearloc_gyroscope);
-					break;
-				case Sensor.TYPE_LIGHT:
-					type = mContext.getResources().getString(
-							R.string.bearloc_light);
-					break;
-				case Sensor.TYPE_LINEAR_ACCELERATION:
-					type = mContext.getResources().getString(
-							R.string.bearloc_linear_accelerometer);
-					break;
-				case Sensor.TYPE_MAGNETIC_FIELD:
-					type = mContext.getResources().getString(
-							R.string.bearloc_magnetic);
-					break;
-				case Sensor.TYPE_PRESSURE:
-					type = mContext.getResources().getString(
-							R.string.bearloc_pressure);
-					break;
-				case Sensor.TYPE_PROXIMITY:
-					type = mContext.getResources().getString(
-							R.string.bearloc_proximity);
-					break;
-				case Sensor.TYPE_RELATIVE_HUMIDITY:
-					type = mContext.getResources().getString(
-							R.string.bearloc_humidity);
-					break;
-				case Sensor.TYPE_ROTATION_VECTOR:
-					type = mContext.getResources().getString(
-							R.string.bearloc_rotation);
-					break;
-				default:
-					break;
-				}
-
-				if (type != null) {
-					final JSONObject sensorInfo = new JSONObject();
-					sensorInfo.put("sensor", type);
-					sensorInfo.put("vendor", sensor.getVendor());
-					sensorInfo.put("model", sensor.getName());
-					sensorInfo.put("version", sensor.getVersion());
-					sensorInfo.put("power", sensor.getPower());
-					if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD) {
-						sensorInfo.put("min delay", sensor.getMinDelay());
-					}
-					sensorInfo.put("max range", sensor.getMaximumRange());
-					sensorInfo.put("resolution", sensor.getResolution());
-
-					sensorInfoList.put(sensorInfo);
-				}
-
-				// TODO add audio, wifi, and bluetooth info
-			}
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return sensorInfoList;
-	}
-
-	private JSONObject format(final Object data, final JSONObject meta) {
-		final String type = meta.optString("type");
-		// Android requires compiler compliance level 5.0 or 6.0
-		if (type == mContext.getResources().getString(
-				R.string.bearloc_device_info)) {
-			return formatDeviceInfo(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_sensor_info)) {
-			return formatSensorInfo(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_reported_semantic_loc)) {
-			return formatSemLoc(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_wifi)) {
-			return formatWifi(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_audio)) {
-			return formatAudio(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_geocoord)) {
-			return formatGeoCoord(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_accelerometer)) {
-			return formatAcc(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_linear_accelerometer)) {
-			return formatLinearAcc(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_gravity)) {
-			return formatGravity(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_gyroscope)) {
-			return formatGyro(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_rotation)) {
-			return formatRotation(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_magnetic)) {
-			return formatMagnetic(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_light)) {
-			return formatLight(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_temperature)) {
-			return formatTemp(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_pressure)) {
-			return formatPressure(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_proximity)) {
-			return formatProximity(data, meta);
-		} else if (type == mContext.getResources().getString(
-				R.string.bearloc_humidity)) {
-			return formatHumidity(data, meta);
-		}
-
-		return null;
-	}
-
-	private JSONObject formatDeviceInfo(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final JSONObject from = (JSONObject) data;
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.optLong("epoch"));
-			to.put("sysnano", meta.optLong("sysnano"));
-			to.put("make", from.optString("make"));
-			to.put("model", from.optString("model"));
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatSensorInfo(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final JSONObject from = (JSONObject) data;
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.optLong("epoch"));
-			to.put("sysnano", meta.optLong("sysnano"));
-			to.put("sensor", from.optString("sensor"));
-			to.put("vendor", from.optString("vendor"));
-			to.put("model", from.optString("model"));
-			to.put("version", from.optInt("version"));
-			to.put("power", from.optDouble("power", 0));
-			to.put("min delay", from.optInt("min delay"));
-			to.put("max range", from.optDouble("max range", 0));
-			to.put("resolution", from.optDouble("resolution", 0));
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatSemLoc(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final JSONObject from = (JSONObject) data;
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("country", from.optString("country", null));
-			to.put("state", from.optString("state", null));
-			to.put("city", from.optString("city", null));
-			to.put("street", from.optString("street", null));
-			to.put("building", from.optString("building", null));
-			to.put("locale", from.optString("locale", null));
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatWifi(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final ScanResult from = (ScanResult) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("BSSID", from.BSSID);
-			to.put("SSID", from.SSID);
-			to.put("capability", from.capabilities);
-			to.put("frequency", from.frequency);
-			to.put("RSSI", from.level);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatAudio(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final JSONObject from = (JSONObject) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("sysnano", meta.getLong("sysnano"));
-			final String source = (from.getInt("source") == AudioSource.CAMCORDER) ? "CAMCORDER"
-					: "MIC";
-			final int channel = (from.getInt("channel") == AudioFormat.CHANNEL_IN_MONO) ? 1
-					: 2;
-			final int sampwidth = (from.getInt("sampwidth") == AudioFormat.ENCODING_PCM_16BIT) ? 2
-					: 1;
-			final int nframes = from.getJSONArray("raw").length()
-					/ (from.getInt("sampwidth") * from.getInt("channel"));
-			to.put("source", source);
-			to.put("channel", channel);
-			to.put("sampwidth", sampwidth);
-			to.put("nframes", nframes);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatGeoCoord(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final Location from = (Location) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", from.getTime());
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("longitude", from.getLongitude());
-			to.put("latitude", from.getLatitude());
-			to.put("altitude", from.getAltitude());
-			to.put("bearing", from.getBearing());
-			to.put("speed", from.getSpeed());
-			to.put("accuracy", from.getAccuracy());
-			to.put("provider", from.getProvider());
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatAcc(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("x", from.values[0]);
-			to.put("y", from.values[1]);
-			to.put("z", from.values[2]);
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatLinearAcc(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("x", from.values[0]);
-			to.put("y", from.values[1]);
-			to.put("z", from.values[2]);
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatGravity(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("x", from.values[0]);
-			to.put("y", from.values[1]);
-			to.put("z", from.values[2]);
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatGyro(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("x", from.values[0]);
-			to.put("y", from.values[1]);
-			to.put("z", from.values[2]);
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatRotation(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("xr", from.values[0]);
-			to.put("yr", from.values[1]);
-			to.put("zr", from.values[2]);
-			if (from.values.length >= 4) {
-				to.put("cos", from.values[3]);
-			}
-			if (from.values.length >= 5) {
-				to.put("head_accuracy", from.values[4]);
-			}
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatMagnetic(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("x", from.values[0]);
-			to.put("y", from.values[1]);
-			to.put("z", from.values[2]);
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatLight(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("light", from.values[0]);
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatTemp(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("temp", from.values[0]);
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatPressure(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("pressure", from.values[0]);
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatProximity(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("proximity", from.values[0]);
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
-
-	private JSONObject formatHumidity(final Object data, final JSONObject meta) {
-		final JSONObject to = new JSONObject();
-		final SensorEvent from = (SensorEvent) data;
-
-		try {
-			to.put("type", meta.getString("type"));
-			to.put("id", DeviceUUID.getDeviceUUID(mContext));
-			to.put("epoch", meta.getLong("epoch"));
-			to.put("sysnano", meta.getLong("sysnano"));
-			to.put("eventnano", from.timestamp);
-			to.put("humidity", from.values[0]);
-			to.put("accuracy", from.accuracy);
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return to;
-	}
+    private final Context mContext;
+    private final BearLocCache mCache;
+
+    public BearLocFormat(final Context context, final BearLocCache cache) {
+        mContext = context;
+        mCache = cache;
+
+        try {
+            String type = mContext.getResources().getString(
+                    R.string.bearloc_device_info);
+            JSONObject meta = new JSONObject();
+            meta.put("epoch", System.currentTimeMillis());
+            meta.put("sysnano", System.nanoTime());
+            mCache.add(type, getDeviceInfo(), meta);
+
+            final JSONArray sensorInfoList = getSensorInfoList();
+            type = mContext.getResources().getString(
+                    R.string.bearloc_sensor_info);
+            for (int i = 0; i < sensorInfoList.length(); i++) {
+                final JSONObject sensorInfo = sensorInfoList.getJSONObject(i);
+
+                meta = new JSONObject();
+                meta.put("epoch", System.currentTimeMillis());
+                meta.put("sysnano", System.nanoTime());
+                mCache.add(type, sensorInfo, meta);
+            }
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    public JSONArray dump(final List<Pair<Object, JSONObject>> eventList) {
+        final JSONArray dumpArr = new JSONArray();
+
+        for (final Pair<Object, JSONObject> event : eventList) {
+            final Object data = event.first;
+            final JSONObject meta = event.second;
+            final JSONObject formated = format(data, meta);
+            if (formated != null) {
+                dumpArr.put(formated);
+            }
+        }
+
+        return dumpArr;
+    }
+
+    private JSONObject getDeviceInfo() {
+        final JSONObject deviceInfo = new JSONObject();
+        try {
+            // Device Info
+            deviceInfo.put("make", Build.MANUFACTURER);
+            deviceInfo.put("model", Build.MODEL);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return deviceInfo;
+    }
+
+    // Only call getMinDelay() before Gingerbread
+    @SuppressLint("NewApi")
+    private JSONArray getSensorInfoList() {
+        final JSONArray sensorInfoList = new JSONArray();
+        try {
+            // Sensor Info
+            final SensorManager sensorMgr = (SensorManager) mContext
+                    .getSystemService(Context.SENSOR_SERVICE);
+            final List<Sensor> sensorList = sensorMgr
+                    .getSensorList(Sensor.TYPE_ALL);
+            final Iterator<Sensor> iterator = sensorList.iterator();
+            while (iterator.hasNext()) {
+                final Sensor sensor = iterator.next();
+
+                String type = null;
+                switch (sensor.getType()) {
+                    case Sensor.TYPE_ACCELEROMETER :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_accelerometer);
+                        break;
+                    case Sensor.TYPE_AMBIENT_TEMPERATURE :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_temperature);
+                        break;
+                    case Sensor.TYPE_GRAVITY :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_gravity);
+                        break;
+                    case Sensor.TYPE_GYROSCOPE :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_gyroscope);
+                        break;
+                    case Sensor.TYPE_LIGHT :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_light);
+                        break;
+                    case Sensor.TYPE_LINEAR_ACCELERATION :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_linear_accelerometer);
+                        break;
+                    case Sensor.TYPE_MAGNETIC_FIELD :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_magnetic);
+                        break;
+                    case Sensor.TYPE_PRESSURE :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_pressure);
+                        break;
+                    case Sensor.TYPE_PROXIMITY :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_proximity);
+                        break;
+                    case Sensor.TYPE_RELATIVE_HUMIDITY :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_humidity);
+                        break;
+                    case Sensor.TYPE_ROTATION_VECTOR :
+                        type = mContext.getResources().getString(
+                                R.string.bearloc_rotation);
+                        break;
+                    default :
+                        break;
+                }
+
+                if (type != null) {
+                    final JSONObject sensorInfo = new JSONObject();
+                    sensorInfo.put("sensor", type);
+                    sensorInfo.put("vendor", sensor.getVendor());
+                    sensorInfo.put("model", sensor.getName());
+                    sensorInfo.put("version", sensor.getVersion());
+                    sensorInfo.put("power", sensor.getPower());
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD) {
+                        sensorInfo.put("min delay", sensor.getMinDelay());
+                    }
+                    sensorInfo.put("max range", sensor.getMaximumRange());
+                    sensorInfo.put("resolution", sensor.getResolution());
+
+                    sensorInfoList.put(sensorInfo);
+                }
+
+                // TODO add audio, wifi, and bluetooth info
+            }
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return sensorInfoList;
+    }
+
+    private JSONObject format(final Object data, final JSONObject meta) {
+        final String type = meta.optString("type");
+        // Android requires compiler compliance level 5.0 or 6.0
+        if (type == mContext.getResources().getString(
+                R.string.bearloc_device_info)) {
+            return formatDeviceInfo(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_sensor_info)) {
+            return formatSensorInfo(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_reported_semantic_loc)) {
+            return formatSemLoc(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_wifi)) {
+            return formatWifi(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_audio)) {
+            return formatAudio(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_geocoord)) {
+            return formatGeoCoord(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_accelerometer)) {
+            return formatAcc(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_linear_accelerometer)) {
+            return formatLinearAcc(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_gravity)) {
+            return formatGravity(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_gyroscope)) {
+            return formatGyro(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_rotation)) {
+            return formatRotation(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_magnetic)) {
+            return formatMagnetic(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_light)) {
+            return formatLight(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_temperature)) {
+            return formatTemp(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_pressure)) {
+            return formatPressure(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_proximity)) {
+            return formatProximity(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_humidity)) {
+            return formatHumidity(data, meta);
+        }
+
+        return null;
+    }
+
+    private JSONObject formatDeviceInfo(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final JSONObject from = (JSONObject) data;
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.optLong("epoch"));
+            to.put("sysnano", meta.optLong("sysnano"));
+            to.put("make", from.optString("make"));
+            to.put("model", from.optString("model"));
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatSensorInfo(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final JSONObject from = (JSONObject) data;
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.optLong("epoch"));
+            to.put("sysnano", meta.optLong("sysnano"));
+            to.put("sensor", from.optString("sensor"));
+            to.put("vendor", from.optString("vendor"));
+            to.put("model", from.optString("model"));
+            to.put("version", from.optInt("version"));
+            to.put("power", from.optDouble("power", 0));
+            to.put("min delay", from.optInt("min delay"));
+            to.put("max range", from.optDouble("max range", 0));
+            to.put("resolution", from.optDouble("resolution", 0));
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatSemLoc(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final JSONObject from = (JSONObject) data;
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("country", from.optString("country", null));
+            to.put("state", from.optString("state", null));
+            to.put("city", from.optString("city", null));
+            to.put("street", from.optString("street", null));
+            to.put("building", from.optString("building", null));
+            to.put("locale", from.optString("locale", null));
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatWifi(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final ScanResult from = (ScanResult) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("BSSID", from.BSSID);
+            to.put("SSID", from.SSID);
+            to.put("capability", from.capabilities);
+            to.put("frequency", from.frequency);
+            to.put("RSSI", from.level);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatAudio(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final JSONObject from = (JSONObject) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("sysnano", meta.getLong("sysnano"));
+            final String source = (from.getInt("source") == AudioSource.CAMCORDER)
+                    ? "CAMCORDER"
+                    : "MIC";
+            final int channel = (from.getInt("channel") == AudioFormat.CHANNEL_IN_MONO)
+                    ? 1
+                    : 2;
+            final int sampwidth = (from.getInt("sampwidth") == AudioFormat.ENCODING_PCM_16BIT)
+                    ? 2
+                    : 1;
+            final int nframes = from.getJSONArray("raw").length()
+                    / (from.getInt("sampwidth") * from.getInt("channel"));
+            to.put("source", source);
+            to.put("channel", channel);
+            to.put("sampwidth", sampwidth);
+            to.put("nframes", nframes);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatGeoCoord(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final Location from = (Location) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", from.getTime());
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("longitude", from.getLongitude());
+            to.put("latitude", from.getLatitude());
+            to.put("altitude", from.getAltitude());
+            to.put("bearing", from.getBearing());
+            to.put("speed", from.getSpeed());
+            to.put("accuracy", from.getAccuracy());
+            to.put("provider", from.getProvider());
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatAcc(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("x", from.values[0]);
+            to.put("y", from.values[1]);
+            to.put("z", from.values[2]);
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatLinearAcc(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("x", from.values[0]);
+            to.put("y", from.values[1]);
+            to.put("z", from.values[2]);
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatGravity(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("x", from.values[0]);
+            to.put("y", from.values[1]);
+            to.put("z", from.values[2]);
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatGyro(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("x", from.values[0]);
+            to.put("y", from.values[1]);
+            to.put("z", from.values[2]);
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatRotation(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("xr", from.values[0]);
+            to.put("yr", from.values[1]);
+            to.put("zr", from.values[2]);
+            if (from.values.length >= 4) {
+                to.put("cos", from.values[3]);
+            }
+            if (from.values.length >= 5) {
+                to.put("head_accuracy", from.values[4]);
+            }
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatMagnetic(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("x", from.values[0]);
+            to.put("y", from.values[1]);
+            to.put("z", from.values[2]);
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatLight(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("light", from.values[0]);
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatTemp(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("temp", from.values[0]);
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatPressure(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("pressure", from.values[0]);
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatProximity(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("proximity", from.values[0]);
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
+    private JSONObject formatHumidity(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final SensorEvent from = (SensorEvent) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("eventnano", from.timestamp);
+            to.put("humidity", from.values[0]);
+            to.put("accuracy", from.accuracy);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
 }

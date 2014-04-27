@@ -93,9 +93,9 @@ public class DeviceUUID {
                         final String deviceId = ((TelephonyManager) context
                                 .getSystemService(Context.TELEPHONY_SERVICE))
                                 .getDeviceId();
-                        DeviceUUID.uuid = deviceId != null ? UUID
-                                .nameUUIDFromBytes(deviceId.getBytes("utf8"))
-                                : UUID.randomUUID();
+                        DeviceUUID.uuid = deviceId != null
+                                ? UUID.nameUUIDFromBytes(deviceId
+                                        .getBytes("utf8")) : UUID.randomUUID();
                     }
                 } catch (final UnsupportedEncodingException e) {
                     throw new RuntimeException(e);

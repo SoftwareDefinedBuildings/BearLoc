@@ -43,43 +43,43 @@ import android.content.Context;
 import android.util.Pair;
 
 public class BearLocCache {
-	private final List<Pair<Object, JSONObject>> mEventList;
+    private final List<Pair<Object, JSONObject>> mEventList;
 
-	// TODO make all events in one list
-	public BearLocCache(final Context context) {
-		mEventList = new LinkedList<Pair<Object, JSONObject>>();
-	}
+    // TODO make all events in one list
+    public BearLocCache(final Context context) {
+        mEventList = new LinkedList<Pair<Object, JSONObject>>();
+    }
 
-	public void add(final String type, final Object data, final JSONObject meta) {
-		if (type == null || data == null || meta == null) {
-			return;
-		}
-		try {
-			meta.put("type", type);
-			mEventList.add(new Pair<Object, JSONObject>(data, meta));
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+    public void add(final String type, final Object data, final JSONObject meta) {
+        if (type == null || data == null || meta == null) {
+            return;
+        }
+        try {
+            meta.put("type", type);
+            mEventList.add(new Pair<Object, JSONObject>(data, meta));
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
-	public void addAll(final List<Pair<Object, JSONObject>> eventList) {
-		if (eventList == null) {
-			return;
-		}
-		mEventList.addAll(eventList);
-	}
+    public void addAll(final List<Pair<Object, JSONObject>> eventList) {
+        if (eventList == null) {
+            return;
+        }
+        mEventList.addAll(eventList);
+    }
 
-	/**
-	 * Get a new copy of the current data list in cache.
-	 * 
-	 * @return a new copy of current data list in cache.
-	 */
-	public List<Pair<Object, JSONObject>> getCopy() {
-		return new LinkedList<Pair<Object, JSONObject>>(mEventList);
-	}
+    /**
+     * Get a new copy of the current data list in cache.
+     * 
+     * @return a new copy of current data list in cache.
+     */
+    public List<Pair<Object, JSONObject>> getCopy() {
+        return new LinkedList<Pair<Object, JSONObject>>(mEventList);
+    }
 
-	public void clear() {
-		mEventList.clear();
-	}
+    public void clear() {
+        mEventList.clear();
+    }
 }

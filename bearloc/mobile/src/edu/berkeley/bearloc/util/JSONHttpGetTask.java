@@ -51,70 +51,70 @@ import android.os.AsyncTask;
  */
 public class JSONHttpGetTask extends AsyncTask<Object, Void, JSONArray> {
 
-	private final onJSONHttpGetRespondedListener listener;
+    private final onJSONHttpGetRespondedListener listener;
 
-	public static interface onJSONHttpGetRespondedListener {
-		void onJSONHttpGetResponded(JSONArray response);
-	}
+    public static interface onJSONHttpGetRespondedListener {
+        void onJSONHttpGetResponded(JSONArray response);
+    }
 
-	public JSONHttpGetTask(final onJSONHttpGetRespondedListener listener) {
-		this.listener = listener;
-	}
+    public JSONHttpGetTask(final onJSONHttpGetRespondedListener listener) {
+        this.listener = listener;
+    }
 
-	private InputStream httpGet(final HttpURLConnection connection,
-			final URL url) throws IOException {
-		connection.setRequestMethod("GET");
+    private InputStream httpGet(final HttpURLConnection connection,
+            final URL url) throws IOException {
+        connection.setRequestMethod("GET");
 
-		final InputStream in = new BufferedInputStream(
-				connection.getInputStream());
+        final InputStream in = new BufferedInputStream(
+                connection.getInputStream());
 
-		return in;
-	}
+        return in;
+    }
 
-	@Override
-	protected JSONArray doInBackground(final Object... params) {
-		final URL url = (URL) params[0];
+    @Override
+    protected JSONArray doInBackground(final Object... params) {
+        final URL url = (URL) params[0];
 
-		if (url == null) {
-			return null;
-		}
+        if (url == null) {
+            return null;
+        }
 
-		// TODO reuse the connection
-		HttpURLConnection connection = null;
-		try {
-			connection = (HttpURLConnection) url.openConnection();
-			final InputStream in = httpGet(connection, url);
+        // TODO reuse the connection
+        HttpURLConnection connection = null;
+        try {
+            connection = (HttpURLConnection) url.openConnection();
+            final InputStream in = httpGet(connection, url);
 
-			final BufferedReader reader = new BufferedReader(
-					new InputStreamReader(in));
+            final BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(in));
 
-			String line;
-			final StringBuilder sb = new StringBuilder();
-			while ((line = reader.readLine()) != null) {
-				sb.append(line + '\n');
-			}
-			reader.close();
+            String line;
+            final StringBuilder sb = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                sb.append(line + '\n');
+            }
+            reader.close();
 
-			return new JSONArray(sb.toString());
-		} catch (final IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			if (connection != null) {
-				connection.disconnect();
-			}
-		}
+            return new JSONArray(sb.toString());
+        } catch (final IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	@Override
-	protected void onPostExecute(final JSONArray response) {
-		if (!isCancelled() && listener != null) {
-			listener.onJSONHttpGetResponded(response);
-		}
-	}
+    @Override
+    protected void onPostExecute(final JSONArray response) {
+        if (!isCancelled() && listener != null) {
+            listener.onJSONHttpGetResponded(response);
+        }
+    }
 }

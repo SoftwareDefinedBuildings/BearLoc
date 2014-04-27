@@ -55,141 +55,141 @@ import edu.berkeley.bearloc.R;
 
 public class LocReporterService extends Service implements SensorEventListener {
 
-	private static final long AUTO_REPORT_ITVL = 180000L; // millisecond
+    private static final long AUTO_REPORT_ITVL = 180000L; // millisecond
 
-	private BearLocService mBearLocService;
-	private boolean mBound = false;
-	private final ServiceConnection mBearLocConn = new ServiceConnection() {
-		@Override
-		public void onServiceConnected(final ComponentName name,
-				final IBinder service) {
-			final BearLocBinder binder = (BearLocBinder) service;
-			mBearLocService = binder.getService();
-			mBound = true;
-		}
+    private BearLocService mBearLocService;
+    private boolean mBound = false;
+    private final ServiceConnection mBearLocConn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(final ComponentName name,
+                final IBinder service) {
+            final BearLocBinder binder = (BearLocBinder) service;
+            mBearLocService = binder.getService();
+            mBound = true;
+        }
 
-		@Override
-		public void onServiceDisconnected(final ComponentName name) {
-			mBound = false;
-		}
-	};
+        @Override
+        public void onServiceDisconnected(final ComponentName name) {
+            mBound = false;
+        }
+    };
 
-	final public static String[] Semantics = new String[] { "country", "state",
-			"city", "street", "building", "locale" };
+    final public static String[] Semantics = new String[]{"country", "state",
+            "city", "street", "building", "locale"};
 
-	private IBinder mBinder;
-	private Handler mHandler;
+    private IBinder mBinder;
+    private Handler mHandler;
 
-	private Sensor mAcc;
-	private boolean mAutoReport;
+    private Sensor mAcc;
+    private boolean mAutoReport;
 
-	private class LocReportTask implements Runnable {
-		private final JSONObject mLoc;
+    private class LocReportTask implements Runnable {
+        private final JSONObject mLoc;
 
-		public LocReportTask(final JSONObject loc) {
-			mLoc = loc;
-		}
+        public LocReportTask(final JSONObject loc) {
+            mLoc = loc;
+        }
 
-		@Override
-		public void run() {
-			if (mAutoReport == true) {
-				reportSemLoc(mLoc);
-			}
-		}
-	};
+        @Override
+        public void run() {
+            if (mAutoReport == true) {
+                reportSemLoc(mLoc);
+            }
+        }
+    };
 
-	public class LocReporterBinder extends Binder {
-		public LocReporterService getService() {
-			// Return this instance so clients can call public methods
-			return LocReporterService.this;
-		}
-	}
+    public class LocReporterBinder extends Binder {
+        public LocReporterService getService() {
+            // Return this instance so clients can call public methods
+            return LocReporterService.this;
+        }
+    }
 
-	@Override
-	public void onCreate() {
-		final Intent intent = new Intent(this, BearLocService.class);
-		bindService(intent, mBearLocConn, Context.BIND_AUTO_CREATE);
+    @Override
+    public void onCreate() {
+        final Intent intent = new Intent(this, BearLocService.class);
+        bindService(intent, mBearLocConn, Context.BIND_AUTO_CREATE);
 
-		mBinder = new LocReporterBinder();
-		mHandler = new Handler();
+        mBinder = new LocReporterBinder();
+        mHandler = new Handler();
 
-		final SensorManager sensorMgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-		mAcc = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-		sensorMgr.registerListener(this, mAcc,
-				SensorManager.SENSOR_DELAY_NORMAL);
+        final SensorManager sensorMgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mAcc = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorMgr.registerListener(this, mAcc,
+                SensorManager.SENSOR_DELAY_NORMAL);
 
-		mAutoReport = false;
-	}
+        mAutoReport = false;
+    }
 
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-		// Unbind from the service
-		if (mBound) {
-			unbindService(mBearLocConn);
-			mBound = false;
-		}
-	}
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Unbind from the service
+        if (mBound) {
+            unbindService(mBearLocConn);
+            mBound = false;
+        }
+    }
 
-	@Override
-	public IBinder onBind(final Intent intent) {
-		return mBinder;
-	}
+    @Override
+    public IBinder onBind(final Intent intent) {
+        return mBinder;
+    }
 
-	public boolean localize(final LocListener listener) {
-		if (listener == null) {
-			return false;
-		}
+    public boolean localize(final LocListener listener) {
+        if (listener == null) {
+            return false;
+        }
 
-		return mBearLocService.getLocation(listener);
-	}
+        return mBearLocService.getLocation(listener);
+    }
 
-	public void reportLocation(final JSONObject loc) {
-		reportSemLoc(loc);
-	}
+    public void reportLocation(final JSONObject loc) {
+        reportSemLoc(loc);
+    }
 
-	public boolean getCandidate(final JSONObject loc,
-			final CandidateListener listener) {
-		if (loc == null) {
-			return false;
-		}
+    public boolean getCandidate(final JSONObject loc,
+            final CandidateListener listener) {
+        if (loc == null) {
+            return false;
+        }
 
-		return mBearLocService.getCandidate(loc, listener);
-	}
+        return mBearLocService.getCandidate(loc, listener);
+    }
 
-	private void reportSemLoc(final JSONObject loc) {
-		if (loc == null) {
-			return;
-		}
+    private void reportSemLoc(final JSONObject loc) {
+        if (loc == null) {
+            return;
+        }
 
-		mBearLocService
-				.postData(
-						getResources().getString(
-								R.string.bearloc_reported_semantic_loc), loc);
+        mBearLocService
+                .postData(
+                        getResources().getString(
+                                R.string.bearloc_reported_semantic_loc), loc);
 
-		// start new auto report schedule if not yet
-		if (mAutoReport == false && mAcc != null
-				&& LocReporterSettingsActivity.getAutoReport(this) == true) {
-			mAutoReport = true;
-			// report in AUTO_REPORT_ITVL milliseconds
-			mHandler.postDelayed(new LocReportTask(loc),
-					LocReporterService.AUTO_REPORT_ITVL);
-		}
-	}
+        // start new auto report schedule if not yet
+        if (mAutoReport == false && mAcc != null
+                && LocReporterSettingsActivity.getAutoReport(this) == true) {
+            mAutoReport = true;
+            // report in AUTO_REPORT_ITVL milliseconds
+            mHandler.postDelayed(new LocReportTask(loc),
+                    LocReporterService.AUTO_REPORT_ITVL);
+        }
+    }
 
-	@Override
-	public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-		// TODO Auto-generated method stub
+    @Override
+    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
+        // TODO Auto-generated method stub
 
-	}
+    }
 
-	@Override
-	public void onSensorChanged(final SensorEvent event) {
-		if (event != null
-				&& (Math.abs(event.values[0]) > 1
-						|| Math.abs(event.values[0]) > 1 || event.values[2] < 9)) {
-			// If not statically face up, then stop reporting location
-			mAutoReport = false;
-		}
-	}
+    @Override
+    public void onSensorChanged(final SensorEvent event) {
+        if (event != null
+                && (Math.abs(event.values[0]) > 1
+                        || Math.abs(event.values[0]) > 1 || event.values[2] < 9)) {
+            // If not statically face up, then stop reporting location
+            mAutoReport = false;
+        }
+    }
 }

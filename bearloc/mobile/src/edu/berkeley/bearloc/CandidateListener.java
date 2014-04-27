@@ -36,9 +36,9 @@ package edu.berkeley.bearloc;
 import org.json.JSONArray;
 
 public interface CandidateListener {
-	/**
-	 * @param candidate
-	 *            candidate returned by server
-	 */
-	public abstract void onCandidateEventReturned(JSONArray candidateEvent);
+    /**
+     * @param candidate
+     *            candidate returned by server
+     */
+    public abstract void onCandidateEventReturned(JSONArray candidateEvent);
 }

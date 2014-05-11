@@ -117,6 +117,17 @@ public class Acc implements Sampler, SensorEventListener {
 
 	private void pause() {
 		if (mBusy == true) {
+		    if (accOS != null) {
+		        try {
+                    accOS.flush();
+                    accOS.close();
+		        } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+		        accOS = null;
+            }
+		    
 			mBusy = false;
 			mSensorManager.unregisterListener(this);
 			mHandler.removeCallbacks(mPauseTask);

@@ -50,7 +50,6 @@ import android.media.AudioFormat;
 import android.media.MediaRecorder.AudioSource;
 import android.net.wifi.ScanResult;
 import android.os.Build;
-import android.util.Pair;
 import edu.berkeley.bearloc.util.DeviceUUID;
 
 public class BearLocFormat {
@@ -66,9 +65,13 @@ public class BearLocFormat {
             String type = mContext.getResources().getString(
                     R.string.bearloc_device_info);
             JSONObject meta = new JSONObject();
+            meta.put("type", type);
             meta.put("epoch", System.currentTimeMillis());
             meta.put("sysnano", System.nanoTime());
-            mCache.add(type, getDeviceInfo(), meta);
+            JSONObject formated = format(getDeviceInfo(), meta);
+            if (formated != null) {
+                mCache.add(formated);
+            }
 
             final JSONArray sensorInfoList = getSensorInfoList();
             type = mContext.getResources().getString(
@@ -77,9 +80,14 @@ public class BearLocFormat {
                 final JSONObject sensorInfo = sensorInfoList.getJSONObject(i);
 
                 meta = new JSONObject();
+                meta.put("type", type);
                 meta.put("epoch", System.currentTimeMillis());
                 meta.put("sysnano", System.nanoTime());
-                mCache.add(type, sensorInfo, meta);
+                formated = format(sensorInfo, meta);
+                if (formated != null) {
+                    mCache.add(formated);
+                }
+
             }
         } catch (final JSONException e) {
             // TODO Auto-generated catch block
@@ -87,19 +95,63 @@ public class BearLocFormat {
         }
     }
 
-    public JSONArray dump(final List<Pair<Object, JSONObject>> eventList) {
-        final JSONArray dumpArr = new JSONArray();
-
-        for (final Pair<Object, JSONObject> event : eventList) {
-            final Object data = event.first;
-            final JSONObject meta = event.second;
-            final JSONObject formated = format(data, meta);
-            if (formated != null) {
-                dumpArr.put(formated);
-            }
+    public JSONObject format(final Object data, final JSONObject meta) {
+        final String type = meta.optString("type");
+        // Android requires compiler compliance level 5.0 or 6.0
+        if (type == mContext.getResources().getString(
+                R.string.bearloc_device_info)) {
+            return formatDeviceInfo(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_sensor_info)) {
+            return formatSensorInfo(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_reported_semantic_loc)) {
+            return formatSemLoc(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_wifi)) {
+            return formatWifi(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_audio)) {
+            return formatAudio(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_geocoord)) {
+            return formatGeoCoord(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_accelerometer)) {
+            return formatAcc(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_linear_accelerometer)) {
+            return formatLinearAcc(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_gravity)) {
+            return formatGravity(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_gyroscope)) {
+            return formatGyro(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_rotation)) {
+            return formatRotation(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_magnetic)) {
+            return formatMagnetic(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_light)) {
+            return formatLight(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_temperature)) {
+            return formatTemp(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_pressure)) {
+            return formatPressure(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_proximity)) {
+            return formatProximity(data, meta);
+        } else if (type == mContext.getResources().getString(
+                R.string.bearloc_humidity)) {
+            return formatHumidity(data, meta);
         }
 
-        return dumpArr;
+        return null;
     }
 
     private JSONObject getDeviceInfo() {
@@ -204,65 +256,6 @@ public class BearLocFormat {
         }
 
         return sensorInfoList;
-    }
-
-    private JSONObject format(final Object data, final JSONObject meta) {
-        final String type = meta.optString("type");
-        // Android requires compiler compliance level 5.0 or 6.0
-        if (type == mContext.getResources().getString(
-                R.string.bearloc_device_info)) {
-            return formatDeviceInfo(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_sensor_info)) {
-            return formatSensorInfo(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_reported_semantic_loc)) {
-            return formatSemLoc(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_wifi)) {
-            return formatWifi(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_audio)) {
-            return formatAudio(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_geocoord)) {
-            return formatGeoCoord(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_accelerometer)) {
-            return formatAcc(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_linear_accelerometer)) {
-            return formatLinearAcc(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_gravity)) {
-            return formatGravity(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_gyroscope)) {
-            return formatGyro(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_rotation)) {
-            return formatRotation(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_magnetic)) {
-            return formatMagnetic(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_light)) {
-            return formatLight(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_temperature)) {
-            return formatTemp(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_pressure)) {
-            return formatPressure(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_proximity)) {
-            return formatProximity(data, meta);
-        } else if (type == mContext.getResources().getString(
-                R.string.bearloc_humidity)) {
-            return formatHumidity(data, meta);
-        }
-
-        return null;
     }
 
     private JSONObject formatDeviceInfo(final Object data, final JSONObject meta) {

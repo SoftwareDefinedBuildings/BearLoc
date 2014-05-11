@@ -52,7 +52,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Pair;
 import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
 import edu.berkeley.bearloc.util.DeviceUUID;
 import edu.berkeley.bearloc.util.JSONHttpGetTask;
@@ -146,14 +145,18 @@ public class BearLocService extends Service
     public boolean postData(final String type, final JSONObject data) {
         final JSONObject meta = new JSONObject();
         try {
+            meta.put("type", type);
             meta.put("epoch", System.currentTimeMillis());
             meta.put("sysnano", System.nanoTime());
         } catch (final JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        mCache.add(type, data, meta);
-        mSampler.sample();
+        final JSONObject formated = mFormat.format(data, meta);
+        if (formated != null) {
+            mCache.add(formated);
+            mSampler.sample();
+        }
 
         return true;
     }
@@ -196,17 +199,20 @@ public class BearLocService extends Service
     public void onSampleEvent(final String type, final Object data) {
         final JSONObject meta = new JSONObject();
         try {
+            meta.put("type", type);
             meta.put("epoch", System.currentTimeMillis());
             meta.put("sysnano", System.nanoTime());
         } catch (final JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        mCache.add(type, data, meta);
-
-        if (mDataSendItvl == null) {
-            mDataSendItvl = BearLocService.DATA_SEND_ITVL;
-            mHandler.postDelayed(new SendDataTask(), mDataSendItvl);
+        final JSONObject formated = mFormat.format(data, meta);
+        if (formated != null) {
+            mCache.add(formated);
+            if (mDataSendItvl == null) {
+                mDataSendItvl = BearLocService.DATA_SEND_ITVL;
+                mHandler.postDelayed(new SendDataTask(), mDataSendItvl);
+            }
         }
     }
 
@@ -240,9 +246,8 @@ public class BearLocService extends Service
                 + DeviceUUID.getDeviceUUID(this).toString();
         final URL url = getHttpURL(path);
 
-        final List<Pair<Object, JSONObject>> eventList = mCache.getCopy();
-        mCache.clear();
-        final JSONArray data = mFormat.dump(eventList);
+        // get all cached data
+        final JSONArray data = mCache.get();
 
         if (data.length() > 0) {
             try {
@@ -250,7 +255,7 @@ public class BearLocService extends Service
                     @Override
                     public void onJSONHttpPostResponded(final JSONArray response) {
                         if (response == null) {
-                            mCache.addAll(eventList);
+                            mCache.addAll(data);
                         }
                     }
                 }).execute(url, data);

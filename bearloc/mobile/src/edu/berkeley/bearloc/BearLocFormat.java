@@ -50,7 +50,6 @@ import android.media.AudioFormat;
 import android.media.MediaRecorder.AudioSource;
 import android.net.wifi.ScanResult;
 import android.os.Build;
-import android.util.Pair;
 import edu.berkeley.bearloc.util.DeviceUUID;
 
 public class BearLocFormat {

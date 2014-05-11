@@ -37,7 +37,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.json.JSONArray;
@@ -49,7 +48,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Pair;
 import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
 import edu.berkeley.bearloc.util.DeviceUUID;
 import edu.berkeley.bearloc.util.JSONHttpPostTask;
@@ -107,7 +105,7 @@ public class BearLocService extends Service
 
     @Override
     public boolean postData(final String type, final JSONObject data) {
-        if (type != null || data != null) {
+        if (type != null && data != null) {
             final JSONObject meta = new JSONObject();
             try {
                 meta.put("type", type);
@@ -120,9 +118,9 @@ public class BearLocService extends Service
             final JSONObject formated = mFormat.format(data, meta);
             if (formated != null) {
                 mCache.add(formated);
-                mSampler.sample();
             }
         }
+        mSampler.sample();
 
         return true;
     }

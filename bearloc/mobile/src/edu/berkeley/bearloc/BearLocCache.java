@@ -33,53 +33,54 @@
 
 package edu.berkeley.bearloc;
 
-import java.util.LinkedList;
-import java.util.List;
-
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.util.Pair;
 
 public class BearLocCache {
-	private final List<Pair<Object, JSONObject>> mEventList;
+    private JSONArray mEventArray;
 
-	// TODO make all events in one list
-	public BearLocCache(final Context context) {
-		mEventList = new LinkedList<Pair<Object, JSONObject>>();
-	}
+    public BearLocCache(final Context context) {
+        mEventArray = new JSONArray();
+    }
 
-	public void add(final String type, final Object data, final JSONObject meta) {
-		if (type == null || data == null || meta == null) {
-			return;
-		}
-		try {
-			meta.put("type", type);
-			mEventList.add(new Pair<Object, JSONObject>(data, meta));
-		} catch (final JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+    public void add(final JSONObject data) {
+        if (data == null) {
+            return;
+        }
+        mEventArray.put(data);
+    }
 
-	public void addAll(final List<Pair<Object, JSONObject>> eventList) {
-		if (eventList == null) {
-			return;
-		}
-		mEventList.addAll(eventList);
-	}
+    public void addAll(final JSONArray eventArray) {
+        if (eventArray == null) {
+            return;
+        }
 
-	/**
-	 * Get a new copy of the current data list in cache.
-	 * 
-	 * @return a new copy of current data list in cache.
-	 */
-	public List<Pair<Object, JSONObject>> getCopy() {
-		return new LinkedList<Pair<Object, JSONObject>>(mEventList);
-	}
+        try {
+            JSONArray tmpEventArray = new JSONArray();
+            for (int i = 0; i < mEventArray.length(); i++) {
+                tmpEventArray.put(mEventArray.get(i));
+            }
+            for (int i = 0; i < eventArray.length(); i++) {
+                tmpEventArray.put(eventArray.get(i));
+            }
+            mEventArray = tmpEventArray;
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
-	public void clear() {
-		mEventList.clear();
-	}
+    /** get cached data.
+     * this will make cache empty.
+     * 
+     * @return: cached data.
+     */
+    public JSONArray get() {
+        JSONArray rv = mEventArray;
+        mEventArray = new JSONArray();
+        return rv;
+    }
 }

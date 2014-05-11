@@ -65,9 +65,13 @@ public class BearLocFormat {
 		try {
 			String type = "device info";
 			JSONObject meta = new JSONObject();
+            meta.put("type", type);
 			meta.put("epoch", System.currentTimeMillis());
 			meta.put("sysnano", System.nanoTime());
-			mCache.add(type, getDeviceInfo(), meta);
+            JSONObject formated = format(getDeviceInfo(), meta);
+            if (formated != null) {
+                mCache.add(formated);
+            }
 
 			final JSONArray sensorInfoList = getSensorInfoList();
 			type = "sensor info";
@@ -75,30 +79,62 @@ public class BearLocFormat {
 				final JSONObject sensorInfo = sensorInfoList.getJSONObject(i);
 
 				meta = new JSONObject();
+                meta.put("type", type);
 				meta.put("epoch", System.currentTimeMillis());
 				meta.put("sysnano", System.nanoTime());
-				mCache.add(type, sensorInfo, meta);
+                formated = format(sensorInfo, meta);
+                if (formated != null) {
+                    mCache.add(formated);
+                }
 			}
 		} catch (final JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+	
+	public JSONObject format(final Object data, final JSONObject meta) {
+        final String type = meta.optString("type");
+        // Android requires compiler compliance level 5.0 or 6.0
+        if (type == "device info") {
+            return formatDeviceInfo(data, meta);
+        } else if (type == "sensor info") {
+            return formatSensorInfo(data, meta);
+        } else if (type == "reported semloc") {
+            return formatSemLoc(data, meta);
+        } else if (type == "wifi") {
+            return formatWifi(data, meta);
+        } else if (type == "audio") {
+            return formatAudio(data, meta);
+        } else if (type == "geocoord") {
+            return formatGeoCoord(data, meta);
+        } else if (type == "accelerometer") {
+            return formatAcc(data, meta);
+        } else if (type == "linear accelerometer") {
+            return formatLinearAcc(data, meta);
+        } else if (type == "gravity") {
+            return formatGravity(data, meta);
+        } else if (type == "gyroscope") {
+            return formatGyro(data, meta);
+        } else if (type == "rotation") {
+            return formatRotation(data, meta);
+        } else if (type == "magnetic") {
+            return formatMagnetic(data, meta);
+        } else if (type == "light") {
+            return formatLight(data, meta);
+        } else if (type == "temperature") {
+            return formatTemp(data, meta);
+        } else if (type == "pressure") {
+            return formatPressure(data, meta);
+        } else if (type == "proximity") {
+            return formatProximity(data, meta);
+        } else if (type == "humidity") {
+            return formatHumidity(data, meta);
+        }
 
-	public JSONArray dump(final List<Pair<Object, JSONObject>> eventList) {
-		final JSONArray dumpArr = new JSONArray();
+        return null;
+    }
 
-		for (final Pair<Object, JSONObject> event : eventList) {
-			final Object data = event.first;
-			final JSONObject meta = event.second;
-			final JSONObject formated = format(data, meta);
-			if (formated != null) {
-				dumpArr.put(formated);
-			}
-		}
-
-		return dumpArr;
-	}
 
 	private JSONObject getDeviceInfo() {
 		final JSONObject deviceInfo = new JSONObject();
@@ -190,48 +226,6 @@ public class BearLocFormat {
 		}
 
 		return sensorInfoList;
-	}
-
-	private JSONObject format(final Object data, final JSONObject meta) {
-		final String type = meta.optString("type");
-		// Android requires compiler compliance level 5.0 or 6.0
-		if (type == "device info") {
-			return formatDeviceInfo(data, meta);
-		} else if (type == "sensor info") {
-			return formatSensorInfo(data, meta);
-		} else if (type == "reported semloc") {
-			return formatSemLoc(data, meta);
-		} else if (type == "wifi") {
-			return formatWifi(data, meta);
-		} else if (type == "audio") {
-			return formatAudio(data, meta);
-		} else if (type == "geocoord") {
-			return formatGeoCoord(data, meta);
-		} else if (type == "accelerometer") {
-			return formatAcc(data, meta);
-		} else if (type == "linear accelerometer") {
-			return formatLinearAcc(data, meta);
-		} else if (type == "gravity") {
-			return formatGravity(data, meta);
-		} else if (type == "gyroscope") {
-			return formatGyro(data, meta);
-		} else if (type == "rotation") {
-			return formatRotation(data, meta);
-		} else if (type == "magnetic") {
-			return formatMagnetic(data, meta);
-		} else if (type == "light") {
-			return formatLight(data, meta);
-		} else if (type == "temperature") {
-			return formatTemp(data, meta);
-		} else if (type == "pressure") {
-			return formatPressure(data, meta);
-		} else if (type == "proximity") {
-			return formatProximity(data, meta);
-		} else if (type == "humidity") {
-			return formatHumidity(data, meta);
-		}
-
-		return null;
 	}
 
 	private JSONObject formatDeviceInfo(final Object data, final JSONObject meta) {

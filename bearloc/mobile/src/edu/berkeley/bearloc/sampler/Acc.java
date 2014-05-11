@@ -92,7 +92,7 @@ public class Acc implements Sampler, SensorEventListener {
 			final File sdCard = Environment.getExternalStorageDirectory();
             File dir = new File(sdCard.getAbsolutePath() + "/Galaxy");
             dir.mkdirs();
-            final String filename = "acc.txt";
+            final String filename = Long.toString(System.currentTimeMillis()) + ".txt";
             final File file = new File(dir, filename);
             try {
                 accOS = new BufferedOutputStream(new FileOutputStream(file));

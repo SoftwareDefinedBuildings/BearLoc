@@ -59,7 +59,7 @@ import edu.berkeley.bearloc.util.ServerSettings;
 public class BearLocService extends Service implements LocService,
 		OnSampleEventListener {
 
-	private static final int DATA_SEND_ITVL = 100; // millisecond
+	private static final int DATA_SEND_ITVL = 1000; // millisecond
 
 	private IBinder mBinder;
 	private Handler mHandler;

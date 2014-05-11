@@ -33,11 +33,18 @@
 
 package edu.berkeley.bearloc.sampler;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Environment;
 import android.os.Handler;
 import edu.berkeley.bearloc.util.SamplerSettings;
 
@@ -52,6 +59,7 @@ public class Acc implements Sampler, SensorEventListener {
 	private final Handler mHandler;
 	private final SensorManager mSensorManager;
 	private final Sensor mAcc;
+	private BufferedOutputStream accOS;
 
 	public static interface SamplerListener {
 		public abstract void onAccEvent(SensorEvent event);
@@ -80,6 +88,18 @@ public class Acc implements Sampler, SensorEventListener {
 				SamplerSettings.setAccEnable(mContext, false);
 				return false;
 			}
+			
+			final File sdCard = Environment.getExternalStorageDirectory();
+            File dir = new File(sdCard.getAbsolutePath() + "/Galaxy");
+            dir.mkdirs();
+            final String filename = "acc.txt";
+            final File file = new File(dir, filename);
+            try {
+                accOS = new BufferedOutputStream(new FileOutputStream(file));
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
 			// final long duration = SamplerSettings.getAccDuration(mContext);
 			// final int num = SamplerSettings.getAccCnt(mContext);
@@ -116,6 +136,17 @@ public class Acc implements Sampler, SensorEventListener {
 		}
 
 		if (mListener != null) {
+		    String data;
+		    data = Long.toString(event.timestamp) + ", ";
+		    data += Float.toString(event.values[0]) + ", ";
+		    data += Float.toString(event.values[1]) + ", ";
+		    data += Float.toString(event.values[2]) + "\n";
+		    try {
+                accOS.write(data.getBytes());
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 			mListener.onAccEvent(event);
 		}
 

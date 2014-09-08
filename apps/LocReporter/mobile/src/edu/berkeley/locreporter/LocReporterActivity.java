@@ -344,6 +344,6 @@ public class LocReporterActivity extends Activity implements SemLocListener,
 	@Override
 	public void onwrittenReturned(String written) {
 //		System.out.println(written);
-		mTextView.setText(written);
+		mTextView.append(written+"\n");
 	}
 }

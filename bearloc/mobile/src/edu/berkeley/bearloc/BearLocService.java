@@ -233,15 +233,18 @@ public class BearLocService extends Service implements SemLocService,
 	private void sendData(final writeListener listener) {
 		final JSONObject report = mFormat.dump(mCache.get());
 		mCache.clear();
-
+		final File sdCard = Environment.getExternalStorageDirectory();
+		final File directory = new File(sdCard.getAbsolutePath()
+				+ "/BearLoc");
+		directory.mkdirs();
+		String log_msg = "";
+		int log_length = 0;
+		String log_error = "";
 		if (report.length() > 0) {
 			try {
 				// This will get the SD Card directory and create a folder named
 				// MyFiles in it.
-				final File sdCard = Environment.getExternalStorageDirectory();
-				final File directory = new File(sdCard.getAbsolutePath()
-						+ "/BearLoc");
-				directory.mkdirs();
+				
 				// Now create the file in the above directory and write the
 				// contents into it
 				final String fileName = Long.toString(System
@@ -255,7 +258,6 @@ public class BearLocService extends Service implements SemLocService,
 					exist = true;
 				}
 							
-				
 				//parse report data
 				String make = "make";
 				String model = "model"; 
@@ -271,7 +273,6 @@ public class BearLocService extends Service implements SemLocService,
 				String[] deviceProp = {uuid, model, make};
 				csvOutput.writeNext(arrayOutput);
 				
-				String written = "";
 				JSONArray pointList;
 				JSONObject device;
 				try {
@@ -280,12 +281,10 @@ public class BearLocService extends Service implements SemLocService,
 						JSONObject singlePoint = pointList.getJSONObject(i);
 						String[] arrayOutputList = {singlePoint.optString(epoch), singlePoint.optString(SSID), singlePoint.optString(capability), singlePoint.optString(BSSID), singlePoint.optString(frequency), singlePoint.optString(RSSI)};
 						csvOutput.writeNext(arrayOutputList);
-						written = singlePoint.optString(epoch);
+						log_msg = singlePoint.optString(epoch);
 					}
 					csvOutput.close();
-					if (listener != null) {
-						listener.onwrittenReturned(written+","+Integer.toString(pointList.length()));
-					}
+					log_length = pointList.length();
 					
 					if(!exist){
 						CSVWriter csvmetaOutput = new CSVWriter(new FileWriter(metaFile, true), ',', CSVWriter.NO_QUOTE_CHARACTER);
@@ -298,16 +297,25 @@ public class BearLocService extends Service implements SemLocService,
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
-
-				Toast.makeText(
-						this,
-						"Save to New File " + fileName + "\nUUID"
-								+ DeviceUUID.getDeviceUUID(this),
-						Toast.LENGTH_SHORT).show();
-				
 			} catch (final IOException e) {
+				log_error = "IO ERROR";
 				e.printStackTrace();
 			}
+			if (listener != null) {
+				String[] sendback_msg = {log_msg,Integer.toString(log_length), log_error};
+				listener.onwrittenReturned(log_msg + "," + Integer.toString(log_length) + "," + log_error);
+				final String logfileName = "loginfo.csv";
+				final File logfile = new File(directory, logfileName);
+				CSVWriter logcsvOutput;
+				try {
+					logcsvOutput = new CSVWriter(new FileWriter(logfile, true), ',', CSVWriter.NO_QUOTE_CHARACTER);
+					logcsvOutput.writeNext(sendback_msg);
+					logcsvOutput.flush();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			
 			mHandler.postDelayed(mSendDataTask, mDataSendItvl);
 		} else {
 			mDataSendItvl = null;

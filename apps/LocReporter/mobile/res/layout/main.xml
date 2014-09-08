@@ -23,7 +23,7 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <TextxView
+    <TextView
         android:id="@+id/list"
         android:maxLines = "1000"
         android:scrollbars = "vertical"

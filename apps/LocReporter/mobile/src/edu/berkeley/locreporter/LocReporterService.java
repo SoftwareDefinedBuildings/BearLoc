@@ -54,7 +54,7 @@ import edu.berkeley.bearloc.SemLocListener;
 import edu.berkeley.bearloc.writeListener;
 
 public class LocReporterService extends Service implements SemLocListener,
-        MetaListener {
+        MetaListener, writeListener {
 
     private static final long AUTO_REPORT_ITVL = 60000L; // millisecond
 

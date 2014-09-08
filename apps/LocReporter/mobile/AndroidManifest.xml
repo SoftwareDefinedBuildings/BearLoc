@@ -42,7 +42,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name="edu.berkeley.bearloc.BearLocService" />
+        <service android:name="edu.berkeley.bearloc.WifiLogService" />
         <service
             android:name="edu.berkeley.locreporter.LocReporterService"
             android:exported="false" />

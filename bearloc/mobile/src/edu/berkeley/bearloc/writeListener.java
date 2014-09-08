@@ -33,6 +33,6 @@
 
 package edu.berkeley.bearloc;
 
-public interface writeListener {
+public interface WriteListener {
     public abstract void onwrittenReturned(String meta);
 }

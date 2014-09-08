@@ -31,7 +31,7 @@
  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
  */
 
-package edu.berkeley.bearloc.sampler;
+package edu.berkeley.bearloc;
 
 import java.util.List;
 
@@ -47,7 +47,7 @@ import android.widget.Toast;
 import edu.berkeley.bearloc.R;
 import edu.berkeley.bearloc.util.SamplerSettings;
 
-public class Wifi implements Sampler {
+public class WifiSampler {
     private boolean mBusy;
 
     private final Context mContext;
@@ -82,7 +82,7 @@ public class Wifi implements Sampler {
         }
     };
 
-    public Wifi(final Context context, final SamplerListener listener) {
+    public WifiSampler(final Context context, final SamplerListener listener) {
         mContext = context;
         mListener = listener;
         mHandler = new Handler();
@@ -94,7 +94,6 @@ public class Wifi implements Sampler {
         context.registerReceiver(mOnScanDone, i);
     }
 
-    @Override
     public boolean start() {
         if (mBusy == false && SamplerSettings.getWifiEnable(mContext) == true) {
             if (mWifiManager == null) {
@@ -115,6 +114,19 @@ public class Wifi implements Sampler {
         }
     }
 
+    public boolean stop() {
+        // TODO Auto-generated method stub
+        if (mBusy == true) {
+            mBusy = false;
+            mWifiLock.release();
+            mWifiLock = null;
+            mHandler.removeCallbacks(mWifiScanTask);
+            mContext.unregisterReceiver(mOnScanDone);
+        }
+        
+        return true;
+    }
+
     private void scan() {
         final boolean success = mWifiManager.startScan();
 
@@ -122,4 +134,5 @@ public class Wifi implements Sampler {
             mHandler.postDelayed(mWifiScanTask, 0);
         }
     }
+
 }

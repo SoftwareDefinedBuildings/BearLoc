@@ -23,8 +23,10 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <ListView
+    <TextxView
         android:id="@+id/list"
+        android:maxLines = "1000"
+        android:scrollbars = "vertical"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />

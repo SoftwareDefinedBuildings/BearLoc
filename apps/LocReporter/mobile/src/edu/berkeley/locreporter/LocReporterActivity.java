@@ -54,6 +54,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -69,10 +70,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import edu.berkeley.bearloc.MetaListener;
 import edu.berkeley.bearloc.SemLocListener;
+import edu.berkeley.bearloc.writeListener;
 import edu.berkeley.locreporter.LocReporterService.LocReporterBinder;
 
 public class LocReporterActivity extends Activity implements SemLocListener,
-        MetaListener, OnClickListener, OnItemClickListener,
+        MetaListener, writeListener, OnClickListener, OnItemClickListener,
         DialogInterface.OnClickListener {
 
     private String mCurSem;
@@ -83,7 +85,8 @@ public class LocReporterActivity extends Activity implements SemLocListener,
     private EditText mAddLocEditText;
     private String mSelectedLoc;
 
-    private ListView mListView;
+//    private ListView mListView;
+    private TextView mTextView;
     private ArrayAdapter<String> mArrayAdapter;
 
     private TextView mLocPrefixTextView;
@@ -103,6 +106,7 @@ public class LocReporterActivity extends Activity implements SemLocListener,
             mService = binder.getService();
             mService.setSemLocListener(LocReporterActivity.this);
             mService.setMetaListener(LocReporterActivity.this);
+			mService.setWriteListener(LocReporterActivity.this);
             mBound = true;
         }
 
@@ -123,11 +127,12 @@ public class LocReporterActivity extends Activity implements SemLocListener,
 
         mCurSem = LocReporterService.Sems[LocReporterService.Sems.length - 1];
 
-        mListView = (ListView) findViewById(R.id.list);
+        mTextView = (TextView) findViewById(R.id.list);
         mArrayAdapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1);
-        mListView.setAdapter(mArrayAdapter);
-        mListView.setOnItemClickListener(this);
+        mTextView.setMovementMethod(new ScrollingMovementMethod());
+//        mTextView.setAdapter(mArrayAdapter);
+//        mTextView.setOnItemClickListener(this);
 
         mLocPrefixTextView = (TextView) findViewById(R.id.loc_prefix);
         mCurSemLocTextView = (TextView) findViewById(R.id.cur_sem_loc);
@@ -335,4 +340,10 @@ public class LocReporterActivity extends Activity implements SemLocListener,
             return super.onOptionsItemSelected(item);
         }
     }
+
+	@Override
+	public void onwrittenReturned(String written) {
+//		System.out.println(written);
+		mTextView.setText(written);
+	}
 }

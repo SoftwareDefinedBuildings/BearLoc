@@ -51,6 +51,7 @@ import edu.berkeley.bearloc.BearLocService;
 import edu.berkeley.bearloc.BearLocService.BearLocBinder;
 import edu.berkeley.bearloc.MetaListener;
 import edu.berkeley.bearloc.SemLocListener;
+import edu.berkeley.bearloc.writeListener;
 
 public class LocReporterService extends Service implements SemLocListener,
         MetaListener {
@@ -66,6 +67,7 @@ public class LocReporterService extends Service implements SemLocListener,
             final BearLocBinder binder = (BearLocBinder) service;
             mBearLocService = binder.getService();
             mBound = true;
+            mBearLocService.setWriteListener((writeListener) LocReporterService.this);
         }
 
         @Override
@@ -83,6 +85,7 @@ public class LocReporterService extends Service implements SemLocListener,
     private Handler mHandler;
     private SemLocListener mSemLocListener;
     private MetaListener mMetaListener;
+    private writeListener mWriteListener;
 
     private final Runnable mReportLocTask = new Runnable() {
         @Override
@@ -132,6 +135,10 @@ public class LocReporterService extends Service implements SemLocListener,
 
     public void setMetaListener(final MetaListener metaListener) {
         mMetaListener = metaListener;
+    }
+    
+    public void setWriteListener(final writeListener writeListener){
+    	mWriteListener = writeListener;
     }
 
     public JSONObject curSemLocInfo() {
@@ -269,6 +276,13 @@ public class LocReporterService extends Service implements SemLocListener,
 
         if (mMetaListener != null) {
             mMetaListener.onMetaReturned(mCurMeta);
+        }
+    }
+    
+    public void onwrittenReturned(String written) {
+
+        if (mWriteListener != null) {
+            mWriteListener.onwrittenReturned(written);
         }
     }
 }

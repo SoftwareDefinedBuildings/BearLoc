@@ -33,46 +33,54 @@
 
 package edu.berkeley.wifilogger;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.util.Pair;
 
 public class WifiLoggerCache {
-    private final Map<String, List<Pair<Object, JSONObject>>> mDataMap;
+    private JSONArray mEventArray;
 
     public WifiLoggerCache(final Context context) {
-        mDataMap = new HashMap<String, List<Pair<Object, JSONObject>>>();
+        mEventArray = new JSONArray();
     }
 
-    public void put(final String type, final Object data, final JSONObject meta) {
-        if (!mDataMap.containsKey(type)) {
-            mDataMap.put(type, new LinkedList<Pair<Object, JSONObject>>());
+    public void add(final JSONObject data) {
+        if (data == null) {
+            return;
         }
-        final List<Pair<Object, JSONObject>> list = mDataMap.get(type);
-
-        list.add(new Pair<Object, JSONObject>(data, meta));
+        mEventArray.put(data);
     }
 
-    public Map<String, List<Pair<Object, JSONObject>>> get() {
-        return mDataMap;
-    }
-
-    public void clear() {
-        final Iterator<Entry<String, List<Pair<Object, JSONObject>>>> it = mDataMap
-                .entrySet().iterator();
-        while (it.hasNext()) {
-            final Map.Entry<String, List<Pair<Object, JSONObject>>> entry = it
-                    .next();
-            final List<Pair<Object, JSONObject>> events = entry.getValue();
-            events.clear();
+    public void addAll(final JSONArray eventArray) {
+        if (eventArray == null) {
+            return;
         }
+        
+        try {
+            JSONArray tmpEventArray = new JSONArray();
+            for (int i = 0; i < mEventArray.length(); i++) {
+                tmpEventArray.put(mEventArray.get(i));
+            }
+            for (int i = 0; i < eventArray.length(); i++) {
+                tmpEventArray.put(eventArray.get(i));
+            }
+            mEventArray = tmpEventArray;
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    /** get cached data.
+     * this will make cache empty.
+     * 
+     * @return: cached data.
+     */
+    public JSONArray get() {
+        JSONArray rv = mEventArray;
+        mEventArray = new JSONArray();
+        return rv;
     }
 }

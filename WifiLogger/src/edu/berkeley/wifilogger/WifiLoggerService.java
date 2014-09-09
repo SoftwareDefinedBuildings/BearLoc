@@ -1,5 +1,5 @@
 /*
-                 * Copyright (c) 2013, Regents of the University of California
+ * Copyright (c) 2013, Regents of the University of California
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,8 +34,10 @@
 package edu.berkeley.wifilogger;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -90,15 +92,15 @@ public class WifiLoggerService extends Service implements SamplerListener {
         mHandler = new Handler();
         mCache = new WifiLoggerCache(this);
         mSampler = new WifiSampler(this, this);
-        mFormat = new WifiLoggerFormat(this);
+        mFormat = new WifiLoggerFormat(this, mCache);
 
         final File sdCard = Environment.getExternalStorageDirectory();
         final String timestamp = Long.toString(System.currentTimeMillis());
         mDataDirectory = new File(sdCard.getAbsolutePath() + "/BearLoc"
-                + timestamp);
+                + timestamp + "/");
         mDataDirectory.mkdirs();
     }
-    
+
     @Override
     public void onDestroy() {
         mSampler.stop();
@@ -113,117 +115,23 @@ public class WifiLoggerService extends Service implements SamplerListener {
         mWriteListener = writeListener;
     }
 
-    private void writeData() {
-        final JSONObject report = mFormat.dump(mCache.get());
-        mCache.clear();
-
-        if (report.length() > 0) {
-            String logMsg = "";
-            int logLength = 0;
-            String logError = "";
-            try {
-                final String timestamp = Long.toString(System
-                        .currentTimeMillis());
-                final String fileName = timestamp + ".csv";
-                final File file = new File(mDataDirectory, fileName);
-                CSVWriter csvOutput = new CSVWriter(new FileWriter(file, true),
-                        ',', CSVWriter.NO_QUOTE_CHARACTER);
-                final File metaFile = new File(mDataDirectory, "metadata.txt");
-                boolean metaFileExists = false;
-                if (metaFile.exists() && mDataDirectory.isDirectory()) {
-                    metaFileExists = true;
-                }
-
-                // parse report data
-                String make = "make";
-                String model = "model";
-                String uuid = "uuid";
-                String RSSI = "RSSI";
-                String frequency = "frequency";
-                String BSSID = "BSSID";
-                String capability = "capability";
-                String SSID = "SSID";
-                String epoch = "epoch";
-
-                String[] wifiLogOutput = {epoch, SSID, capability, BSSID,
-                        frequency, RSSI};
-                String[] devicePropLayout = {uuid, model, make};
-                csvOutput.writeNext(wifiLogOutput);
-
-                JSONArray pointList;
-                JSONObject device;
-                try {
-                    pointList = (JSONArray) report.get("wifi");
-                    for (int i = 0; i < pointList.length(); i++) {
-                        JSONObject singlePoint = pointList.getJSONObject(i);
-                        String[] arrayOutputList = {
-                                singlePoint.optString(epoch),
-                                singlePoint.optString(SSID),
-                                singlePoint.optString(capability),
-                                singlePoint.optString(BSSID),
-                                singlePoint.optString(frequency),
-                                singlePoint.optString(RSSI)};
-                        csvOutput.writeNext(arrayOutputList);
-                        logMsg = singlePoint.optString(epoch);
-                    }
-                    csvOutput.close();
-                    logLength = pointList.length();
-
-                    if (!metaFileExists) {
-                        CSVWriter csvmetaOutput = new CSVWriter(new FileWriter(
-                                metaFile, true), ',',
-                                CSVWriter.NO_QUOTE_CHARACTER);
-                        csvmetaOutput.writeNext(devicePropLayout);
-                        device = (JSONObject) report.get("device");
-                        String[] devicePropVal = {device.optString(uuid),
-                                device.optString(model), device.optString(make)};
-                        csvmetaOutput.writeNext(devicePropVal);
-                        csvmetaOutput.close();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            } catch (final IOException e) {
-                logError = "IO ERROR";
-                e.printStackTrace();
-            }
-
-            if (mWriteListener != null) {
-                String[] sendbackMsg = {logMsg, Integer.toString(logLength),
-                        logError};
-                mWriteListener.onWritten(TextUtils.join(",", sendbackMsg));
-                final String logfileName = "loginfo.csv";
-                final File logfile = new File(mDataDirectory, logfileName);
-                CSVWriter logcsvOutput;
-                try {
-                    logcsvOutput = new CSVWriter(new FileWriter(logfile, true),
-                            ',', CSVWriter.NO_QUOTE_CHARACTER);
-                    logcsvOutput.writeNext(sendbackMsg);
-                    logcsvOutput.flush();
-                    logcsvOutput.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            mHandler.postDelayed(mWriteDataTask, mDataWriteItvl);
-        } else {
-            mDataWriteItvl = null;
-        }
-    }
-
     @Override
     public void onWifiEvent(List<ScanResult> results) {
         final JSONObject meta = new JSONObject();
         try {
+            meta.put("type", getResources().getString(R.string.wifi));
             meta.put("epoch", System.currentTimeMillis());
             meta.put("sysnano", System.nanoTime());
         } catch (final JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        mCache.put("wifi", results, meta);
-
+        for (final ScanResult result : results) {
+            final JSONObject formated = mFormat.format(result, meta);
+            if (formated != null) {
+                mCache.add(formated);
+            }
+        }
         if (mDataWriteItvl == null) {
             mDataWriteItvl = WifiLoggerService.DATA_WRITE_ITVL;
             mHandler.postDelayed(mWriteDataTask, mDataWriteItvl);
@@ -256,5 +164,122 @@ public class WifiLoggerService extends Service implements SamplerListener {
     public boolean stop() {
         // TODO Auto-generated method stub
         return mSampler.stop();
+    }
+
+    private void writeData() {
+        final JSONArray data = mCache.get();
+
+        if (data.length() > 0) {
+            long logEpoch = 0;
+            int logLength = 0;
+            String logError = "SUCCESS";
+
+            boolean success = true;
+            try {
+                final long curEpoch = System.currentTimeMillis();
+                logEpoch = curEpoch;
+                final String timestamp = Long.toString(curEpoch);
+                final String fileName = timestamp
+                        + getResources().getString(R.string.log_ext);
+                final File file = new File(mDataDirectory, fileName);
+                final CSVWriter csvOutput = new CSVWriter(new FileWriter(file,
+                        true), ',', CSVWriter.NO_QUOTE_CHARACTER);
+                
+                final File metaFile = new File(mDataDirectory, getResources()
+                        .getString(R.string.device_metadata)
+                        + getResources().getString(R.string.log_ext));
+                boolean metaFileExists = false;
+                if (metaFile.exists() && mDataDirectory.isDirectory()) {
+                    metaFileExists = true;
+                }
+
+                // parse report data
+                String make = "make";
+                String model = "model";
+                String uuid = "uuid";
+                String RSSI = "RSSI";
+                String frequency = "frequency";
+                String BSSID = "BSSID";
+                String capability = "capability";
+                String SSID = "SSID";
+                String epoch = "epoch";
+
+                String[] wifiLogOutput = {epoch, SSID, capability, BSSID,
+                        frequency, RSSI};
+                String[] devicePropLayout = {uuid, model, make};
+                csvOutput.writeNext(wifiLogOutput);
+
+                try {
+                    for (int i = 0; i < data.length(); i++) {
+                        JSONObject event = data.getJSONObject(i);
+                        if (event.getString("type").equals(
+                                getResources().getString(R.string.wifi))) {
+                            String[] arrayOutputList = {event.optString(epoch),
+                                    event.optString(SSID),
+                                    event.optString(capability),
+                                    event.optString(BSSID),
+                                    event.optString(frequency),
+                                    event.optString(RSSI)};
+                            csvOutput.writeNext(arrayOutputList);
+                        } else if (event.getString("type").equals(
+                                getResources().getString(R.string.device_info))) {
+                            if (!metaFileExists) {
+                                CSVWriter csvmetaOutput = new CSVWriter(
+                                        new FileWriter(metaFile, true), ',',
+                                        CSVWriter.NO_QUOTE_CHARACTER);
+                                csvmetaOutput.writeNext(devicePropLayout);
+                                String[] devicePropVal = {
+                                        event.optString(uuid),
+                                        event.optString(model),
+                                        event.optString(make)};
+                                csvmetaOutput.writeNext(devicePropVal);
+                                csvmetaOutput.close();
+                            }
+                        }
+                    }
+                    csvOutput.close();
+                    logLength = data.length();
+
+                } catch (JSONException e) {
+                    logError = e.toString();
+                    success = false;
+                    e.printStackTrace();
+                }
+            } catch (final IOException e) {
+                logError = e.toString();
+                success = false;
+                e.printStackTrace();
+            }
+
+            if (mWriteListener != null) {
+                String[] sendbackData = {Long.toString(logEpoch),
+                        Integer.toString(logLength), logError};
+                String sendbackMsg = TextUtils.join(",", sendbackData);
+                mWriteListener.onWritten(sendbackMsg);
+
+                try {
+                    final String logfileName = getResources().getString(
+                            R.string.log_metadata)
+                            + getResources().getString(R.string.log_ext);
+                    final File logfile = new File(mDataDirectory, logfileName);
+                    final FileOutputStream fOut = new FileOutputStream(logfile);
+                    final OutputStreamWriter osw = new OutputStreamWriter(fOut);
+                    osw.write(sendbackMsg);
+                    osw.flush();
+                    osw.close();
+                } catch (IOException e) {
+                    success = false;
+                    e.printStackTrace();
+                }
+            }
+
+            if (success == false) {
+                mCache.addAll(data);
+            }
+
+            mHandler.postDelayed(mWriteDataTask, mDataWriteItvl);
+        } else {
+            mDataWriteItvl = null;
+        }
     }
 }

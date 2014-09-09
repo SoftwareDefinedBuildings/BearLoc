@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Toast strings -->
+    <string name="app_name">WifiLogger</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
     <string name="wifi_error">Wifi Error</string>
+    <string name="device_info">device info</string>
+    <string name="wifi">wifi</string>
+    <string name="device_metadata">device_metadata</string>
+    <string name="log_metadata">log_metadata</string>
+    <string name="log_ext">.csv</string>
 
 </resources>

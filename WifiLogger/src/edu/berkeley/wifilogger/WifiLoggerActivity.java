@@ -37,7 +37,6 @@ import edu.berkeley.wifilogger.WifiLoggerService.WifiLoggerBinder;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -126,7 +125,6 @@ public class WifiLoggerActivity extends Activity
 
     @Override
     public void onClick(final View v) {
-        AlertDialog.Builder builder;
         switch (v.getId()) {
             case R.id.start :
                 mService.start();
@@ -144,7 +142,8 @@ public class WifiLoggerActivity extends Activity
     }
 
     @Override
-    public void onwrittenReturned(String written) {
+    public void onWritten(String written) {
+        // TODO refresh textview when full
         mTextView.append(written + "\n");
     }
 }

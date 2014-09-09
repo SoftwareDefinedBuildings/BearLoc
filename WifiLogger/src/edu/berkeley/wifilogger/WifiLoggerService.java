@@ -98,6 +98,11 @@ public class WifiLoggerService extends Service implements SamplerListener {
                 + timestamp);
         mDataDirectory.mkdirs();
     }
+    
+    @Override
+    public void onDestroy() {
+        mSampler.stop();
+    }
 
     @Override
     public IBinder onBind(final Intent intent) {
@@ -186,7 +191,7 @@ public class WifiLoggerService extends Service implements SamplerListener {
             if (mWriteListener != null) {
                 String[] sendbackMsg = {logMsg, Integer.toString(logLength),
                         logError};
-                mWriteListener.onwrittenReturned(TextUtils.join(",", sendbackMsg));
+                mWriteListener.onWritten(TextUtils.join(",", sendbackMsg));
                 final String logfileName = "loginfo.csv";
                 final File logfile = new File(mDataDirectory, logfileName);
                 CSVWriter logcsvOutput;

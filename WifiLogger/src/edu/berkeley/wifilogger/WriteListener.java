@@ -34,5 +34,5 @@
 package edu.berkeley.wifilogger;
 
 public interface WriteListener {
-    public abstract void onwrittenReturned(String meta);
+    public abstract void onWritten(String msg);
 }

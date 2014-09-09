@@ -86,10 +86,6 @@ public class WifiSampler {
         mHandler = new Handler();
         mWifiManager = (WifiManager) context
                 .getSystemService(Context.WIFI_SERVICE);
-
-        final IntentFilter i = new IntentFilter();
-        i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-        context.registerReceiver(mOnScanDone, i);
     }
 
     public boolean start() {
@@ -99,16 +95,20 @@ public class WifiSampler {
                         Toast.LENGTH_SHORT).show();
                 return false;
             }
+            
+            final IntentFilter i = new IntentFilter();
+            i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+            mContext.registerReceiver(mOnScanDone, i);
 
-            mHandler.postDelayed(mWifiScanTask, 0);
             mBusy = true;
             mWifiLock = mWifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL,
                     "BearLoc");
             mWifiLock.acquire();
-            return true;
-        } else {
-            return false;
+            
+            mHandler.postDelayed(mWifiScanTask, 0);
         }
+        
+        return true;
     }
 
     public boolean stop() {

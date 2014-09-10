@@ -57,7 +57,7 @@ import edu.berkeley.wifilogger.WifiSampler.SamplerListener;
 
 public class WifiLoggerService extends Service implements SamplerListener {
 
-    private static final int DATA_WRITE_ITVL = 6000; // millisecond
+    private static final int DATA_WRITE_ITVL = 60000; // millisecond
 
     private IBinder mBinder;
 
@@ -67,7 +67,7 @@ public class WifiLoggerService extends Service implements SamplerListener {
     private WifiLoggerCache mCache;
     private WifiSampler mSampler;
     private WifiLoggerFormat mFormat;
-    private WriteListener mWriteListener;
+    private LoggerListener mLoggerListener;
 
     private File mDataDirectory;
 
@@ -111,8 +111,8 @@ public class WifiLoggerService extends Service implements SamplerListener {
         return mBinder;
     }
 
-    public void setWriteListener(final WriteListener writeListener) {
-        mWriteListener = writeListener;
+    public void setWriteListener(final LoggerListener writeListener) {
+        mLoggerListener = writeListener;
     }
 
     @Override
@@ -136,6 +136,8 @@ public class WifiLoggerService extends Service implements SamplerListener {
             mDataWriteItvl = WifiLoggerService.DATA_WRITE_ITVL;
             mHandler.postDelayed(mWriteDataTask, mDataWriteItvl);
         }
+        
+        mLoggerListener.onSampleEvent();
     }
 
     /* Checks if external storage is available for read and write */
@@ -251,11 +253,11 @@ public class WifiLoggerService extends Service implements SamplerListener {
                 e.printStackTrace();
             }
 
-            if (mWriteListener != null) {
+            if (mLoggerListener != null) {
                 String[] sendbackData = {Long.toString(logEpoch),
                         Integer.toString(logLength), logError};
                 String sendbackMsg = TextUtils.join(",", sendbackData);
-                mWriteListener.onWritten(sendbackMsg);
+                mLoggerListener.onWritten(sendbackMsg);
 
                 try {
                     final String logfileName = getResources().getString(

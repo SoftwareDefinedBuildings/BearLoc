@@ -33,6 +33,8 @@
 
 package edu.berkeley.wifilogger;
 
-public interface WriteListener {
+public interface LoggerListener {
     public abstract void onWritten(String msg);
+    
+    public abstract void onSampleEvent();
 }

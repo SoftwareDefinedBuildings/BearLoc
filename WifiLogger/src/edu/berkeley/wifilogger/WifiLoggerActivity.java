@@ -33,6 +33,10 @@
 
 package edu.berkeley.wifilogger;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+
 import edu.berkeley.wifilogger.WifiLoggerService.WifiLoggerBinder;
 
 import android.annotation.SuppressLint;
@@ -42,6 +46,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.text.method.ScrollingMovementMethod;
@@ -52,17 +57,34 @@ import android.widget.TextView;
 
 public class WifiLoggerActivity extends Activity
         implements
-            WriteListener,
+            LoggerListener,
             OnClickListener {
 
-    private TextView mTextView;
+    private static final int LOG_VIEW_MAX_LINE = 25;
+    private static final int STATUS_VIEW_MAX_DOTS = 30;
+
+    private List<String> mLogs = new LinkedList<String>();
+    private int mNumDots = 0;
+    
+    private TextView mLogView;
+    private TextView mStatusView;
     private Button mStartButton;
     private Button mStopButton;
+    private boolean confirmingStop = false;
 
     private WifiLoggerService mService;
     private boolean mBound = false;
     
+    private Handler mHandler;
+    
     private PowerManager.WakeLock mWakeLock;
+    
+    private final Runnable mCancelConfirmTask = new Runnable() {
+        @Override
+        public void run() {
+            stopConfirm();
+        }
+    };
 
     private final ServiceConnection mServiceConn = new ServiceConnection() {
         @Override
@@ -86,8 +108,9 @@ public class WifiLoggerActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        mTextView = (TextView) findViewById(R.id.textview);
-        mTextView.setMovementMethod(new ScrollingMovementMethod());
+        mLogView = (TextView) findViewById(R.id.logview);
+        mLogView.setMovementMethod(new ScrollingMovementMethod());
+        mStatusView = (TextView) findViewById(R.id.statusview);
 
         mStartButton = (Button) findViewById(R.id.start);
         mStartButton.setOnClickListener(this);
@@ -99,6 +122,8 @@ public class WifiLoggerActivity extends Activity
         final Intent intent = new Intent(this, WifiLoggerService.class);
         bindService(intent, mServiceConn, Context.BIND_AUTO_CREATE);
 
+        mHandler = new Handler();
+        
         // Keep screen on
         final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm
@@ -132,9 +157,17 @@ public class WifiLoggerActivity extends Activity
                 mStopButton.setEnabled(true);
                 break;
             case R.id.stop :
-                mService.stop();
-                mStartButton.setEnabled(true);
-                mStopButton.setEnabled(false);
+                if (confirmingStop) 
+                {
+                    stopConfirm();
+                    mService.stop();
+                    mStartButton.setEnabled(true);
+                    mStopButton.setEnabled(false);
+                    confirmingStop = false;
+                } else {
+                    startConfirm();
+                    mHandler.postDelayed(mCancelConfirmTask, 1000);
+                }
                 break;
             default :
                 break;
@@ -143,7 +176,41 @@ public class WifiLoggerActivity extends Activity
 
     @Override
     public void onWritten(String written) {
-        // TODO refresh textview when full
-        mTextView.append(written + "\n");
+        mLogs.add(written);
+        
+        // remove old logs when full
+        if (mLogs.size() >= LOG_VIEW_MAX_LINE)
+        {
+            mLogs.remove(0);
+        }
+        
+        // Show all logs
+        String log = "";
+        for (String str:mLogs){
+            log += str +"\n";
+        }
+        mLogView.setText(log);
+    }
+
+    @Override
+    public void onSampleEvent() {
+        mNumDots = (mNumDots + 1) % STATUS_VIEW_MAX_DOTS;
+        final char[] chars = new char[mNumDots];
+        Arrays.fill(chars, '.');
+        final String status = new String(chars);
+        mStatusView.setText(status);
+    }
+    
+    private void startConfirm()
+    {
+        mStopButton.setText(R.string.confirm);
+        confirmingStop = true;
+    }
+    
+    private void stopConfirm()
+    {
+        mHandler.removeCallbacks(mCancelConfirmTask);
+        mStopButton.setText(R.string.stop);
+        confirmingStop = false;
     }
 }

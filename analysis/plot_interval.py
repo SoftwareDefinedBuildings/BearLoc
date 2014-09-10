@@ -1,0 +1,62 @@
+import operator
+import glob
+import os
+import csv
+
+from itertools import groupby
+from matplotlib import pyplot
+
+def import_data():
+	os.chdir("BearLoc1398720331923")
+	return_list = []
+	for filename in glob.glob("*.csv"):
+		if ("metadata" not in filename):
+			with open(filename, 'rb') as csvfile:
+				reader = csv.reader(csvfile, delimiter=',')
+				next(reader, None)
+				for row in reader:
+					return_list.append(row)
+				break
+	return return_list
+
+def groupby_macaddr():
+	data_list = import_data()
+	interval_list = []
+	# print data_list[0]
+	data_list = sorted(data_list, key=lambda x:x[3])
+	for group in groupby(data_list, lambda x:x[3]):
+		print group[0]
+		group_data = list(group[1])
+		# print group_data
+		group_data = sorted(group_data, key=lambda x:int(x[0]))
+		# print group_data
+		interval_list += get_interval(group_data)
+	plot(interval_list)	
+
+
+def get_interval(data):
+	# i = 0
+	# time_list = []
+	# while(i<(len(data)-1)):
+	# 	time = data[i][0]
+	# 	next_time = data[i+1][0]
+	# 	interval = int(next_time) - int(time)
+	# 	# print time
+	# 	# print next_time
+	# 	# print data[i]
+	# 	# print data[i+1]
+	# 	time_list.append(interval)
+	# 	i += 1
+	time_list = [int(data[i+1][0]) - int(data[i][0]) for i in range(len(data)-1)]
+	return time_list
+
+
+def plot(interval_list):
+	print interval_list
+	print "ploting..."
+	pyplot.plot(interval_list)
+	pyplot.show()
+
+
+if __name__ == "__main__":
+	groupby_macaddr()

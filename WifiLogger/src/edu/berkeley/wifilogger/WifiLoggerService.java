@@ -264,7 +264,7 @@ public class WifiLoggerService extends Service implements SamplerListener {
                             R.string.log_metadata)
                             + getResources().getString(R.string.log_ext);
                     final File logfile = new File(mDataDirectory, logfileName);
-                    final FileOutputStream fOut = new FileOutputStream(logfile);
+                    final FileOutputStream fOut = new FileOutputStream(logfile, true);
                     final OutputStreamWriter osw = new OutputStreamWriter(fOut);
                     osw.write(sendbackMsg);
                     osw.flush();

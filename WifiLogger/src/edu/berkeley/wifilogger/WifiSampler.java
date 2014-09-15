@@ -68,7 +68,7 @@ public class WifiSampler {
                     mListener.onWifiEvent(results);
                 }
 
-                mHandler.postDelayed(mWifiScanTask, 0);
+                while (!mHandler.postDelayed(mWifiScanTask, 0));
             }
         }
     };
@@ -105,7 +105,7 @@ public class WifiSampler {
                     "BearLoc");
             mWifiLock.acquire();
             
-            mHandler.postDelayed(mWifiScanTask, 0);
+            while (!mHandler.postDelayed(mWifiScanTask, 0));
         }
         
         return true;
@@ -128,7 +128,7 @@ public class WifiSampler {
         final boolean success = mWifiManager.startScan();
 
         if (success == false) {
-            mHandler.postDelayed(mWifiScanTask, 0);
+            while (!mHandler.postDelayed(mWifiScanTask, 0));
         }
     }
 

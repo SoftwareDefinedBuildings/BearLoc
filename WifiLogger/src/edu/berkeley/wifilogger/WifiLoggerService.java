@@ -134,7 +134,7 @@ public class WifiLoggerService extends Service implements SamplerListener {
         }
         if (mDataWriteItvl == null) {
             mDataWriteItvl = WifiLoggerService.DATA_WRITE_ITVL;
-            mHandler.postDelayed(mWriteDataTask, mDataWriteItvl);
+            while (!mHandler.postDelayed(mWriteDataTask, mDataWriteItvl));
         }
         
         mLoggerListener.onSampleEvent();
@@ -266,7 +266,7 @@ public class WifiLoggerService extends Service implements SamplerListener {
                     final File logfile = new File(mDataDirectory, logfileName);
                     final FileOutputStream fOut = new FileOutputStream(logfile, true);
                     final OutputStreamWriter osw = new OutputStreamWriter(fOut);
-                    osw.write(sendbackMsg);
+                    osw.write(sendbackMsg +"\n");
                     osw.flush();
                     osw.close();
                 } catch (IOException e) {
@@ -279,7 +279,7 @@ public class WifiLoggerService extends Service implements SamplerListener {
                 mCache.addAll(data);
             }
 
-            mHandler.postDelayed(mWriteDataTask, mDataWriteItvl);
+            while (!mHandler.postDelayed(mWriteDataTask, mDataWriteItvl));
         } else {
             mDataWriteItvl = null;
         }

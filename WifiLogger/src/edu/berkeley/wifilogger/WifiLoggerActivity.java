@@ -62,6 +62,7 @@ public class WifiLoggerActivity extends Activity
 
     private static final int LOG_VIEW_MAX_LINE = 25;
     private static final int STATUS_VIEW_MAX_DOTS = 30;
+    private static final int CANCEL_CONFIRM_MS = 500;
 
     private List<String> mLogs = new LinkedList<String>();
     private int mNumDots = 0;
@@ -166,7 +167,7 @@ public class WifiLoggerActivity extends Activity
                     confirmingStop = false;
                 } else {
                     startConfirm();
-                    mHandler.postDelayed(mCancelConfirmTask, 1000);
+                    while (!mHandler.postDelayed(mCancelConfirmTask, CANCEL_CONFIRM_MS));
                 }
                 break;
             default :

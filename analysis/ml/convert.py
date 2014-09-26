@@ -17,6 +17,7 @@ for root, subFolders, files in os.walk(datadir):
 macs = [] # list of MAC addresses
 data = {} # dict with timestamp as keys, with dict as values
 for fpath in fpaths:
+    room = os.path.basename(os.path.dirname(fpath)).split("_")[1]
     print "handling", fpath
     with open(fpath) as f:
         f.readline() # skip header
@@ -35,11 +36,12 @@ for fpath in fpaths:
         if timestamp not in data:
             data[timestamp] = {}
         data[timestamp][mac] = rssi
+        data[timestamp]["room"] = room
 macs = list(set(macs))
 
 # write to output file
 with open(output_fname, "w") as f:
-    f.write(",".join(macs) + "\n")
+    f.write(",".join(macs + ["room"]) + "\n")
     for items in data.values():
-        row_vals = [str(items.get(m, "?")) for m in macs]
+        row_vals = [str(items.get(m, "?")) for m in macs+["room"]]
         f.write(",".join(row_vals) + "\n")

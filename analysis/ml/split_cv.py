@@ -16,11 +16,11 @@ train_index, test_index = [(train_index, test_index) for train_index, test_index
 
 
 with open("data.train.csv", "w") as f:
-    f.write(header + "\n")
+    f.write(header)
     for i in train_index:
-        f.write(lines[i] + "\n")
+        f.write(lines[i])
 
 with open("data.test.csv", "w") as f:
-    f.write(header + "\n")
+    f.write(header)
     for i in test_index:
-        f.write(lines[i] + "\n")
+        f.write(lines[i])

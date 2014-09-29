@@ -11,10 +11,13 @@ with open(dataf) as f:
         splits = l.strip().split(",")
         targets.append(splits[-1])
 
-cv = cross_validation.StratifiedKFold(targets, n_folds=20)
+cv = cross_validation.StratifiedKFold(targets, n_folds=2000)
 cv_index = [index for index in cv]
-_, train_index = cv_index[0]
-_, test_index = cv_index[1]
+train_index = []
+for i in range(100):
+  _, _train_index = cv_index[i]
+  train_index.extend(_train_index)
+_, test_index = cv_index[100]
 
 
 with open("data.train.csv", "w") as f:

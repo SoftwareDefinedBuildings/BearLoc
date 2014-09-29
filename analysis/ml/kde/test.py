@@ -1,8 +1,10 @@
 import numpy as np
 from sklearn.neighbors.kde import KernelDensity
+import cPickle as pickle
+from sklearn.metrics import confusion_matrix
 
-trainf = "../data.train.csv"
 testf = "../data.test.csv"
+modelf = "models"
 
 X_test = []
 y_test = []
@@ -17,3 +19,32 @@ with open(testf) as f:
 
 X_test = np.array(X_test)
 y_test = np.array(y_test)
+
+with open(modelf, 'rb') as f:
+    models = pickle.load(f)
+
+rooms = list(set(y_test))
+macs = header.strip().split(",")[:-1]
+y_pred = []
+for i in range(len(X_test)):
+    print i
+    X = X_test[i]
+    scores = {}
+    for r in rooms:
+        score = 0
+        for j in range(len(macs)):
+            m = macs[j]
+            model = models[r][m]["model"]
+            p = models[r][m]["possibility"]
+            if X[j] == -100:
+                score += 1 - p
+            else:
+                if model:
+                    score += model.score(X[j]) * p
+                else:
+                    score += p
+        scores[r] = score
+    r_pred = max(scores.items(), key=lambda x: x[1])[0]
+    y_pred.append(r_pred)
+
+cm = confusion_matrix(y_test, y_pred)

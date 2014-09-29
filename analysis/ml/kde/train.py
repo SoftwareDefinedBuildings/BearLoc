@@ -3,7 +3,6 @@ from sklearn.neighbors.kde import KernelDensity
 import cPickle as pickle
 
 trainf = "../data.train.csv"
-testf = "../data.test.csv"
 
 X_train = []
 y_train = []
@@ -25,18 +24,20 @@ macs = header.strip().split(",")[:-1]
 models = {}
 for r in rooms:
     models[r] = {}
+    X_train_r = [X_train[xi] for xi in range(len(X_train)) if y_train[xi] == r]
     for mi in range(len(macs)):
         m = macs[mi]
-        X = [X_train[xi][mi] for xi in range(len(X_train)) if y_train[xi] == r and X_train[xi][mi] != -100]
-        print r, m, len(X)
+        print r, m
+        X = [x[mi] for x in X_train_r if x[mi] != -100]
+        X = [[x] for x in X]
+        p = float(len(X))/len(X_train_r)
         if len(X) > 5:
-            models[r][m] = KernelDensity(kernel='gaussian', bandwidth=0.2).fit(X)
+            models[r][m] = {"model": KernelDensity(kernel='gaussian', bandwidth=0.2).fit(X), "possibility": p}
         else:
-            models[r][m] = None
+            models[r][m] = {"model": None, "possibility": p}
 
 #add appearance possibility
 
-models_str = pickle.dumps(models)
 
-with open("models", "w") as f:
-    f.write(models_str)
+with open("models", "wb") as f:
+    pickle.dump(models, f)

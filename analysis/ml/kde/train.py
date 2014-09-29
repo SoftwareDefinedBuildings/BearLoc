@@ -18,7 +18,7 @@ with open(trainf) as f:
 X_train = np.array(X_train)
 y_train = np.array(y_train)
 
-
+#train
 rooms = list(set(y_train))
 macs = header.strip().split(",")[:-1]
 models = {}
@@ -35,9 +35,6 @@ for r in rooms:
             models[r][m] = {"model": KernelDensity(kernel='gaussian', bandwidth=0.2).fit(X), "possibility": p}
         else:
             models[r][m] = {"model": None, "possibility": p}
-
-#add appearance possibility
-
 
 with open("models", "wb") as f:
     pickle.dump(models, f)

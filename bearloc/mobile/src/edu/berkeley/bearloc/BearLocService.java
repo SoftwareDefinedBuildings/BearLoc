@@ -59,6 +59,9 @@ import edu.berkeley.bearloc.util.JSONHttpGetTask.onJSONHttpGetRespondedListener;
 import edu.berkeley.bearloc.util.JSONHttpPostTask;
 import edu.berkeley.bearloc.util.JSONHttpPostTask.onJSONHttpPostRespondedListener;
 import edu.berkeley.bearloc.util.ServerSettings;
+import edu.berkeley.bearlocinterface.CandidateListener;
+import edu.berkeley.bearlocinterface.LocListener;
+import edu.berkeley.bearlocinterface.LocService;
 
 public class BearLocService extends Service
         implements

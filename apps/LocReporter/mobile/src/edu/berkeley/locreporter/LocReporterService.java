@@ -47,11 +47,13 @@ import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+
 import edu.berkeley.bearloc.BearLocService;
-import edu.berkeley.bearloc.BearLocService.BearLocBinder;
-import edu.berkeley.bearloc.CandidateListener;
-import edu.berkeley.bearloc.LocListener;
-import edu.berkeley.bearloc.R;
+import edu.berkeley.bearloc.BearLocService.BearLocBinder; //TODO: Fix this dependency issue. 
+// import edu.berkeley.bearlocinterface.LocService;
+import edu.berkeley.bearlocinterface.CandidateListener;
+import edu.berkeley.bearlocinterface.LocListener;
+import edu.berkeley.bearloc.R; //TODO: The configuration data should be provided as arguments 
 
 public class LocReporterService extends Service implements SensorEventListener {
 

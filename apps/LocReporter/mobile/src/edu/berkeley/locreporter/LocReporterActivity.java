@@ -66,8 +66,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import edu.berkeley.bearloc.CandidateListener;
-import edu.berkeley.bearloc.LocListener;
+import edu.berkeley.bearlocinterface.CandidateListener;
+import edu.berkeley.bearlocinterface.LocListener;
 import edu.berkeley.locreporter.LocReporterService.LocReporterBinder;
 
 public class LocReporterActivity extends Activity

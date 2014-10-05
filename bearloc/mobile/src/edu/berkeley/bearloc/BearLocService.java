@@ -47,9 +47,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Service;
 import android.content.Intent;
-import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
@@ -63,10 +61,7 @@ import edu.berkeley.bearlocinterface.CandidateListener;
 import edu.berkeley.bearlocinterface.LocListener;
 import edu.berkeley.bearlocinterface.LocService;
 
-public class BearLocService extends Service
-        implements
-            LocService,
-            OnSampleEventListener {
+public class BearLocService extends LocService implements OnSampleEventListener {
 
     private static final int DATA_SEND_ITVL = 100; // millisecond
     private static final int LOC_DELAY = 300; // millisecond
@@ -104,16 +99,9 @@ public class BearLocService extends Service
         }
     };
 
-    public class BearLocBinder extends Binder {
-        public BearLocService getService() {
-            // Return this instance so clients can call public methods
-            return BearLocService.this;
-        }
-    }
-
     @Override
     public void onCreate() {
-        mBinder = new BearLocBinder();
+        mBinder = new LocBinder();
         mHandler = new Handler();
         mCache = new BearLocCache(this);
         mSampler = new BearLocSampler(this, this);
@@ -218,6 +206,8 @@ public class BearLocService extends Service
             }
         }
     }
+    
+    /* Private methods. */
 
     private void sendLocRequest(final LocListener listener) {
         if (listener == null) {

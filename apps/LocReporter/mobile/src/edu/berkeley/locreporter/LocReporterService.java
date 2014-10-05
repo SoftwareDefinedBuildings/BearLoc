@@ -48,9 +48,8 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 
-import edu.berkeley.bearloc.BearLocService;
-import edu.berkeley.bearloc.BearLocService.BearLocBinder; //TODO: Fix this dependency issue. 
-// import edu.berkeley.bearlocinterface.LocService;
+import edu.berkeley.bearlocinterface.LocService;
+import edu.berkeley.bearlocinterface.LocService.LocBinder;
 import edu.berkeley.bearlocinterface.CandidateListener;
 import edu.berkeley.bearlocinterface.LocListener;
 import edu.berkeley.bearloc.R; //TODO: The configuration data should be provided as arguments 
@@ -59,13 +58,13 @@ public class LocReporterService extends Service implements SensorEventListener {
 
     private static final long AUTO_REPORT_ITVL = 180000L; // millisecond
 
-    private BearLocService mBearLocService;
+    private LocService mBearLocService;
     private boolean mBound = false;
     private final ServiceConnection mBearLocConn = new ServiceConnection() {
         @Override
         public void onServiceConnected(final ComponentName name,
                 final IBinder service) {
-            final BearLocBinder binder = (BearLocBinder) service;
+            final LocBinder binder = (LocBinder) service;
             mBearLocService = binder.getService();
             mBound = true;
         }
@@ -109,7 +108,7 @@ public class LocReporterService extends Service implements SensorEventListener {
 
     @Override
     public void onCreate() {
-        final Intent intent = new Intent(this, BearLocService.class);
+        final Intent intent = new Intent(this, LocService.class);
         bindService(intent, mBearLocConn, Context.BIND_AUTO_CREATE);
 
         mBinder = new LocReporterBinder();

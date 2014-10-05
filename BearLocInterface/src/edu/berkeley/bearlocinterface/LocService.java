@@ -37,7 +37,10 @@ import java.util.UUID;
 
 import org.json.JSONObject;
 
-public interface LocService {
+import android.app.Service;
+import android.os.Binder;
+
+public abstract class LocService extends Service {
     /**
      * Get location for this device.
      * 
@@ -90,4 +93,12 @@ public interface LocService {
      */
     public abstract boolean getCandidate(JSONObject loc,
             CandidateListener listener);
+    
+    
+    public class LocBinder extends Binder {
+        public LocService getService() {
+            // Return this instance so clients can call public methods
+            return LocService.this;
+        }
+    }
 }

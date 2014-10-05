@@ -105,7 +105,8 @@ public class BearLocFormat {
                 R.string.bearloc_sensor_info)) {
             return formatSensorInfo(data, meta);
         } else if (type == mContext.getResources().getString(
-                R.string.bearloc_reported_semantic_loc)) {
+                edu.berkeley.bearlocinterface.R.string.reported_semantic_loc)) { 
+        	// TODO: where to put all these strings? What should be in the service? What should be in the interface?
             return formatSemLoc(data, meta);
         } else if (type == mContext.getResources().getString(
                 R.string.bearloc_wifi)) {

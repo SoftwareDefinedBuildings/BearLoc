@@ -32,7 +32,6 @@
     <!-- BearLoc event type strings -->
     <string name="bearloc_device_info">device info</string>
     <string name="bearloc_sensor_info">sensor info</string>
-    <string name="bearloc_reported_semantic_loc">reported semloc</string>
     <string name="bearloc_wifi">wifi</string>
     <string name="bearloc_audio">audio</string>
     <string name="bearloc_geocoord">geocoord</string>

@@ -32,17 +32,21 @@ for i in range(len(X_test)):
     scores = {}
     for r in rooms:
         score = 0
+        model_count = models[r]['count']['model']
+        score += np.exp(model_count.score(len(X)))
         for j in range(len(macs)):
             m = macs[j]
-            model = models[r][m]["model"]
-            p = models[r][m]["possibility"]
+            model = models[r]['rssi'][m]["model"]
+            p = models[r]['rssi'][m]["possibility"]
             if X[j] == -100:
-                score += 1 - p
+                # score += 1 - p
+                pass
             else:
                 if model:
-                    score += model.score(X[j]) * p
+                    score += np.exp(model.score(X[j])) * p
                 else:
-                    score += p
+                    # score += p
+                    pass
         scores[r] = score
     r_pred = max(scores.items(), key=lambda x: x[1])[0]
     y_pred.append(r_pred)

@@ -23,8 +23,10 @@ rooms = list(set(y_train))
 macs = header.strip().split(",")[:-1]
 models = {}
 for r in rooms:
-    models[r] = {}
+    models[r]['rssi'] = {}
     X_train_r = [X_train[xi] for xi in range(len(X_train)) if y_train[xi] == r]
+    Y = [sum(x!=-100 for x in X) for X in X_train_r]
+    models[r]['count'] = {"model": KernelDensity(kernel='gaussian', bandwidth=0.2).fit(Y)}
     for mi in range(len(macs)):
         m = macs[mi]
         print r, m
@@ -32,9 +34,9 @@ for r in rooms:
         X = [[x] for x in X]
         p = float(len(X))/len(X_train_r)
         if len(X) > 5:
-            models[r][m] = {"model": KernelDensity(kernel='gaussian', bandwidth=0.2).fit(X), "possibility": p}
+            models[r]['rssi'][m] = {"model": KernelDensity(kernel='gaussian', bandwidth=0.2).fit(X), "possibility": p}
         else:
-            models[r][m] = {"model": None, "possibility": p}
+            models[r]['rssi'][m] = {"model": None, "possibility": p}
 
 with open("models", "wb") as f:
     pickle.dump(models, f)

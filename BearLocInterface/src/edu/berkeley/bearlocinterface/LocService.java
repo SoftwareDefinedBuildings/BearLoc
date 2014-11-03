@@ -28,7 +28,7 @@
  */
 
 /*
- * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
+ * Author: Siyuan He <siyuanhe@berkeley.edu>
  */
 
 package edu.berkeley.bearlocinterface;
@@ -92,7 +92,7 @@ public abstract class LocService extends Service {
      * @return true if success, else false
      */
     public abstract boolean getCandidate(JSONObject loc,
-            CandidateListener listener);
+            LocListener listener);
     
     
     public class LocBinder extends Binder {

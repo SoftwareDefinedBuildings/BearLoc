@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Sensor delay api values -->
+    <string name="bearloc_SENSOR_DELAY_NORMAL">3</string> <!-- android.hardware.SensorManager.SENSOR_DELAY_NORMAL -->
+    <string name="bearloc_SENSOR_DELAY_UI">2</string> <!-- android.hardware.SensorManager.SENSOR_DELAY_UI -->
+    <string name="bearloc_SENSOR_DELAY_GAME">1</string> <!-- android.hardware.SensorManager.SENSOR_DELAY_GAME -->
+    <string name="bearloc_SENSOR_DELAY_FASTEST">0</string> <!-- android.hardware.SensorManager.SENSOR_DELAY_FASTEST -->
+
+
+    <!-- Sensor delay real values -->
+    <string name="bearloc_SENSOR_DELAY_NORMAL_MS">200</string>
+    <string name="bearloc_SENSOR_DELAY_UI_MS">60</string>
+    <string name="bearloc_SENSOR_DELAY_GAME_MS">20</string>
+    <string name="bearloc_SENSOR_DELAY_FASTEST_MS">0</string>
+
+    <!-- Audio source api values -->
+    <string name="bearloc_CAMCORDER">5</string> <!-- android.media.MediaRecorder.AudioSource.CAMCORDER -->
+    <string name="bearloc_MIC">1</string> <!-- android.media.MediaRecorder.AudioSource.CAMCORDER -->
+
+
+    <!-- Audio channel api values -->
+    <string name="bearloc_CHANNEL_IN_MONO">16</string> <!-- android.media.AudioFormat.CHANNEL_IN_MONO -->
+    <string name="bearloc_CHANNEL_IN_STEREO">12</string> <!-- android.media.AudioFormat.CHANNEL_IN_STEREO -->
+
+
+    <!-- Audio format api values -->
+    <string name="bearloc_ENCODING_PCM_16BIT">2</string> <!-- android.media.AudioFormat.ENCODING_PCM_16BIT -->
+    <string name="bearloc_ENCODING_PCM_8BIT">3</string> <!-- android.media.AudioFormat.ENCODING_PCM_8BIT -->
+
+
+    <!-- BearLoc event type strings -->
+    <string name="bearloc_device_info">device info</string>
+    <string name="bearloc_sensor_info">sensor info</string>
+    <string name="bearloc_wifi">wifi</string>
+    <string name="bearloc_audio">audio</string>
+    <string name="bearloc_geocoord">geocoord</string>
+    <string name="bearloc_accelerometer">accelerometer</string>
+    <string name="bearloc_linear_accelerometer">linear accelerometer</string>
+    <string name="bearloc_gravity">gravity</string>
+    <string name="bearloc_gyroscope">gyroscope</string>
+    <string name="bearloc_rotation">rotation</string>
+    <string name="bearloc_magnetic">magnetic</string>
+    <string name="bearloc_light">light</string>
+    <string name="bearloc_temperature">temperature</string>
+    <string name="bearloc_pressure">pressure</string>
+    <string name="bearloc_proximity">proximity</string>
+    <string name="bearloc_humidity">humidity</string>
+
+    <!-- Accelerometer settings strings -->
+    <string name="bearloc_pref_acc_title">Accelerometer</string>
+    <string name="bearloc_pref_acc_enable_summ">Enable accelerometer sampling</string>
+    <string name="bearloc_pref_acc_enable">Sample Accelerometer</string>
+    <string name="bearloc_default_acc_enable">true</string>
+    <string name="bearloc_pref_acc_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_acc_duration">Duration</string>
+    <string name="bearloc_default_acc_duration">1000</string>
+    <string name="bearloc_pref_acc_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_acc_cnt">Count</string>
+    <string name="bearloc_default_acc_cnt">50</string>
+    <string name="bearloc_pref_acc_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_acc_delay">Speed (Delay)</string>
+    <string name="bearloc_default_acc_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
+
+    <!-- Ambient temperature settings strings -->
+    <string name="bearloc_pref_temp_title">Ambient Temperature</string>
+    <string name="bearloc_pref_temp_enable_summ">Enable ambient temperature sampling</string>
+    <string name="bearloc_pref_temp_enable">Sample Temperature</string>
+    <string name="bearloc_default_temp_enable">true</string>
+    <string name="bearloc_pref_temp_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_temp_duration">Duration</string>
+    <string name="bearloc_default_temp_duration">1000</string>
+    <string name="bearloc_pref_temp_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_temp_cnt">Count</string>
+    <string name="bearloc_default_temp_cnt">1</string>
+    <string name="bearloc_pref_temp_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_temp_delay">Speed (Delay)</string>
+    <string name="bearloc_default_temp_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL</string>
+
+    <!-- Atmospheric pressure settings strings -->
+    <string name="bearloc_pref_pressure_title">Atmospheric Pressure</string>
+    <string name="bearloc_pref_pressure_enable_summ">Enable atmospheric pressure sampling</string>
+    <string name="bearloc_pref_pressure_enable">Sample Pressure</string>
+    <string name="bearloc_default_pressure_enable">true</string>
+    <string name="bearloc_pref_pressure_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_pressure_duration">Duration</string>
+    <string name="bearloc_default_pressure_duration">1000</string>
+    <string name="bearloc_pref_pressure_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_pressure_cnt">Count</string>
+    <string name="bearloc_default_pressure_cnt">1</string>
+    <string name="bearloc_pref_pressure_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_pressure_delay">Speed (Delay)</string>
+    <string name="bearloc_default_pressure_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL</string>
+
+    <!-- Audio settings strings -->
+    <string name="bearloc_pref_audio_title">Audio</string>
+    <string name="bearloc_pref_audio_enable_summ">Enable Audio recording</string>
+    <string name="bearloc_pref_audio_enable">Record Audio</string>
+    <string name="bearloc_default_audio_enable">true</string>
+    <string name="bearloc_pref_audio_duration_summ">Audio duration in milliseconds</string>
+    <string name="bearloc_pref_audio_duration">Audio Duration</string>
+    <string name="bearloc_default_audio_duration">1000</string>
+    <string name="bearloc_pref_audio_src_summ">The microphone to use</string>
+    <string name="bearloc_pref_audio_src">Audio Source</string>
+    <string name="bearloc_default_audio_src_value">@string/bearloc_CAMCORDER</string>
+    <string name="bearloc_pref_audio_sample_rate_summ">Sample rate in Hertz</string>
+    <string name="bearloc_pref_audio_sample_rate">Audio Sample Rate</string>
+    <string name="bearloc_default_audio_sample_rate_value">44100</string> <!-- Only 44100 is guaranteed to work -->
+    <string name="bearloc_pref_audio_channel_summ">Number of separate audio streams</string>
+    <string name="bearloc_pref_audio_channel">Audio Channel</string>
+    <string name="bearloc_default_audio_channel_value">@string/bearloc_CHANNEL_IN_MONO</string> <!-- Only MONO is guaranteed to work -->
+    <string name="bearloc_pref_audio_format_summ">Number of bits per sample</string>
+    <string name="bearloc_pref_audio_format">Audio Data Format</string>
+    <string name="bearloc_default_audio_format_value">@string/bearloc_ENCODING_PCM_16BIT</string> <!-- Only 16BIT is guaranteed to work -->
+
+
+    <!-- Humidity settings strings -->
+    <string name="bearloc_pref_humidity_title">Humidity</string>
+    <string name="bearloc_pref_humidity_enable_summ">Enable humidity sampling</string>
+    <string name="bearloc_pref_humidity_enable">Sample Humidity</string>
+    <string name="bearloc_default_humidity_enable">true</string>
+    <string name="bearloc_pref_humidity_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_humidity_duration">Duration</string>
+    <string name="bearloc_default_humidity_duration">1000</string>
+    <string name="bearloc_pref_humidity_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_humidity_cnt">Count</string>
+    <string name="bearloc_default_humidity_cnt">1</string>
+    <string name="bearloc_pref_humidity_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_humidity_delay">Speed (Delay)</string>
+    <string name="bearloc_default_humidity_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL</string>
+
+    <!-- Geographic Coordinate settings strings -->
+    <string name="bearloc_pref_geocoord_title">Geographic Location</string>
+    <string name="bearloc_pref_geocoord_enable_summ">Enable geolocation sampling</string>
+    <string name="bearloc_pref_geocoord_enable">Sample GeoLocation</string>
+    <string name="bearloc_default_geocoord_enable">true</string>
+    <string name="bearloc_pref_geocoord_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_geocoord_duration">Duration</string>
+    <string name="bearloc_default_geocoord_duration">1000</string>
+    <string name="bearloc_pref_geocoord_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_geocoord_cnt">Count</string>
+    <string name="bearloc_default_geocoord_cnt">1</string>
+    <string name="bearloc_pref_geocoord_min_delay_summ">Minimum delay of updates in milliseconds</string>
+    <string name="bearloc_pref_geocoord_min_delay">Minimum Delay</string>
+    <string name="bearloc_default_geocoord_min_delay">0</string>
+    <string name="bearloc_pref_geocoord_min_dist_summ">Minimum distance of updates in meters</string>
+    <string name="bearloc_pref_geocoord_min_dist">Minimum Distance</string>
+    <string name="bearloc_default_geocoord_min_dist">0</string>
+
+    <!-- Gravity settings strings -->
+    <string name="bearloc_pref_gravity_title">Gravity</string>
+    <string name="bearloc_pref_gravity_enable_summ">Enable gravity sampling</string>
+    <string name="bearloc_pref_gravity_enable">Sample Gravity</string>
+    <string name="bearloc_default_gravity_enable">true</string>
+    <string name="bearloc_pref_gravity_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_gravity_duration">Duration</string>
+    <string name="bearloc_default_gravity_duration">1000</string>
+    <string name="bearloc_pref_gravity_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_gravity_cnt">Count</string>
+    <string name="bearloc_default_gravity_cnt">50</string>
+    <string name="bearloc_pref_gravity_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_gravity_delay">Speed (Delay)</string>
+    <string name="bearloc_default_gravity_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
+
+    <!-- Gyroscope settings strings -->
+    <string name="bearloc_pref_gyro_title">Gyroscope</string>
+    <string name="bearloc_pref_gyro_enable_summ">Enable gyroscope sampling</string>
+    <string name="bearloc_pref_gyro_enable">Sample Gyroscope</string>
+    <string name="bearloc_default_gyro_enable">true</string>
+    <string name="bearloc_pref_gyro_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_gyro_duration">Duration</string>
+    <string name="bearloc_default_gyro_duration">1000</string>
+    <string name="bearloc_pref_gyro_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_gyro_cnt">Count</string>
+    <string name="bearloc_default_gyro_cnt">50</string>
+    <string name="bearloc_pref_gyro_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_gyro_delay">Speed (Delay)</string>
+    <string name="bearloc_default_gyro_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
+
+    <!-- Light settings strings -->
+    <string name="bearloc_pref_light_title">Light</string>
+    <string name="bearloc_pref_light_enable_summ">Enable light sampling</string>
+    <string name="bearloc_pref_light_enable">Sample Light</string>
+    <string name="bearloc_default_light_enable">true</string>
+    <string name="bearloc_pref_light_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_light_duration">Duration</string>
+    <string name="bearloc_default_light_duration">1000</string>
+    <string name="bearloc_pref_light_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_light_cnt">Count</string>
+    <string name="bearloc_default_light_cnt">1</string>
+    <string name="bearloc_pref_light_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_light_delay">Speed (Delay)</string>
+    <string name="bearloc_default_light_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL</string>
+
+    <!-- Linear Accelerometer settings strings -->
+    <string name="bearloc_pref_lacc_title">Linear Accelerometer</string>
+    <string name="bearloc_pref_lacc_enable_summ">Enable linear accelerometer sampling</string>
+    <string name="bearloc_pref_lacc_enable">Sample Linear Accelerometer</string>
+    <string name="bearloc_default_lacc_enable">true</string>
+    <string name="bearloc_pref_lacc_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_lacc_duration">Duration</string>
+    <string name="bearloc_default_lacc_duration">1000</string>
+    <string name="bearloc_pref_lacc_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_lacc_cnt">Count</string>
+    <string name="bearloc_default_lacc_cnt">50</string>
+    <string name="bearloc_pref_lacc_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_lacc_delay">Speed (Delay)</string>
+    <string name="bearloc_default_lacc_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
+
+    <!-- Magnetic settings strings -->
+    <string name="bearloc_pref_magnetic_title">Magnetic</string>
+    <string name="bearloc_pref_magnetic_enable_summ">Enable magnetic sampling</string>
+    <string name="bearloc_pref_magnetic_enable">Sample Magnetic</string>
+    <string name="bearloc_default_magnetic_enable">true</string>
+    <string name="bearloc_pref_magnetic_duration_summ">Delay duration in milliseconds</string>
+    <string name="bearloc_pref_magnetic_duration">Duration</string>
+    <string name="bearloc_default_magnetic_duration">1000</string>
+    <string name="bearloc_pref_magnetic_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_magnetic_cnt">Count</string>
+    <string name="bearloc_default_magnetic_cnt">1</string>
+    <string name="bearloc_pref_magnetic_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_magnetic_delay">Speed (Delay)</string>
+    <string name="bearloc_default_magnetic_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
+
+    <!-- Proximity settings strings -->
+    <string name="bearloc_pref_proximity_title">Proximity</string>
+    <string name="bearloc_pref_proximity_enable_summ">Enable proximity sampling</string>
+    <string name="bearloc_pref_proximity_enable">Sample Proximity</string>
+    <string name="bearloc_default_proximity_enable">true</string>
+    <string name="bearloc_pref_proximity_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_proximity_duration">Duration</string>
+    <string name="bearloc_default_proximity_duration">1000</string>
+    <string name="bearloc_pref_proximity_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_proximity_cnt">Count</string>
+    <string name="bearloc_default_proximity_cnt">1</string>
+    <string name="bearloc_pref_proximity_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_proximity_delay">Speed (Delay)</string>
+    <string name="bearloc_default_proximity_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL</string>
+
+    <!-- Rotation settings strings -->
+    <string name="bearloc_pref_rotation_title">Rotation</string>
+    <string name="bearloc_pref_rotation_enable_summ">Enable rotation sampling</string>
+    <string name="bearloc_pref_rotation_enable">Sample Rotation</string>
+    <string name="bearloc_default_rotation_enable">true</string>
+    <string name="bearloc_pref_rotation_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_rotation_duration">Duration</string>
+    <string name="bearloc_default_rotation_duration">1000</string>
+    <string name="bearloc_pref_rotation_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_rotation_cnt">Count</string>
+    <string name="bearloc_default_rotation_cnt">50</string>
+    <string name="bearloc_pref_rotation_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_rotation_delay">Speed (Delay)</string>
+    <string name="bearloc_default_rotation_delay_value">@string/bearloc_SENSOR_DELAY_GAME</string>
+
+    <!-- Wifi settings strings -->
+    <string name="bearloc_pref_wifi_title">Wifi</string>
+    <string name="bearloc_pref_wifi_enable_summ">Enable Wifi signal strength sampling</string>
+    <string name="bearloc_pref_wifi_enable">Sample Wifi</string>
+    <string name="bearloc_default_wifi_enable">true</string>
+    <string name="bearloc_pref_wifi_duration_summ">Max sample duration in milliseconds</string>
+    <string name="bearloc_pref_wifi_duration">Duration</string>
+    <string name="bearloc_default_wifi_duration">1000</string>
+    <string name="bearloc_pref_wifi_cnt_summ">Max sample count in one duration</string>
+    <string name="bearloc_pref_wifi_cnt">Count</string>
+    <string name="bearloc_default_wifi_cnt">3</string>
+    <string name="bearloc_pref_wifi_delay_summ">Min sample delay in milliseconds</string>
+    <string name="bearloc_pref_wifi_delay">Speed (Delay)</string>
+    <string name="bearloc_default_wifi_delay_value">@string/bearloc_SENSOR_DELAY_NORMAL_MS</string>
+
+</resources>

@@ -52,7 +52,7 @@ import edu.berkeley.bearlocinterface.LocService;
 import edu.berkeley.bearlocinterface.LocService.LocBinder;
 import edu.berkeley.bearlocinterface.CandidateListener;
 import edu.berkeley.bearlocinterface.LocListener;
-import edu.berkeley.bearlocinterface.R; //TODO: The configuration data should be provided as arguments 
+import edu.berkeley.bearloc.R; //TODO: The configuration data should be provided as arguments 
 
 public class LocReporterService extends Service implements SensorEventListener {
 
@@ -150,7 +150,7 @@ public class LocReporterService extends Service implements SensorEventListener {
     }
 
     public boolean getCandidate(final JSONObject loc,
-            final CandidateListener listener) {
+            final LocListener listener) {
         if (loc == null) {
             return false;
         }

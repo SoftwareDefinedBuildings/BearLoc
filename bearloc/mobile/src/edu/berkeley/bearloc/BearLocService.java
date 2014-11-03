@@ -225,7 +225,7 @@ public class BearLocService extends LocService implements OnSampleEventListener 
             new JSONHttpGetTask(new onJSONHttpGetRespondedListener() {
                 @Override
                 public void onJSONHttpGetResponded(final JSONArray response) {
-                    listener.onLocEventReturned(response);
+                    listener.onResponseReturned(response);
                 }
             }).execute(url);
         } catch (final RejectedExecutionException e) {

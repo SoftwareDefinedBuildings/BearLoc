@@ -31,14 +31,56 @@
  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
  */
 
-package edu.berkeley.bearlocinterface;
+package edu.berkeley.bearloc;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
-public interface LocListener {
-	/**
-	 * @param response
-	 *            response returned by server
+import android.content.Context;
+
+public class BearLocCache {
+	private JSONArray mEventArray;
+
+	public BearLocCache(final Context context) {
+	    mEventArray = new JSONArray();
+	}
+
+	public void add(final JSONObject data) {
+		if (data == null) {
+			return;
+		}
+		mEventArray.put(data);
+	}
+
+	public void addAll(final JSONArray eventArray) {
+		if (eventArray == null) {
+			return;
+		}
+		
+		try {
+		    JSONArray tmpEventArray = new JSONArray();
+    	    for (int i = 0; i < mEventArray.length(); i++) {
+                tmpEventArray.put(mEventArray.get(i));
+    	    }
+    	    for (int i = 0; i < eventArray.length(); i++) {
+    	        tmpEventArray.put(eventArray.get(i));
+    	    }
+    	    mEventArray = tmpEventArray;
+		} catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+	}
+
+	/** get cached data.
+	 * this will make cache empty.
+	 * 
+	 * @return: cached data.
 	 */
-	public abstract void onResponseReturned(JSONObject response);
+	public JSONArray get() {
+	    JSONArray rv = mEventArray;
+		mEventArray = new JSONArray();
+		return rv;
+	}
 }

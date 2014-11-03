@@ -65,11 +65,11 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
             } else if (action != null
                     && action
                             .equals(LocReporterSettingsActivity.ACTION_PREF_SERVER)) {
-                addPreferencesFromResource(R.xml.bearloc_server_settings);
+                addPreferencesFromResource(edu.berkeley.bearloc.R.xml.bearloc_server_settings);
             } else if (action != null
                     && action
                             .equals(LocReporterSettingsActivity.ACTION_PREF_SAMPLER)) {
-                addPreferencesFromResource(R.xml.bearloc_sampler_settings);
+                addPreferencesFromResource(edu.berkeley.bearloc.R.xml.bearloc_sampler_settings);
             } else {
                 // Load the legacy preferences headers
                 addPreferencesFromResource(R.xml.pref_headers_legacy);
@@ -95,9 +95,9 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
             if ("general".equals(settings)) {
                 addPreferencesFromResource(R.xml.general_settings);
             } else if ("server".equals(settings)) {
-                addPreferencesFromResource(R.xml.bearloc_server_settings);
+                addPreferencesFromResource(edu.berkeley.bearloc.R.xml.bearloc_server_settings);
             } else if ("sampler".equals(settings)) {
-                addPreferencesFromResource(R.xml.bearloc_sampler_settings);
+                addPreferencesFromResource(edu.berkeley.bearloc.R.xml.bearloc_sampler_settings);
             }
         }
     }

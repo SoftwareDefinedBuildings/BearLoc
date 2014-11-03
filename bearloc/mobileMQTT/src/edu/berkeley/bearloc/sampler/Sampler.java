@@ -31,14 +31,9 @@
  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
  */
 
-package edu.berkeley.bearlocinterface;
+package edu.berkeley.bearloc.sampler;
 
-import org.json.JSONObject;
-
-public interface LocListener {
-	/**
-	 * @param response
-	 *            response returned by server
-	 */
-	public abstract void onResponseReturned(JSONObject response);
+public interface Sampler {
+    // duration in millisecond
+    public abstract boolean start();
 }

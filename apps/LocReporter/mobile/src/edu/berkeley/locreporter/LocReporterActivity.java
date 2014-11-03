@@ -66,14 +66,12 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import edu.berkeley.bearlocinterface.CandidateListener;
 import edu.berkeley.bearlocinterface.LocListener;
 import edu.berkeley.locreporter.LocReporterService.LocReporterBinder;
 
 public class LocReporterActivity extends Activity
         implements
             LocListener,
-            CandidateListener,
             OnClickListener,
             OnItemClickListener,
             DialogInterface.OnClickListener {
@@ -336,39 +334,52 @@ public class LocReporterActivity extends Activity
     }
 
     @Override
-    public void onLocEventReturned(final JSONArray locEvent) {
+    public void onResponseReturned(final JSONObject response) {
         mAddButton.setEnabled(true);
         mSemButton.setEnabled(true);
         mLocButton.setEnabled(true);
 
-        if (locEvent == null) {
+        if (response == null) {
             Toast.makeText(this, R.string.server_no_respond, Toast.LENGTH_SHORT)
                     .show();
             return;
         }
-
-        final JSONObject oldLoc = mCurLoc;
+        
         try {
-            mCurLoc = locEvent.getJSONObject(0); // The response is JSON Array
-            if (oldLoc == null
-                    || oldLoc.toString().equals(mCurLoc.toString()) == false) {
-                if (getCandidate() == false) {
-                    mCurLoc = oldLoc;
-                    Toast.makeText(this, R.string.loc_not_updated,
-                            Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, R.string.loc_updated,
-                            Toast.LENGTH_SHORT).show();
-                }
+            if (response.has("type")) {
+            	String type = response.getString("type");
+            	if (type == "localize") {
+            		onLocEventReturned(response);
+            	} else if (type == "candidate") {
+            		onCandidateEventReturned(response);
+            	}
             }
         } catch (final JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        
+
+        
+    }
+    
+    public void onLocEventReturned(final JSONObject locEvent) {
+    	final JSONObject oldLoc = mCurLoc;
+        mCurLoc = locEvent; // The response is JSON Array
+		if (oldLoc == null
+		        || oldLoc.toString().equals(mCurLoc.toString()) == false) {
+		    if (getCandidate() == false) {
+		        mCurLoc = oldLoc;
+		        Toast.makeText(this, R.string.loc_not_updated,
+		                Toast.LENGTH_SHORT).show();
+		    } else {
+		        Toast.makeText(this, R.string.loc_updated,
+		                Toast.LENGTH_SHORT).show();
+		    }
+		}
     }
 
-    @Override
-    public void onCandidateEventReturned(final JSONArray candidateEvent) {
+    public void onCandidateEventReturned(final JSONObject candidateEvent) {
         if (candidateEvent == null) {
             Toast.makeText(this, R.string.server_no_respond, Toast.LENGTH_SHORT)
                     .show();
@@ -376,7 +387,7 @@ public class LocReporterActivity extends Activity
         }
 
         try {
-            mCurCandidate = candidateEvent.getJSONObject(0).getJSONArray(
+            mCurCandidate = candidateEvent.getJSONArray(
                     "location candidate");
         } catch (final JSONException e) {
             // TODO Auto-generated catch block

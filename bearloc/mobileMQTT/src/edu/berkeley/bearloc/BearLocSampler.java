@@ -1,0 +1,234 @@
+/*
+ * Copyright (c) 2013, Regents of the University of California
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions 
+ * are met:
+ * 
+ *  - Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  - Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL 
+ * THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
+ */
+
+package edu.berkeley.bearloc;
+
+import java.util.List;
+
+import org.json.JSONObject;
+
+import android.content.Context;
+import android.hardware.SensorEvent;
+import android.location.Location;
+import android.net.wifi.ScanResult;
+import edu.berkeley.bearloc.sampler.Acc;
+import edu.berkeley.bearloc.sampler.Audio;
+import edu.berkeley.bearloc.sampler.GeoCoord;
+import edu.berkeley.bearloc.sampler.Gravity;
+import edu.berkeley.bearloc.sampler.Gyro;
+import edu.berkeley.bearloc.sampler.Humidity;
+import edu.berkeley.bearloc.sampler.Light;
+import edu.berkeley.bearloc.sampler.LinearAcc;
+import edu.berkeley.bearloc.sampler.Magnetic;
+import edu.berkeley.bearloc.sampler.Pressure;
+import edu.berkeley.bearloc.sampler.Proximity;
+import edu.berkeley.bearloc.sampler.Rotation;
+import edu.berkeley.bearloc.sampler.Temp;
+import edu.berkeley.bearloc.sampler.Wifi;
+
+public class BearLocSampler {
+
+    private final Context mContext;
+    private final OnSampleEventListener mListener;
+
+    private final Wifi mWifi;
+    private final Audio mAudio;
+    private final GeoCoord mGeoLoc;
+    private final Acc mAcc;
+    private final LinearAcc mLAcc;
+    private final Gravity mGravity;
+    private final Gyro mGyro;
+    private final Rotation mRotation;
+    private final Magnetic mMag;
+    private final Light mLight;
+    private final Temp mTemp;
+    private final Pressure mPressure;
+    private final Proximity mProximity;
+    private final Humidity mHumidity;
+
+    public static interface OnSampleEventListener {
+        void onSampleEvent(String type, Object data);
+    }
+
+    public BearLocSampler(final Context context,
+            final OnSampleEventListener listener) {
+        mContext = context;
+        mListener = listener;
+
+        mWifi = new Wifi(mContext, new Wifi.SamplerListener() {
+            @Override
+            public void onWifiEvent(final List<ScanResult> results) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_wifi);
+                for (final ScanResult result : results) {
+                    mListener.onSampleEvent(type, result);
+                }
+            }
+        });
+
+        mAudio = new Audio(mContext, new Audio.SamplerListener() {
+            @Override
+            public void onAudioEvent(final JSONObject audio) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_audio);
+                mListener.onSampleEvent(type, audio);
+            }
+        });
+
+        mGeoLoc = new GeoCoord(mContext, new GeoCoord.SamplerListener() {
+            @Override
+            public void onGeoCoordEvent(final Location location) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_geocoord);
+                mListener.onSampleEvent(type, location);
+            }
+        });
+
+        mAcc = new Acc(mContext, new Acc.SamplerListener() {
+            @Override
+            public void onAccEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_accelerometer);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+
+        mLAcc = new LinearAcc(mContext, new LinearAcc.SamplerListener() {
+            @Override
+            public void onLinearAccEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_linear_accelerometer);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+
+        mGravity = new Gravity(mContext, new Gravity.SamplerListener() {
+            @Override
+            public void onGravityEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_gravity);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+
+        mGyro = new Gyro(mContext, new Gyro.SamplerListener() {
+            @Override
+            public void onGyroEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_gyroscope);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+
+        mRotation = new Rotation(mContext, new Rotation.SamplerListener() {
+            @Override
+            public void onRotationEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_rotation);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+
+        mMag = new Magnetic(mContext, new Magnetic.SamplerListener() {
+            @Override
+            public void onMagneticEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_magnetic);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+
+        mLight = new Light(mContext, new Light.SamplerListener() {
+            @Override
+            public void onLightEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_light);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+
+        mTemp = new Temp(mContext, new Temp.SamplerListener() {
+            @Override
+            public void onTempEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_temperature);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+
+        mPressure = new Pressure(mContext, new Pressure.SamplerListener() {
+
+            @Override
+            public void onPressureEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_pressure);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+
+        mProximity = new Proximity(mContext, new Proximity.SamplerListener() {
+            @Override
+            public void onProximityEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_proximity);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+
+        mHumidity = new Humidity(mContext, new Humidity.SamplerListener() {
+            @Override
+            public void onHumidityEvent(final SensorEvent event) {
+                final String type = mContext.getResources().getString(
+                        R.string.bearloc_humidity);
+                mListener.onSampleEvent(type, event);
+            }
+        });
+    }
+
+    public void sample() {
+        mWifi.start();
+        mAudio.start();
+        mGeoLoc.start();
+        mAcc.start();
+        mLAcc.start();
+        mGravity.start();
+        mGyro.start();
+        mRotation.start();
+        mMag.start();
+        mLight.start();
+        mTemp.start();
+        mPressure.start();
+        mProximity.start();
+        mHumidity.start();
+    }
+}

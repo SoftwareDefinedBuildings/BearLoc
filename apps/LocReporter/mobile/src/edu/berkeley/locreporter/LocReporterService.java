@@ -48,6 +48,8 @@ import edu.berkeley.bearlocinterface.LocService.LocBinder;
 import edu.berkeley.bearlocinterface.LocListener;
 import edu.berkeley.bearloc.R; //TODO: The configuration data should be provided as arguments 
 
+
+// TODO remove LocReporterService
 public class LocReporterService extends Service {
 
     private LocService mBearLocService;

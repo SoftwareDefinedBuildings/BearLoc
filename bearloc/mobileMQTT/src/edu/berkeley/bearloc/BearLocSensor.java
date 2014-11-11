@@ -56,31 +56,16 @@ import edu.berkeley.bearloc.sampler.Rotation;
 import edu.berkeley.bearloc.sampler.Temp;
 import edu.berkeley.bearloc.sampler.Wifi;
 
-public class BearLocSampler {
+public class BearLocSensor {
 
     private final Context mContext;
     private final OnSampleEventListener mListener;
-
-    private final Wifi mWifi;
-    private final Audio mAudio;
-    private final GeoCoord mGeoLoc;
-    private final Acc mAcc;
-    private final LinearAcc mLAcc;
-    private final Gravity mGravity;
-    private final Gyro mGyro;
-    private final Rotation mRotation;
-    private final Magnetic mMag;
-    private final Light mLight;
-    private final Temp mTemp;
-    private final Pressure mPressure;
-    private final Proximity mProximity;
-    private final Humidity mHumidity;
 
     public static interface OnSampleEventListener {
         void onSampleEvent(String type, Object data);
     }
 
-    public BearLocSampler(final Context context,
+    public BearLocSensor(final Context context,
             final OnSampleEventListener listener) {
         mContext = context;
         mListener = listener;

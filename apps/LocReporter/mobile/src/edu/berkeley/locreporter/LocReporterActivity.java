@@ -52,7 +52,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -118,9 +117,6 @@ public class LocReporterActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        // Set default setting values
-        PreferenceManager.setDefaultValues(this, R.xml.general_settings, false);
-
         mCurLoc = new JSONObject();
         mCurSem = LocReporterService.Semantics[LocReporterService.Semantics.length - 1];
         mCurCandidate = new JSONArray();
@@ -149,6 +145,7 @@ public class LocReporterActivity extends Activity
 
         refresh();
     }
+    
     @Override
     protected void onResume() {
         super.onResume();
@@ -347,12 +344,12 @@ public class LocReporterActivity extends Activity
         
         try {
             if (response.has("type")) {
-            	String type = response.getString("type");
-            	if (type == "localize") {
-            		onLocEventReturned(response);
-            	} else if (type == "candidate") {
-            		onCandidateEventReturned(response);
-            	}
+                String type = response.getString("type");
+                if (type == "localize") {
+                    onLocEventReturned(response);
+                } else if (type == "candidate") {
+                    onCandidateEventReturned(response);
+                }
             }
         } catch (final JSONException e) {
             // TODO Auto-generated catch block
@@ -364,19 +361,19 @@ public class LocReporterActivity extends Activity
     }
     
     public void onLocEventReturned(final JSONObject locEvent) {
-    	final JSONObject oldLoc = mCurLoc;
+        final JSONObject oldLoc = mCurLoc;
         mCurLoc = locEvent; // The response is JSON Array
-		if (oldLoc == null
-		        || oldLoc.toString().equals(mCurLoc.toString()) == false) {
-		    if (getCandidate() == false) {
-		        mCurLoc = oldLoc;
-		        Toast.makeText(this, R.string.loc_not_updated,
-		                Toast.LENGTH_SHORT).show();
-		    } else {
-		        Toast.makeText(this, R.string.loc_updated,
-		                Toast.LENGTH_SHORT).show();
-		    }
-		}
+        if (oldLoc == null
+                || oldLoc.toString().equals(mCurLoc.toString()) == false) {
+            if (getCandidate() == false) {
+                mCurLoc = oldLoc;
+                Toast.makeText(this, R.string.loc_not_updated,
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.loc_updated,
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     public void onCandidateEventReturned(final JSONObject candidateEvent) {
@@ -422,6 +419,7 @@ public class LocReporterActivity extends Activity
 
         return false;
     }
+    
     public String getLocStr(final JSONObject loc, final String[] sems,
             final String endSem) {
         String locStr = "";

@@ -31,7 +31,7 @@
 
     <!-- Overwrite bearloc strings -->
     <string name="bearloc_default_server_addr">bearloc.cal-sdb.org</string>
-    <string name="bearloc_default_server_port">10080</string>
+    <string name="bearloc_default_server_port">52411</string>
     <string name="bearloc_default_acc_enable">false</string>
     <string name="bearloc_default_temp_enable">false</string>
     <string name="bearloc_default_pressure_enable">false</string>

@@ -40,23 +40,15 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
 
 import edu.berkeley.bearlocinterface.LocService;
 import edu.berkeley.bearlocinterface.LocService.LocBinder;
-import edu.berkeley.bearlocinterface.CandidateListener;
 import edu.berkeley.bearlocinterface.LocListener;
 import edu.berkeley.bearloc.R; //TODO: The configuration data should be provided as arguments 
 
-public class LocReporterService extends Service implements SensorEventListener {
-
-    private static final long AUTO_REPORT_ITVL = 180000L; // millisecond
+public class LocReporterService extends Service {
 
     private LocService mBearLocService;
     private boolean mBound = false;
@@ -79,25 +71,6 @@ public class LocReporterService extends Service implements SensorEventListener {
             "city", "street", "building", "locale"};
 
     private IBinder mBinder;
-    private Handler mHandler;
-
-    private Sensor mAcc;
-    private boolean mAutoReport;
-
-    private class LocReportTask implements Runnable {
-        private final JSONObject mLoc;
-
-        public LocReportTask(final JSONObject loc) {
-            mLoc = loc;
-        }
-
-        @Override
-        public void run() {
-            if (mAutoReport == true) {
-                reportSemLoc(mLoc);
-            }
-        }
-    };
 
     public class LocReporterBinder extends Binder {
         public LocReporterService getService() {
@@ -112,14 +85,6 @@ public class LocReporterService extends Service implements SensorEventListener {
         bindService(intent, mBearLocConn, Context.BIND_AUTO_CREATE);
 
         mBinder = new LocReporterBinder();
-        mHandler = new Handler();
-
-        final SensorManager sensorMgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mAcc = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorMgr.registerListener(this, mAcc,
-                SensorManager.SENSOR_DELAY_NORMAL);
-
-        mAutoReport = false;
     }
 
     @Override
@@ -149,8 +114,7 @@ public class LocReporterService extends Service implements SensorEventListener {
         reportSemLoc(loc);
     }
 
-    public boolean getCandidate(final JSONObject loc,
-            final LocListener listener) {
+    public boolean getCandidate(final JSONObject loc, final LocListener listener) {
         if (loc == null) {
             return false;
         }
@@ -163,34 +127,7 @@ public class LocReporterService extends Service implements SensorEventListener {
             return;
         }
 
-        mBearLocService
-                .postData(
-                        getResources().getString(
-                                R.string.reported_semantic_loc), loc);
-
-        // start new auto report schedule if not yet
-        if (mAutoReport == false && mAcc != null
-                && LocReporterSettingsActivity.getAutoReport(this) == true) {
-            mAutoReport = true;
-            // report in AUTO_REPORT_ITVL milliseconds
-            mHandler.postDelayed(new LocReportTask(loc),
-                    LocReporterService.AUTO_REPORT_ITVL);
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(final Sensor sensor, final int accuracy) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void onSensorChanged(final SensorEvent event) {
-        if (event != null
-                && (Math.abs(event.values[0]) > 1
-                        || Math.abs(event.values[0]) > 1 || event.values[2] < 9)) {
-            // If not statically face up, then stop reporting location
-            mAutoReport = false;
-        }
+        mBearLocService.postData(
+                getResources().getString(R.string.reported_semantic_loc), loc);
     }
 }

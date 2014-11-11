@@ -37,14 +37,11 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.RejectedExecutionException;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,10 +61,7 @@ import android.os.IBinder;
 import android.util.Log;
 import edu.berkeley.bearloc.BearLocSampler.OnSampleEventListener;
 import edu.berkeley.bearloc.util.DeviceUUID;
-import edu.berkeley.bearloc.util.JSONHttpGetTask;
-import edu.berkeley.bearloc.util.JSONHttpGetTask.onJSONHttpGetRespondedListener;
 import edu.berkeley.bearloc.util.ServerSettings;
-import edu.berkeley.bearlocinterface.CandidateListener;
 import edu.berkeley.bearlocinterface.LocListener;
 import edu.berkeley.bearlocinterface.LocService;
 

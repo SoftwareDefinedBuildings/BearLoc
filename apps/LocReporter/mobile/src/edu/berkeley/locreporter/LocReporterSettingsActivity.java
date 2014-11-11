@@ -36,17 +36,13 @@ package edu.berkeley.locreporter;
 import java.util.List;
 
 import android.annotation.TargetApi;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 
 public class LocReporterSettingsActivity extends PreferenceActivity {
 
-    final public static String ACTION_PREF_GENERAL = "edu.berkeley.locreporter.PREF_GENERAL";
     final public static String ACTION_PREF_SERVER = "edu.berkeley.bearloc.PREF_SERVER";
     final public static String ACTION_PREF_SAMPLER = "edu.berkeley.bearloc.PREF_SAMPLER";
 
@@ -59,10 +55,6 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
         final String action = getIntent().getAction();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
             if (action != null
-                    && action
-                            .equals(LocReporterSettingsActivity.ACTION_PREF_GENERAL)) {
-                addPreferencesFromResource(R.xml.general_settings);
-            } else if (action != null
                     && action
                             .equals(LocReporterSettingsActivity.ACTION_PREF_SERVER)) {
                 addPreferencesFromResource(edu.berkeley.bearloc.R.xml.bearloc_server_settings);
@@ -92,9 +84,7 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
             super.onCreate(savedInstanceState);
 
             final String settings = getArguments().getString("settings");
-            if ("general".equals(settings)) {
-                addPreferencesFromResource(R.xml.general_settings);
-            } else if ("server".equals(settings)) {
+            if ("server".equals(settings)) {
                 addPreferencesFromResource(edu.berkeley.bearloc.R.xml.bearloc_server_settings);
             } else if ("sampler".equals(settings)) {
                 addPreferencesFromResource(edu.berkeley.bearloc.R.xml.bearloc_sampler_settings);
@@ -105,16 +95,5 @@ public class LocReporterSettingsActivity extends PreferenceActivity {
     @Override
     protected boolean isValidFragment(final String fragmentName) {
         return true;
-    }
-
-    public static Boolean getAutoReport(final Context context) {
-        final SharedPreferences prefs = PreferenceManager
-                .getDefaultSharedPreferences(context);
-        final boolean defaultValue = Boolean.parseBoolean(context
-                .getString(R.string.default_auto_report));
-        final boolean enable = prefs.getBoolean("pref_auto_report_key",
-                defaultValue);
-
-        return enable;
     }
 }

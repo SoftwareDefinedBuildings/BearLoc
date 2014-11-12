@@ -33,7 +33,6 @@
 
 package edu.berkeley.bearloc;
 
-import java.util.HashMap;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -53,14 +52,14 @@ import edu.berkeley.bearloc.util.DeviceUUID;
 public class BearLocApp {
     private MqttAndroidClient mqttClient;
     private Context mContext;
-    private LocListener mLocListener;
+    private LocListener mListener;
     private String mAlgorithmTopic;
 
     public interface LocListener {
         public abstract void onResponseReturned(JSONObject response);
     }
 
-    class exampleCallBack implements MqttCallback {
+    class AppMqttCallback implements MqttCallback {
         public void connectionLost(Throwable cause) {
             Log.d(getClass().getCanonicalName(), "MQTT Server connection lost");
         }
@@ -76,8 +75,8 @@ public class BearLocApp {
                 e.printStackTrace();
             }
 
-            if (mLocListener != null) {
-                mLocListener.onResponseReturned(jsonResponse);
+            if (mListener != null) {
+                mListener.onResponseReturned(jsonResponse);
             }
         }
 
@@ -88,12 +87,12 @@ public class BearLocApp {
 
     public BearLocApp(Context context, LocListener listener, String mqttServerURI, String algorithmTopic) {
         mContext = context;
-        mLocListener = listener;
+        mListener = listener;
         mAlgorithmTopic = algorithmTopic;
 
         mqttClient = new MqttAndroidClient(mContext, mqttServerURI,
                 MqttClient.generateClientId());
-        mqttClient.setCallback(new exampleCallBack());
+        mqttClient.setCallback(new AppMqttCallback());
         MqttConnectOptions options = new MqttConnectOptions();
         try {
             mqttClient.connect(options);

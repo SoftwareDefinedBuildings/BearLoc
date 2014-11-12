@@ -33,187 +33,131 @@
 
 package edu.berkeley.bearloc;
 
-import java.util.List;
-
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.hardware.SensorEvent;
-import android.location.Location;
-import android.net.wifi.ScanResult;
-import edu.berkeley.bearloc.sampler.Acc;
-import edu.berkeley.bearloc.sampler.Audio;
-import edu.berkeley.bearloc.sampler.GeoCoord;
-import edu.berkeley.bearloc.sampler.Gravity;
-import edu.berkeley.bearloc.sampler.Gyro;
-import edu.berkeley.bearloc.sampler.Humidity;
-import edu.berkeley.bearloc.sampler.Light;
-import edu.berkeley.bearloc.sampler.LinearAcc;
-import edu.berkeley.bearloc.sampler.Magnetic;
-import edu.berkeley.bearloc.sampler.Pressure;
-import edu.berkeley.bearloc.sampler.Proximity;
-import edu.berkeley.bearloc.sampler.Rotation;
-import edu.berkeley.bearloc.sampler.Temp;
-import edu.berkeley.bearloc.sampler.Wifi;
+import android.util.Log;
 
 public class BearLocSensor {
-
+    private MqttAndroidClient mqttClient;
     private final Context mContext;
-    private final OnSampleEventListener mListener;
+    private final Driver mDriver;
+    private String mAlgorithmTopic;
 
-    public static interface OnSampleEventListener {
-        void onSampleEvent(String type, Object data);
+    private final Driver.OnSampleEventListener mListener = new Driver.OnSampleEventListener() {
+
+        @Override
+        public void onSampleEvent(Object data) {
+            String topic = mAlgorithmTopic;
+            String message = data.toString();
+            postMqttMessage(topic, message);
+        }
+
+    };
+
+    public interface Driver {
+        public abstract boolean setListener(OnSampleEventListener listener);
+
+        // duration in millisecond
+        public abstract boolean start(long duration, long frequency);
+
+        public abstract boolean stop();
+
+        public static interface OnSampleEventListener {
+            void onSampleEvent(Object data);
+        }
     }
 
-    public BearLocSensor(final Context context,
-            final OnSampleEventListener listener) {
+    class SensorMqttCallback implements MqttCallback {
+        public void connectionLost(Throwable cause) {
+            Log.d(getClass().getCanonicalName(), "MQTT Server connection lost");
+        }
+
+        public void messageArrived(String topic, MqttMessage message) {
+            Log.d(getClass().getCanonicalName(), "Message arrived:" + topic
+                    + ":" + message.toString());
+            JSONObject jsonMessage = null;
+            try {
+                jsonMessage = new JSONObject(message.getPayload().toString());
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            if (mDriver != null) {
+                // TODO get duration and frequency from jsonMessage
+                mDriver.start(0, 0);
+            }
+        }
+
+        public void deliveryComplete(IMqttDeliveryToken token) {
+            Log.d(getClass().getCanonicalName(), "Delivery complete");
+        }
+    }
+
+    public BearLocSensor(Context context, String mqttServerURI, Driver driver,
+            String algorithmTopic) {
         mContext = context;
-        mListener = listener;
+        mDriver = driver;
+        mAlgorithmTopic = algorithmTopic;
 
-        mWifi = new Wifi(mContext, new Wifi.SamplerListener() {
-            @Override
-            public void onWifiEvent(final List<ScanResult> results) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_wifi);
-                for (final ScanResult result : results) {
-                    mListener.onSampleEvent(type, result);
-                }
-            }
-        });
+        mqttClient = new MqttAndroidClient(mContext, mqttServerURI,
+                MqttClient.generateClientId());
+        mqttClient.setCallback(new SensorMqttCallback());
+        MqttConnectOptions options = new MqttConnectOptions();
+        try {
+            mqttClient.connect(options);
+        } catch (MqttException e) {
+            Log.d(getClass().getCanonicalName(),
+                    "Connection attempt failed with reason code = "
+                            + e.getReasonCode() + ":" + e.getCause());
+        }
+        mqttSubscribe("sensor_name"); // TODO
 
-        mAudio = new Audio(mContext, new Audio.SamplerListener() {
-            @Override
-            public void onAudioEvent(final JSONObject audio) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_audio);
-                mListener.onSampleEvent(type, audio);
-            }
-        });
-
-        mGeoLoc = new GeoCoord(mContext, new GeoCoord.SamplerListener() {
-            @Override
-            public void onGeoCoordEvent(final Location location) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_geocoord);
-                mListener.onSampleEvent(type, location);
-            }
-        });
-
-        mAcc = new Acc(mContext, new Acc.SamplerListener() {
-            @Override
-            public void onAccEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_accelerometer);
-                mListener.onSampleEvent(type, event);
-            }
-        });
-
-        mLAcc = new LinearAcc(mContext, new LinearAcc.SamplerListener() {
-            @Override
-            public void onLinearAccEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_linear_accelerometer);
-                mListener.onSampleEvent(type, event);
-            }
-        });
-
-        mGravity = new Gravity(mContext, new Gravity.SamplerListener() {
-            @Override
-            public void onGravityEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_gravity);
-                mListener.onSampleEvent(type, event);
-            }
-        });
-
-        mGyro = new Gyro(mContext, new Gyro.SamplerListener() {
-            @Override
-            public void onGyroEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_gyroscope);
-                mListener.onSampleEvent(type, event);
-            }
-        });
-
-        mRotation = new Rotation(mContext, new Rotation.SamplerListener() {
-            @Override
-            public void onRotationEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_rotation);
-                mListener.onSampleEvent(type, event);
-            }
-        });
-
-        mMag = new Magnetic(mContext, new Magnetic.SamplerListener() {
-            @Override
-            public void onMagneticEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_magnetic);
-                mListener.onSampleEvent(type, event);
-            }
-        });
-
-        mLight = new Light(mContext, new Light.SamplerListener() {
-            @Override
-            public void onLightEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_light);
-                mListener.onSampleEvent(type, event);
-            }
-        });
-
-        mTemp = new Temp(mContext, new Temp.SamplerListener() {
-            @Override
-            public void onTempEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_temperature);
-                mListener.onSampleEvent(type, event);
-            }
-        });
-
-        mPressure = new Pressure(mContext, new Pressure.SamplerListener() {
-
-            @Override
-            public void onPressureEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_pressure);
-                mListener.onSampleEvent(type, event);
-            }
-        });
-
-        mProximity = new Proximity(mContext, new Proximity.SamplerListener() {
-            @Override
-            public void onProximityEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_proximity);
-                mListener.onSampleEvent(type, event);
-            }
-        });
-
-        mHumidity = new Humidity(mContext, new Humidity.SamplerListener() {
-            @Override
-            public void onHumidityEvent(final SensorEvent event) {
-                final String type = mContext.getResources().getString(
-                        R.string.bearloc_humidity);
-                mListener.onSampleEvent(type, event);
-            }
-        });
+        mDriver.setListener(mListener);
     }
 
-    public void sample() {
-        mWifi.start();
-        mAudio.start();
-        mGeoLoc.start();
-        mAcc.start();
-        mLAcc.start();
-        mGravity.start();
-        mGyro.start();
-        mRotation.start();
-        mMag.start();
-        mLight.start();
-        mTemp.start();
-        mPressure.start();
-        mProximity.start();
-        mHumidity.start();
+    /* Private methods. */
+
+    private boolean mqttSubscribe(final String topic) {
+        try {
+            IMqttToken token = mqttClient.subscribe(topic, 1);
+            token.waitForCompletion();
+            return true;
+        } catch (MqttException e) {
+            Log.d(getClass().getCanonicalName(),
+                    "Subscribe failed with reason code = " + e.getReasonCode());
+            return false;
+        }
+    }
+
+    /**
+     * An MqttMessage holds the application payload and options specifying how
+     * the message is to be delivered The message includes a "payload" (the body
+     * of the message) represented as a byte[].
+     * 
+     * @return
+     */
+    private boolean postMqttMessage(final String topic, final String msg) {
+        try {
+            MqttMessage message = new MqttMessage();
+            message.setPayload(msg.getBytes());
+            IMqttDeliveryToken token = mqttClient.publish(topic, message);
+            token.waitForCompletion();
+            return true;
+        } catch (MqttException e) {
+            Log.d(getClass().getCanonicalName(),
+                    "Publish failed with reason code = " + e.getReasonCode());
+            return false;
+        }
     }
 }

@@ -65,15 +65,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import edu.berkeley.bearlocinterface.LocListener;
-import edu.berkeley.locreporter.LocReporterService.LocReporterBinder;
 
-public class LocReporterActivity extends Activity
-        implements
-            LocListener,
-            OnClickListener,
-            OnItemClickListener,
-            DialogInterface.OnClickListener {
+public class LocReporterActivity extends Activity {
 
     private JSONObject mCurLoc;
     private String mCurSem;
@@ -94,128 +87,82 @@ public class LocReporterActivity extends Activity
     private Button mSemButton;
     private Button mLocButton;
 
-    private LocReporterService mService;
-    private boolean mBound = false;
+    final private static String[] mSemantics = new String[]{"country", "state",
+            "city", "street", "building", "locale"};
 
-    private final ServiceConnection mServiceConn = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(final ComponentName name,
-                final IBinder service) {
-            final LocReporterBinder binder = (LocReporterBinder) service;
-            mService = binder.getService();
-            mBound = true;
-        }
+    private OnClickListener mAddButtonOnClickListener = new OnClickListener() {
 
         @Override
-        public void onServiceDisconnected(final ComponentName name) {
-            mBound = false;
+        public void onClick(View v) {
+            AlertDialog.Builder builder;
+            builder = new AlertDialog.Builder(LocReporterActivity.this);
+            builder.setMessage("Please input your CURRENT " + mCurSem + ".");
+            mAddLocEditText = new EditText(LocReporterActivity.this);
+            builder.setView(mAddLocEditText);
+            builder.setCancelable(true);
+            builder.setPositiveButton(R.string.ok, mAddDialogOnClickListener);
+            builder.setNegativeButton(R.string.cancel,
+                    mAddDialogOnClickListener);
+
+            mAddDialog = builder.create();
+            mAddDialog.show();
         }
+
     };
 
-    @Override
-    protected void onCreate(final Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+    private OnClickListener mSemanticButtonOnClickListener = new OnClickListener() {
 
-        mCurLoc = new JSONObject();
-        mCurSem = LocReporterService.Semantics[LocReporterService.Semantics.length - 1];
-        mCurCandidate = new JSONArray();
+        @Override
+        public void onClick(View v) {
+            AlertDialog.Builder builder;
+            builder = new AlertDialog.Builder(LocReporterActivity.this);
+            builder.setTitle("Please select a semantic.");
+            builder.setCancelable(true);
+            builder.setItems(mSemantics, mChangeSemDialogOnClickListener);
 
-        mListView = (ListView) findViewById(R.id.list);
-        mArrayAdapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1);
-        mListView.setAdapter(mArrayAdapter);
-        mListView.setOnItemClickListener(this);
-
-        mLocPrefixTextView = (TextView) findViewById(R.id.loc_prefix);
-        mCurSemLocTextView = (TextView) findViewById(R.id.cur_sem_loc);
-
-        mAddButton = (Button) findViewById(R.id.add_loc);
-        mAddButton.setOnClickListener(this);
-        mAddButton.setEnabled(false);
-        mSemButton = (Button) findViewById(R.id.change_sem);
-        mSemButton.setOnClickListener(this);
-        mSemButton.setEnabled(false);
-        mLocButton = (Button) findViewById(R.id.localize);
-        mLocButton.setOnClickListener(this);
-        mLocButton.setEnabled(true);
-
-        final Intent intent = new Intent(this, LocReporterService.class);
-        bindService(intent, mServiceConn, Context.BIND_AUTO_CREATE);
-
-        refresh();
-    }
-    
-    @Override
-    protected void onResume() {
-        super.onResume();
-        refresh();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Unbind from the service
-        if (mBound == true) {
-            unbindService(mServiceConn);
-            mBound = false;
+            mChangeSemDialog = builder.create();
+            mChangeSemDialog.show();
         }
-    }
 
-    @Override
-    public void onClick(final View v) {
-        AlertDialog.Builder builder;
-        switch (v.getId()) {
-            case R.id.add_loc :
-                builder = new AlertDialog.Builder(this);
-                builder.setMessage("Please input your CURRENT " + mCurSem + ".");
-                mAddLocEditText = new EditText(this);
-                builder.setView(mAddLocEditText);
-                builder.setCancelable(true);
-                builder.setPositiveButton(R.string.ok, this);
-                builder.setNegativeButton(R.string.cancel, this);
+    };
 
-                mAddDialog = builder.create();
-                mAddDialog.show();
-                break;
-            case R.id.change_sem :
-                builder = new AlertDialog.Builder(this);
-                builder.setTitle("Please select a semantic.");
-                builder.setCancelable(true);
-                builder.setItems(LocReporterService.Semantics, this);
+    private OnClickListener mLocateButtonOnClickListener = new OnClickListener() {
 
-                mChangeSemDialog = builder.create();
-                mChangeSemDialog.show();
-                break;
-            case R.id.localize :
-                if (mService.localize(this) == true) {
-                    mLocButton.setEnabled(false);
-                }
-                break;
-            default :
-                break;
+        @Override
+        public void onClick(View v) {
+            if (mService.localize(this) == true) {
+                mLocButton.setEnabled(false);
+            }
         }
-    }
 
-    @Override
-    public void onItemClick(final AdapterView<?> parent, final View view,
-            final int position, final long id) {
-        mSelectedLoc = mArrayAdapter.getItem(position);
+    };
 
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Change your CURRENT " + mCurSem + " to "
-                + mSelectedLoc + "?");
-        builder.setCancelable(true);
-        builder.setPositiveButton(R.string.ok, this);
-        builder.setNegativeButton(R.string.cancel, this);
+    private OnItemClickListener mOnItemClickListener = new OnItemClickListener() {
 
-        mSelectDialog = builder.create();
-        mSelectDialog.show();
-    }
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position,
+                long id) {
+            mSelectedLoc = mArrayAdapter.getItem(position);
 
-    @Override
-    public void onClick(final DialogInterface dialog, final int which) {
-        if (dialog == mAddDialog) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(
+                    LocReporterActivity.this);
+            builder.setMessage("Change your CURRENT " + mCurSem + " to "
+                    + mSelectedLoc + "?");
+            builder.setCancelable(true);
+            builder.setPositiveButton(R.string.ok, mSelectDialogOnClickListener);
+            builder.setNegativeButton(R.string.cancel,
+                    mSelectDialogOnClickListener);
+
+            mSelectDialog = builder.create();
+            mSelectDialog.show();
+        }
+
+    };
+
+    private DialogInterface.OnClickListener mAddDialogOnClickListener = new DialogInterface.OnClickListener() {
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE :
                     final String newInputLoc = mAddLocEditText.getText()
@@ -229,10 +176,24 @@ public class LocReporterActivity extends Activity
                 default :
                     break;
             }
-        } else if (dialog == mChangeSemDialog) {
-            final String sem = LocReporterService.Semantics[which];
+        }
+
+    };
+
+    private DialogInterface.OnClickListener mChangeSemDialogOnClickListener = new DialogInterface.OnClickListener() {
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            final String sem = mSemantics[which];
             changeSem(sem);
-        } else if (dialog == mSelectDialog) {
+        }
+
+    };
+
+    private DialogInterface.OnClickListener mSelectDialogOnClickListener = new DialogInterface.OnClickListener() {
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE :
                     changeLoc(mSelectedLoc);
@@ -242,6 +203,57 @@ public class LocReporterActivity extends Activity
                 default :
                     break;
             }
+        }
+
+    };
+
+    @Override
+    protected void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+
+        mCurLoc = new JSONObject();
+        mCurSem = mSemantics[mSemantics.length - 1];
+        mCurCandidate = new JSONArray();
+
+        mListView = (ListView) findViewById(R.id.list);
+        mArrayAdapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1);
+        mListView.setAdapter(mArrayAdapter);
+        mListView.setOnItemClickListener(mOnItemClickListener);
+
+        mLocPrefixTextView = (TextView) findViewById(R.id.loc_prefix);
+        mCurSemLocTextView = (TextView) findViewById(R.id.cur_sem_loc);
+
+        mAddButton = (Button) findViewById(R.id.add_loc);
+        mAddButton.setOnClickListener(mAddButtonOnClickListener);
+        mAddButton.setEnabled(false);
+        mSemButton = (Button) findViewById(R.id.change_sem);
+        mSemButton.setOnClickListener(mSemanticButtonOnClickListener);
+        mSemButton.setEnabled(false);
+        mLocButton = (Button) findViewById(R.id.localize);
+        mLocButton.setOnClickListener(mLocateButtonOnClickListener);
+        mLocButton.setEnabled(true);
+
+        final Intent intent = new Intent(this, LocReporterService.class);
+        bindService(intent, mServiceConn, Context.BIND_AUTO_CREATE);
+
+        refresh();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refresh();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Unbind from the service
+        if (mBound == true) {
+            unbindService(mServiceConn);
+            mBound = false;
         }
     }
 
@@ -263,7 +275,7 @@ public class LocReporterActivity extends Activity
 
             if (oldLoc.equals(loc) == false) {
                 final JSONObject newLoc = new JSONObject();
-                for (final String sem : LocReporterService.Semantics) {
+                for (final String sem : mSemantics) {
                     newLoc.put(sem, mCurLoc.getString(sem));
                     if (sem.equals(mCurSem) == true) {
                         break;
@@ -274,10 +286,9 @@ public class LocReporterActivity extends Activity
             mService.reportLocation(mCurLoc);
 
             // move semantic downward if it is not at lowest level
-            final int curSemIdx = Arrays.asList(LocReporterService.Semantics)
-                    .indexOf(mCurSem);
-            if (curSemIdx < LocReporterService.Semantics.length - 1) {
-                mCurSem = LocReporterService.Semantics[curSemIdx + 1];
+            final int curSemIdx = Arrays.asList(mSemantics).indexOf(mCurSem);
+            if (curSemIdx < mSemantics.length - 1) {
+                mCurSem = mSemantics[curSemIdx + 1];
             }
 
             refresh();
@@ -308,8 +319,7 @@ public class LocReporterActivity extends Activity
 
         // update location text
         if (mCurLoc != null) {
-            mLocPrefixTextView.setText(getLocStr(mCurLoc,
-                    LocReporterService.Semantics, mCurSem));
+            mLocPrefixTextView.setText(getLocStr(mCurLoc, mSemantics, mCurSem));
             mCurSemLocTextView.setText(mCurSem + ":\n"
                     + mCurLoc.optString(mCurSem, null));
         }
@@ -341,7 +351,7 @@ public class LocReporterActivity extends Activity
                     .show();
             return;
         }
-        
+
         try {
             if (response.has("type")) {
                 String type = response.getString("type");
@@ -355,11 +365,9 @@ public class LocReporterActivity extends Activity
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        
 
-        
     }
-    
+
     public void onLocEventReturned(final JSONObject locEvent) {
         final JSONObject oldLoc = mCurLoc;
         mCurLoc = locEvent; // The response is JSON Array
@@ -370,8 +378,8 @@ public class LocReporterActivity extends Activity
                 Toast.makeText(this, R.string.loc_not_updated,
                         Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, R.string.loc_updated,
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT)
+                        .show();
             }
         }
     }
@@ -384,8 +392,7 @@ public class LocReporterActivity extends Activity
         }
 
         try {
-            mCurCandidate = candidateEvent.getJSONArray(
-                    "location candidate");
+            mCurCandidate = candidateEvent.getJSONArray("location candidate");
         } catch (final JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -397,7 +404,7 @@ public class LocReporterActivity extends Activity
     private boolean getCandidate() {
         try {
             final JSONObject queryLoc = new JSONObject();
-            for (final String sem : LocReporterService.Semantics) {
+            for (final String sem : mSemantics) {
                 if (sem.equals(mCurSem) == true) {
                     break;
                 }
@@ -419,7 +426,7 @@ public class LocReporterActivity extends Activity
 
         return false;
     }
-    
+
     public String getLocStr(final JSONObject loc, final String[] sems,
             final String endSem) {
         String locStr = "";

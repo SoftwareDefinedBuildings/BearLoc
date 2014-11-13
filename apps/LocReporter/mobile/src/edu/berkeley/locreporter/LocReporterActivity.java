@@ -66,6 +66,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import edu.berkeley.bearloc.BearLocApp;
+import edu.berkeley.bearloc.BearLocApp.LocListener;
+import edu.berkeley.bearloc.BearLocSensor;
+import edu.berkeley.bearloc.BearLocSensor.Driver.SensorListener;
+import edu.berkeley.bearloc.sensor.Wifi;
+
 public class LocReporterActivity extends Activity {
 
     private JSONObject mCurLoc;
@@ -86,6 +92,9 @@ public class LocReporterActivity extends Activity {
     private Button mAddButton;
     private Button mSemButton;
     private Button mLocButton;
+
+    private BearLocApp mBearLocApp;
+    private BearLocSensor mWiFiSensor;
 
     final private static String[] mSemantics = new String[]{"country", "state",
             "city", "street", "building", "locale"};
@@ -130,7 +139,7 @@ public class LocReporterActivity extends Activity {
 
         @Override
         public void onClick(View v) {
-            if (mService.localize(this) == true) {
+            if (mBearLocApp.getLocation() == true) {
                 mLocButton.setEnabled(false);
             }
         }
@@ -207,6 +216,37 @@ public class LocReporterActivity extends Activity {
 
     };
 
+    private LocListener mLocListener = new LocListener() {
+
+        @Override
+        public void onResponseReturned(JSONObject response) {
+            mAddButton.setEnabled(true);
+            mSemButton.setEnabled(true);
+            mLocButton.setEnabled(true);
+
+            if (response == null) {
+                Toast.makeText(LocReporterActivity.this,
+                        R.string.server_no_respond, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            try {
+                if (response.has("type")) {
+                    String type = response.getString("type");
+                    if (type == "localize") {
+                        onLocEventReturned(response);
+                    } else if (type == "candidate") {
+                        onCandidateEventReturned(response);
+                    }
+                }
+            } catch (final JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+    };
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -235,12 +275,13 @@ public class LocReporterActivity extends Activity {
         mLocButton.setOnClickListener(mLocateButtonOnClickListener);
         mLocButton.setEnabled(true);
 
-        final Intent intent = new Intent(this, LocReporterService.class);
-        bindService(intent, mServiceConn, Context.BIND_AUTO_CREATE);
+        mBearLocApp = new BearLocApp(this, mLocListener,
+                "tcp://bearloc.cal-sdb.org:52411", "algorithm001-request");
+        mWiFiSensor = new BearLocSensor(this, new Wifi(this),
+                "tcp://bearloc.cal-sdb.org:52411", "algorithm001-request");
 
         refresh();
     }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -250,11 +291,6 @@ public class LocReporterActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Unbind from the service
-        if (mBound == true) {
-            unbindService(mServiceConn);
-            mBound = false;
-        }
     }
 
     private void addLoc(final String loc) {
@@ -339,35 +375,7 @@ public class LocReporterActivity extends Activity {
             }
         }
     }
-
-    @Override
-    public void onResponseReturned(final JSONObject response) {
-        mAddButton.setEnabled(true);
-        mSemButton.setEnabled(true);
-        mLocButton.setEnabled(true);
-
-        if (response == null) {
-            Toast.makeText(this, R.string.server_no_respond, Toast.LENGTH_SHORT)
-                    .show();
-            return;
-        }
-
-        try {
-            if (response.has("type")) {
-                String type = response.getString("type");
-                if (type == "localize") {
-                    onLocEventReturned(response);
-                } else if (type == "candidate") {
-                    onCandidateEventReturned(response);
-                }
-            }
-        } catch (final JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-    }
-
+    
     public void onLocEventReturned(final JSONObject locEvent) {
         final JSONObject oldLoc = mCurLoc;
         mCurLoc = locEvent; // The response is JSON Array

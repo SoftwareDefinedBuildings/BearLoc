@@ -53,7 +53,7 @@ public class BearLocSensor {
     private final Driver mDriver;
     private String mAlgorithmTopic;
 
-    private final Driver.OnSampleEventListener mListener = new Driver.OnSampleEventListener() {
+    private final Driver.SensorListener mListener = new Driver.SensorListener() {
 
         @Override
         public void onSampleEvent(Object data) {
@@ -65,14 +65,14 @@ public class BearLocSensor {
     };
 
     public interface Driver {
-        public abstract boolean setListener(OnSampleEventListener listener);
+        public abstract void setListener(SensorListener listener);
 
         // duration in millisecond
         public abstract boolean start(long duration, long frequency);
 
         public abstract boolean stop();
 
-        public static interface OnSampleEventListener {
+        public static interface SensorListener {
             void onSampleEvent(Object data);
         }
     }
@@ -104,7 +104,7 @@ public class BearLocSensor {
         }
     }
 
-    public BearLocSensor(Context context, String mqttServerURI, Driver driver,
+    public BearLocSensor(Context context, Driver driver, String mqttServerURI, 
             String algorithmTopic) {
         mContext = context;
         mDriver = driver;

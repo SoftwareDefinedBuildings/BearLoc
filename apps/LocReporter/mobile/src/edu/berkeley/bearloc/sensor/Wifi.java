@@ -31,7 +31,7 @@
  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
  */
 
-package edu.berkeley.bearloc.sampler;
+package edu.berkeley.bearloc.sensor;
 
 import java.util.List;
 
@@ -43,25 +43,24 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.Handler;
-import edu.berkeley.bearloc.util.SamplerSettings;
 
-public class Wifi implements Sampler {
+import edu.berkeley.bearloc.BearLocSensor;
+import edu.berkeley.bearloc.BearLocSensor.Driver;
+import edu.berkeley.bearloc.BearLocSensor.Driver.SensorListener;
 
+public class Wifi implements BearLocSensor.Driver {
+
+    private long mSampleDuration; // millisecond
     private long mSampleItvl; // millisecond
 
     private boolean mBusy;
-    private int mSampleCap;
-    private int nSampleNum;
+    private int mSampleNum;
 
-    private final Context mContext;
-    private final SamplerListener mListener;
-    private final Handler mHandler;
-    private final WifiManager mWifiManager;
+    private Context mContext;
+    private SensorListener mListener;
+    private Handler mHandler;
+    private WifiManager mWifiManager;
     private WifiLock mWifiLock;
-
-    public static interface SamplerListener {
-        public abstract void onWifiEvent(List<ScanResult> results);
-    }
 
     private final BroadcastReceiver mOnScanDone = new BroadcastReceiver() {
         @Override
@@ -70,15 +69,10 @@ public class Wifi implements Sampler {
                 final List<ScanResult> results = mWifiManager.getScanResults();
 
                 if (mListener != null) {
-                    mListener.onWifiEvent(results);
+                    mListener.onSampleEvent(results);
                 }
 
-                nSampleNum++;
-                if (nSampleNum < mSampleCap) {
-                    mHandler.postDelayed(mWifiScanTask, mSampleItvl);
-                } else {
-                    pause();
-                }
+                mSampleNum++;
             }
         }
     };
@@ -93,23 +87,22 @@ public class Wifi implements Sampler {
     private final Runnable mPauseTask = new Runnable() {
         @Override
         public void run() {
-            pause();
+            stop();
         }
     };
 
-    public Wifi(final Context context, final SamplerListener listener) {
+    public Wifi(final Context context) {
         mContext = context;
-        mListener = listener;
+
         mHandler = new Handler();
         mWifiManager = (WifiManager) context
                 .getSystemService(Context.WIFI_SERVICE);
     }
 
     @Override
-    public boolean start() {
-        if (mBusy == false && SamplerSettings.getWifiEnable(mContext) == true) {
+    public boolean start(long duration, long frequency) {
+        if (mBusy == false) {
             if (mWifiManager == null) {
-                SamplerSettings.setWifiEnable(mContext, false);
                 return false;
             }
 
@@ -117,13 +110,12 @@ public class Wifi implements Sampler {
             i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
             mContext.registerReceiver(mOnScanDone, i);
 
-            final long duration = SamplerSettings.getWifiDuration(mContext);
-            final int num = SamplerSettings.getWifiCnt(mContext);
-            mSampleItvl = SamplerSettings.getWifiDelay(mContext);
-            nSampleNum = 0;
-            mSampleCap = num;
+            mSampleDuration = duration;
+            // TODO need to be more robust
+            mSampleItvl = (long) (1000.0 / frequency);
+            mSampleNum = 0;
             mHandler.postDelayed(mWifiScanTask, 0);
-            mHandler.postDelayed(mPauseTask, duration);
+            mHandler.postDelayed(mPauseTask, mSampleDuration);
             mBusy = true;
             mWifiLock = mWifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL,
                     "BearLoc");
@@ -134,14 +126,15 @@ public class Wifi implements Sampler {
         }
     }
 
-    private void pause() {
+    @Override
+    public boolean stop() {
         if (mBusy == true) {
             // If no wifi returned, then return the last know ones
-            if (nSampleNum == 0) {
+            if (mSampleNum == 0) {
                 final List<ScanResult> results = mWifiManager.getScanResults();
 
                 if (mListener != null) {
-                    mListener.onWifiEvent(results);
+                    mListener.onSampleEvent(results);
                 }
             }
             mBusy = false;
@@ -151,6 +144,11 @@ public class Wifi implements Sampler {
             mHandler.removeCallbacks(mPauseTask);
             mContext.unregisterReceiver(mOnScanDone);
         }
+        return true;
+    }
+
+    public void setListener(SensorListener listener) {
+        mListener = listener;
     }
 
     private void scan() {

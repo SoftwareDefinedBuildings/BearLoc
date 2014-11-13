@@ -35,22 +35,8 @@
         android:orientation="horizontal" >
 
         <Button
-            android:id="@+id/add_loc"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="@string/add_loc" />
-
-        <Button
-            android:id="@+id/change_sem"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="@string/change_sem" />
-
-        <Button
             android:id="@+id/localize"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:text="@string/localize" />

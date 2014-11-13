@@ -1,0 +1,14 @@
+{
+  "msgtype": "locationRequest",
+  "uuid": "abcdefg",
+  "epoch": 123456789,
+  "backtopic": "test001"
+}
+
+{
+  "msgtype": "data",
+  "uuid": "abcdefg",
+  "epoch": 123456789,
+  "data": "fakedata"
+}
+

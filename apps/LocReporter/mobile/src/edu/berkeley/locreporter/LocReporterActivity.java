@@ -75,7 +75,7 @@ public class LocReporterActivity extends Activity {
         @Override
         public void onClick(View v) {
             if (mBearLocApp.getLocation() == true) {
-                mLocButton.setEnabled(false);
+                //mLocButton.setEnabled(false);
             }
         }
 
@@ -93,17 +93,7 @@ public class LocReporterActivity extends Activity {
                 return;
             }
 
-            try {
-                if (response.has("type")) {
-                    String type = response.getString("type");
-                    if (type == "localize") {
-                        onLocReturned(response);
-                    }
-                }
-            } catch (final JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+            onLocReturned(response);
         }
 
     };
@@ -125,10 +115,10 @@ public class LocReporterActivity extends Activity {
 
         mBearLocApp = new BearLocApp(this, mLocListener,
                 "tcp://bearloc.cal-sdb.org:52411", "algorithm001-request");
-        mWiFiSensor = new BearLocSensor(this, new Wifi(this),
-                "tcp://bearloc.cal-sdb.org:52411", "algorithm001-request");
-        mLocationReporter = new BearLocSensor(this, new Location(),
-                "tcp://bearloc.cal-sdb.org:52411", "algorithm001-request");
+//        mWiFiSensor = new BearLocSensor(this, new Wifi(this),
+//                "tcp://bearloc.cal-sdb.org:52411", "algorithm001-request");
+//        mLocationReporter = new BearLocSensor(this, new Location(),
+//                "tcp://bearloc.cal-sdb.org:52411", "algorithm001-request");
 
         refresh();
     }

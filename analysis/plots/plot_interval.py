@@ -8,7 +8,7 @@ from itertools import groupby
 from matplotlib import pyplot
 
 def import_data():
-    os.chdir("BearLoc1398720331923")
+    os.chdir("/root/data/BearLoc/AMPLab/2014Nov/Phone1_465H_leftleft_table")
     return_list = []
     for filename in glob.glob("*.csv"):
         if ("metadata" not in filename):

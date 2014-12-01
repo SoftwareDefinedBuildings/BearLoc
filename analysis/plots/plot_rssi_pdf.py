@@ -8,7 +8,7 @@ from itertools import groupby
 from matplotlib import pyplot 
 
 def import_data():
-    os.chdir("BearLoc1398720331923")
+    os.chdir("/root/data/BearLoc/AMPLab/2014Nov/Phone1_465H_leftleft_table")
     return_list = []
     for filename in glob.glob("*.csv"):
         if ("metadata" not in filename):
@@ -38,11 +38,11 @@ def plot(rssi_point, mac):
     # print rssi_point
     pyplot.hist(rssi_point, bins = 50)
     # fig1 = pyplot.gcf()
-    # pyplot.draw()
-    os.chdir("../plots")
-    pyplot.legend()
-    pyplot.savefig(mac+'.png', dpi=100)
-    pyplot.close()
+    pyplot.draw()
+    #os.chdir("../plots")
+    #pyplot.legend()
+    #pyplot.savefig(mac+'.png', dpi=100)
+    #pyplot.close()
 
 if __name__ == "__main__":
     groupby_macaddr()

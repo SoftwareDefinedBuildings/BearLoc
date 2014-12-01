@@ -1,8 +1,8 @@
 from glob import glob
 import os
 
-datadir = "./data/"
-output_fname = "data.csv"
+datadir = "/root/data/BearLoc/AMPLab/2014Nov/"
+output_fname = "./data.csv"
 
 
 # get all files' full paths
@@ -23,15 +23,10 @@ for fpath in fpaths:
         f.readline() # skip header
         lines = f.readlines()
     records = [l.strip().split(",") for l in lines]
-    last_timestamp = 0
     for r in records:
         timestamp = int(r[0])
-        # validate timestamp
-        if 0 < timestamp - last_timestamp < 5:
-            raise Exception("timestamp error " + str(timestamp) + " " + str(last_timestamp))
-        last_timestamp = timestamp
-        mac = r[3]
-        rssi = int(r[5])
+        mac = r[-3] # get rid of SSID contains comma
+        rssi = r[-1]
         macs.append(mac)
         if timestamp not in data:
             data[timestamp] = {}
@@ -41,7 +36,8 @@ macs = list(set(macs))
 
 # write to output file
 with open(output_fname, "w") as f:
-    f.write(",".join(macs + ["room"]) + "\n")
-    for items in data.values():
-        row_vals = [str(items.get(m, "?")) for m in macs+["room"]]
+    f.write(",".join(["timestamp"] + macs + ["room"]) + "\n")
+    for timestamp in sorted(data):
+        items = data[timestamp]
+        row_vals = [str(timestamp)] + [items.get(m, "?") for m in macs+["room"]]
         f.write(",".join(row_vals) + "\n")

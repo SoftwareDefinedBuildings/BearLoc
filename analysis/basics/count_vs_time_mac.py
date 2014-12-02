@@ -3,12 +3,19 @@ import matplotlib.pyplot as plt
 import sys
 import os
 import datetime as dt
+import time
 import matplotlib.dates as md
 from sklearn.neighbors.kde import KernelDensity
 from matplotlib.dates import date2num, num2date
+from pytimeparse.timeparse import timeparse
 
 dataf = sys.argv[1] # lowest level of folder that contains csv files
 target_mac = sys.argv[2]
+start_timedelta = None
+stop_timedelta = None
+if len(sys.argv) >= 5:
+  start_timedelta = dt.timedelta(seconds=timeparse(sys.argv[3]))
+  stop_timedelta = dt.timedelta(seconds=timeparse(sys.argv[4]))
 
 # find target MAC network
 for fname in os.listdir(dataf):
@@ -58,6 +65,13 @@ ax.xaxis.set_major_formatter(xfmt)
 
 miss_dates = [dt.datetime.fromtimestamp(ts/1000) for ts in miss_timestamps]
 recv_dates = [dt.datetime.fromtimestamp(ts/1000) for ts in recv_timestamps]
+start_date = min(min(miss_dates), min(recv_dates))
+stop_date = max(max(miss_dates), max(recv_dates))
+
+if start_timedelta and stop_timedelta:
+    ff = lambda x: start_date + start_timedelta < x < start_date + stop_timedelta
+    recv_dates = filter(ff, recv_dates)
+    miss_dates = filter(ff, miss_dates)
 data = [date2num(recv_dates), date2num(miss_dates)]
 plt.hist(data, 100, histtype='bar', stacked=True, alpha=0.8, color=['g', 'r'], label=['Received', "Missing"])
 #plt.scatter(dates, [1]*len(dates), alpha=0.05, color='r', edgecolors='none')

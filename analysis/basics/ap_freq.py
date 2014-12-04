@@ -27,25 +27,28 @@ for fname in os.listdir(dataf):
 # calculate frequencies
 for mac, mac_data in mac_timestamps.iteritems():
     timestamps, ssid = mac_data
-    timestamps.sort(reverse=True)
+    timestamps.sort()
     freqs = [1000.0/(timestamps[i] - timestamps[i-1]) for i in range(1, len(timestamps))]
     mac_data.append(freqs)
 
 # generate plot data
 plot_macs = []
 plot_freqs = []
-plot_stds = []
+plot_mins = []
+plot_maxs = []
 for mac, (_, _, freqs) in mac_timestamps.iteritems():
-    if len(freq) > 0:
+    if len(freqs) > 0:
         plot_macs.append(mac)
         plot_freqs.append(np.mean(freqs))
-        plot_stds.append(np.std(freqs))
+        plot_mins.append(min(freqs))
+        plot_maxs.append(max(freqs))
 
-plot_freqs, plot_stds = zip(*sorted(zip(plot_freqs, plot_stds), key = lambda x: x[0], reverse=True))
+plot_freqs, plot_mins, plot_maxs = zip(*sorted(zip(plot_freqs, plot_mins, plot_maxs), key = lambda x: x[0], reverse=True))
 
-ind = range(len(plot_freqs))
+ind = np.arange(len(plot_freqs))
 width = 0.8
-plt.bar(ind, plot_freqs, width, yerr=plot_stds)
+plt.xticks(rotation=90)
+plt.bar(ind, plot_freqs, width, alpha=0.5, yerr=[plot_mins, plot_maxs], error_kw=dict(ecolor='k'))
 plt.ylabel('Frequencies (Hz)')
 plt.title('Wi-Fi Access Points Appearance Frequencies')
 plt.xticks(ind+width/2., plot_macs)

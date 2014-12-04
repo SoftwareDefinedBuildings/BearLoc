@@ -6,7 +6,7 @@ import datetime as dt
 import matplotlib.dates as md
 
 dataf = sys.argv[1] # lowest level of folder that contains csv files
-mac_order = int(sys.argv[2]) # lowest level of folder that contains csv files
+mac_order = int(sys.argv[2]) 
 
 # find mostly appeared MAC
 mac_cnts = {}

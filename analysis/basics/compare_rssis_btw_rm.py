@@ -33,7 +33,8 @@ count = 0
 for mac, mac_data in sorted_data:
     #if mac not in ['fa:8f:ca:71:6c:0c']:
     #if mac not in ['00:17:df:a7:4c:f0']:
-    if mac not in ['78:54:2e:af:15:a0']:
+    #if mac not in ['78:54:2e:af:15:a0']:
+    if mac not in ['00:22:90:39:07:15']: # bad MAC
         continue
     plot_data = [mac_data[r] for r in rooms]
     if nrows*ncols == 1:

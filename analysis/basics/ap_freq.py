@@ -34,21 +34,23 @@ for mac, mac_data in mac_timestamps.iteritems():
 # generate plot data
 plot_macs = []
 plot_freqs = []
-plot_mins = []
-plot_maxs = []
+plot_lows = []
+plot_ups = []
 for mac, (_, _, freqs) in mac_timestamps.iteritems():
     if len(freqs) > 0:
         plot_macs.append(mac)
-        plot_freqs.append(np.mean(freqs))
-        plot_mins.append(min(freqs))
-        plot_maxs.append(max(freqs))
+        plot_freqs.append(np.percentile(freqs, 50))
+        plot_lows.append(np.percentile(freqs, 5))
+        plot_ups.append(np.percentile(freqs, 95))
 
-plot_freqs, plot_mins, plot_maxs = zip(*sorted(zip(plot_freqs, plot_mins, plot_maxs), key = lambda x: x[0], reverse=True))
+plot_freqs, plot_lows, plot_ups = zip(*sorted(zip(plot_freqs, plot_lows, plot_ups), key = lambda x: x[0], reverse=True))
+plow_lows = [plot_freqs[i] - plot_lows[i] for i in range(len(plot_freqs))]
+plow_ups = [plot_ups[i] - plot_freqs[i] for i in range(len(plot_freqs))]
 
 ind = np.arange(len(plot_freqs))
 width = 0.8
 plt.xticks(rotation=90)
-plt.bar(ind, plot_freqs, width, alpha=0.5, yerr=[plot_mins, plot_maxs], error_kw=dict(ecolor='k'))
+plt.bar(ind, plot_freqs, width, alpha=0.5, yerr=[plot_lows, plot_ups], error_kw=dict(ecolor='k'))
 plt.ylabel('Frequencies (Hz)')
 plt.title('Wi-Fi Access Points Appearance Frequencies')
 plt.xticks(ind+width/2., plot_macs)

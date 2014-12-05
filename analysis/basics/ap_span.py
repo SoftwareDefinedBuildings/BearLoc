@@ -24,35 +24,30 @@ for fname in os.listdir(dataf):
             else:
                 mac_timestamps[mac] = [[], ",".join(vals[1:-4])]
 
-# calculate frequencies
+# calculate span
 for mac, mac_data in mac_timestamps.iteritems():
     timestamps, ssid = mac_data
     timestamps.sort()
-    freqs = [1000.0/(timestamps[i] - timestamps[i-1]) for i in range(1, len(timestamps))]
-    mac_data.append(freqs)
+    span = 0
+    if len(timestamps) > 0:
+        span = timestamps[-1] - timestamps[0]
+    mac_data.append(span)
 
 # generate plot data
 plot_macs = []
-plot_freqs = []
-plot_lows = []
-plot_ups = []
-for mac, (_, _, freqs) in mac_timestamps.iteritems():
-    if len(freqs) > 0:
-        plot_macs.append(mac)
-        plot_freqs.append(np.percentile(freqs, 50))
-        plot_lows.append(np.percentile(freqs, 5))
-        plot_ups.append(np.percentile(freqs, 95))
+plot_spans = []
+for mac, (_, _, span) in mac_timestamps.iteritems():
+    plot_macs.append(mac)
+    plot_spans.append(span/1000/3600)
 
-plot_freqs, plot_lows, plot_ups, plot_macs = zip(*sorted(zip(plot_freqs, plot_lows, plot_ups, plot_macs), key = lambda x: x[0], reverse=True))
-plow_lows = [plot_freqs[i] - plot_lows[i] for i in range(len(plot_freqs))]
-plow_ups = [plot_ups[i] - plot_freqs[i] for i in range(len(plot_freqs))]
+plot_spans, plot_macs = zip(*sorted(zip(plot_spans, plot_macs), key = lambda x: x[0], reverse=True))
 
-ind = np.arange(len(plot_freqs))
+ind = np.arange(len(plot_spans))
 width = 0.8
 plt.xticks(rotation=90)
-plt.bar(ind, plot_freqs, width, alpha=0.5, yerr=[plot_lows, plot_ups], error_kw=dict(ecolor='k'))
-plt.ylabel('Frequencies (Hz)')
-plt.title('Wi-Fi Access Points Appearance Frequencies')
+plt.bar(ind, plot_spans, width, alpha=0.5)
+plt.ylabel('Appearance Duration (hour)')
+plt.title('Wi-Fi Access Points Appearance Durations')
 plt.xticks(ind+width/2., plot_macs)
 #plt.yticks(np.arange(0,81,10))
 plt.tight_layout()

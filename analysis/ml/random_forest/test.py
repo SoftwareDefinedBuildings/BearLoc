@@ -15,7 +15,7 @@ with open(testf) as f:
     lines = f.readlines()
     for l in lines:
         vals = l.strip().split(",")
-        X_test.append([int(x) if x != "?" else -150 for x in vals[:-1]])
+        X_test.append([float(x) if x != "?" else -150 for x in vals[:-1]])
         y_test.append(vals[-1])
 
 X_test = np.array(X_test)

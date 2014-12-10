@@ -3,6 +3,7 @@ from sklearn.ensemble import RandomForestClassifier
 import cPickle as pickle
 from sklearn.metrics import confusion_matrix
 import sys
+import matplotlib.pyplot as plt
 
 testf = sys.argv[1]
 modelf = sys.argv[2]
@@ -35,3 +36,17 @@ for i in range(len(cm)):
     true_cnt += cm[i, i]
 total_cnt = np.sum(cm)
 print "Accuracy:", true_cnt/total_cnt
+
+cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+plt.imshow(cm_normalized, interpolation='nearest')
+plt.xticks(np.arange(0, len(rooms)), rooms)
+plt.yticks(np.arange(0, len(rooms)), rooms)
+
+plt.title('Confusion matrix')
+plt.colorbar()
+plt.ylabel('True label')
+plt.xlabel('Predicted label')
+plt.tight_layout()
+
+plt.show()

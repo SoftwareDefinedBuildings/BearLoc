@@ -33,6 +33,10 @@
 
 package edu.berkeley.bearloc;
 
+import android.content.Context;
+import android.os.AsyncTask;
+import android.util.Log;
+
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -44,31 +48,64 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
-import android.util.Log;
-
 public class BearLocSensor {
-    private MqttAndroidClient mqttClient;
+    private MqttAndroidClient mMQTTClient;
     private final Context mContext;
     private final Driver mDriver;
-    private String mAlgorithmTopic;
+    private String mSensorTopic;  // topic to publish data to
 
     private final Driver.SensorListener mListener = new Driver.SensorListener() {
-
         @Override
         public void onSampleEvent(Object data) {
-            String topic = mAlgorithmTopic;
-            String message = data.toString();
-            postMqttMessage(topic, message);
+            new DataPublishTask().execute(data.toString());
         }
 
     };
 
+    private class ConnectTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... v) {
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setCleanSession(true);
+            try {
+                IMqttToken token = mMQTTClient.connect(options);
+                token.waitForCompletion();
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    private class DataPublishTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... str) {
+            String payload = str[0];
+            try {
+                MqttMessage message = new MqttMessage();
+                message.setPayload(payload.getBytes());
+                IMqttDeliveryToken token = mMQTTClient.publish(mSensorTopic, message);
+                token.waitForCompletion();
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    // start can be blocking
+    private class StartTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... v) {
+            mDriver.start();
+            return null;
+        }
+    }
+
     public interface Driver {
         public abstract void setListener(SensorListener listener);
 
-        // duration in millisecond
-        public abstract boolean start(long duration, long frequency);
+        public abstract boolean start();
 
         public abstract boolean stop();
 
@@ -77,87 +114,23 @@ public class BearLocSensor {
         }
     }
 
-    class SensorMqttCallback implements MqttCallback {
-        public void connectionLost(Throwable cause) {
-            Log.d(getClass().getCanonicalName(), "MQTT Server connection lost");
-        }
-
-        public void messageArrived(String topic, MqttMessage message) {
-            Log.d(getClass().getCanonicalName(), "Message arrived:" + topic
-                    + ":" + message.toString());
-            JSONObject jsonMessage = null;
-            try {
-                jsonMessage = new JSONObject(message.getPayload().toString());
-            } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            if (mDriver != null) {
-                // TODO get duration and frequency from jsonMessage
-                mDriver.start(0, 0);
-            }
-        }
-
-        public void deliveryComplete(IMqttDeliveryToken token) {
-            Log.d(getClass().getCanonicalName(), "Delivery complete");
-        }
-    }
-
-    public BearLocSensor(Context context, Driver driver, String mqttServerURI,
-                         String algorithmTopic) {
+    public BearLocSensor(Context context, Driver driver, String mqttServerURI, String sensorTopic) {
         mContext = context;
         mDriver = driver;
-        mAlgorithmTopic = algorithmTopic;
+        mSensorTopic = sensorTopic;
 
-        mqttClient = new MqttAndroidClient(mContext, mqttServerURI,
-                MqttClient.generateClientId());
-        mqttClient.setCallback(new SensorMqttCallback());
-        MqttConnectOptions options = new MqttConnectOptions();
-        try {
-            mqttClient.connect(options);
-        } catch (MqttException e) {
-            Log.d(getClass().getCanonicalName(),
-                    "Connection attempt failed with reason code = "
-                            + e.getReasonCode() + ":" + e.getCause());
-        }
-        mqttSubscribe("sensor_name"); // TODO
+        mMQTTClient = new MqttAndroidClient(mContext, mqttServerURI, MqttClient.generateClientId());
+        new ConnectTask().execute();
 
         mDriver.setListener(mListener);
     }
 
-    /* Private methods. */
-
-    private boolean mqttSubscribe(final String topic) {
-        try {
-            IMqttToken token = mqttClient.subscribe(topic, 1);
-            token.waitForCompletion();
-            return true;
-        } catch (MqttException e) {
-            Log.d(getClass().getCanonicalName(),
-                    "Subscribe failed with reason code = " + e.getReasonCode());
-            return false;
-        }
+    public boolean start() {
+        new StartTask().execute();
+        return true;
     }
 
-    /**
-     * An MqttMessage holds the application payload and options specifying how
-     * the message is to be delivered The message includes a "payload" (the body
-     * of the message) represented as a byte[].
-     *
-     * @return
-     */
-    private boolean postMqttMessage(final String topic, final String msg) {
-        try {
-            MqttMessage message = new MqttMessage();
-            message.setPayload(msg.getBytes());
-            IMqttDeliveryToken token = mqttClient.publish(topic, message);
-            token.waitForCompletion();
-            return true;
-        } catch (MqttException e) {
-            Log.d(getClass().getCanonicalName(),
-                    "Publish failed with reason code = " + e.getReasonCode());
-            return false;
-        }
+    public boolean stop() {
+        return mDriver.stop();
     }
 }

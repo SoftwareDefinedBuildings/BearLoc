@@ -46,6 +46,7 @@ import org.json.JSONObject;
 import edu.berkeley.bearloc.BearLocApp;
 import edu.berkeley.bearloc.BearLocApp.LocListener;
 import edu.berkeley.bearloc.BearLocSensor;
+import edu.berkeley.bearloc.driver.WiFi;
 
 public class LocReporterActivity extends Activity {
 
@@ -60,6 +61,7 @@ public class LocReporterActivity extends Activity {
     private BearLocSensor mWiFiSensor;
     private BearLocSensor mLocationReporter;
 
+    // TODO: define a location class that handles semantics, string and JSON conversions
     final private static String[] mSemantics = new String[]{"country", "state",
             "city", "street", "building", "locale"};
 
@@ -68,7 +70,7 @@ public class LocReporterActivity extends Activity {
         @Override
         public void onClick(View v) {
             if (mBearLocApp.getLocation() == true) {
-                //mLocButton.setEnabled(false);
+                mLocButton.setEnabled(false);
             }
         }
 
@@ -106,8 +108,13 @@ public class LocReporterActivity extends Activity {
         mLocButton.setOnClickListener(mLocateButtonOnClickListener);
         mLocButton.setEnabled(true);
 
-        mBearLocApp = new BearLocApp(this, mLocListener,
-                "tcp://bearloc.cal-sdb.org:52411", "algorithm001-request");
+        String serverURI = getString(R.string.bearloc_server_addr);
+        String wifiTopic = getString(R.string.bearloc_wifi_topic);
+        mWiFiSensor = new BearLocSensor(this, new WiFi(this), serverURI, wifiTopic);
+        mWiFiSensor.start();
+
+        String algorithmTopic = getString(R.string.bearloc_algorithm_topic);
+        mBearLocApp = new BearLocApp(this, mLocListener, serverURI, algorithmTopic);
 
         refresh();
     }
@@ -129,7 +136,7 @@ public class LocReporterActivity extends Activity {
     private void refresh() {
         // update location text
         if (mCurLoc != null) {
-            mLocPrefixTextView.setText(getLocStr(mCurLoc, mSemantics, mCurSem));
+            mLocPrefixTextView.setText(locToStr(mCurLoc, mSemantics, mCurSem));
             mCurSemLocTextView.setText(mCurSem + ":\n"
                     + mCurLoc.optString(mCurSem, null));
         }
@@ -146,12 +153,11 @@ public class LocReporterActivity extends Activity {
         }
     }
 
-    public String getLocStr(final JSONObject loc, final String[] sems,
-                            final String endSem) {
+    public String locToStr(final JSONObject loc, final String[] sems, final String endSem) {
         String locStr = "";
 
         for (final String sem : sems) {
-            if (sem == endSem) {
+            if (sem.equals(endSem)) {
                 break;
             }
             locStr += "/" + loc.optString(sem, null);

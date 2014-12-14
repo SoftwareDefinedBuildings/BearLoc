@@ -28,13 +28,15 @@
  */
 
 /*
+ * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
  * Author: Siyuan (Jack) He <siyuanhe@berkeley.edu>
  */
 
 package edu.berkeley.bearloc;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.content.Context;
+import android.os.AsyncTask;
+import android.util.Log;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -44,63 +46,102 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-
-import android.content.Context;
-import android.os.AsyncTask;
-import android.util.Log;
-import edu.berkeley.bearloc.DeviceUUID;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class BearLocApp {
-    private MqttAndroidClient mqttClient;
+    private MqttAndroidClient mMQTTClient;
     private Context mContext;
     private LocListener mListener;
     private String mAlgorithmTopic;
 
-    private class ConnectTask extends AsyncTask<Void, Void, Void> {
-
-        private MqttAndroidClient mClient;
-        private MqttConnectOptions mOptions;
-
-        ConnectTask (MqttAndroidClient client, MqttConnectOptions options) {
-            mClient = client;
-            mOptions = options;
+    private MqttCallback mMqttCallback = new MqttCallback() {
+        @Override
+        public void connectionLost(Throwable cause) {
+            Log.d(getClass().getCanonicalName(), "MQTT Server connection lost");
         }
 
-        protected Void doInBackground(Void... v) {
-            Thread t = Thread.currentThread();
-            t.setPriority(t.getPriority());
+        @Override
+        public void messageArrived(String topic, MqttMessage message) {
+            Log.d(getClass().getCanonicalName(), "Message arrived:" + topic + ":" + message.toString());
+
+            if (mListener == null) {
+                return;
+            }
+
+            JSONObject json = null;
             try {
-                Log.d(getClass().getCanonicalName(), "Start connection");
-                IMqttToken token = mClient.connect(mOptions);
-                token.waitForCompletion(6000);
-                if (token.isComplete()) {
-                    Log.d(getClass().getCanonicalName(), "Connected!!!!!");
-                } else {
-                    Log.d(getClass().getCanonicalName(), "Connection Timed Out!");
+                String payload = new String(message.getPayload());
+                json = new JSONObject(payload);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                if (json.has("msgtype") && json.getString("msgtype").equals("locResult")) {
+                    JSONObject loc = json.getJSONObject("result");
+                    mListener.onResponseReturned(loc);
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        @Override
+        public void deliveryComplete(IMqttDeliveryToken token) {
+            Log.d(getClass().getCanonicalName(), "Delivery complete");
+        }
+    };
+
+    private class ConnectTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... v) {
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setCleanSession(true);
+            try {
+                IMqttToken token = mMQTTClient.connect(options);
+                token.waitForCompletion();
             } catch (MqttException e) {
-                Log.d(getClass().getCanonicalName(),
-                        "Connection attempt failed with reason code = "
-                                + e.getReasonCode() + ":" + e.getCause());
+                e.printStackTrace();
             }
             return null;
-        }
-
-        protected void onPostExecute(Void... v) {
-            return;
         }
     }
 
     private class LocRequestTask extends AsyncTask<Void, Void, Void> {
-
+        @Override
         protected Void doInBackground(Void... v) {
-            sendLocRequest();
-            Log.d(getClass().getCanonicalName(), "Just sent a request");
-            return null;
-        }
+            final JSONObject json = new JSONObject();
+            String uuid = DeviceUUID.getDeviceUUID(mContext).toString();
+            String epoch = Long.toString(System.currentTimeMillis());
+            String backTopic = uuid + "-" + epoch;
+            // TODO handle exceptions
+            try {
+                IMqttToken token = mMQTTClient.subscribe(backTopic, 0);
+                token.waitForCompletion();
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
 
-        protected void onPostExecute(Void... v) {
-            return;
+            try {
+                json.put("msgtype", "locationRequest");
+                json.put("uuid", uuid);
+                json.put("epoch", epoch);
+                json.put("backtopic", backTopic);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                MqttMessage message = new MqttMessage();
+                message.setPayload(json.toString().getBytes());
+                IMqttDeliveryToken token = mMQTTClient.publish(mAlgorithmTopic, message);
+                token.waitForCompletion();
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+            return null;
         }
     }
 
@@ -108,144 +149,19 @@ public class BearLocApp {
         public abstract void onResponseReturned(JSONObject response);
     }
 
-    class AppMqttCallback implements MqttCallback {
-        public void connectionLost(Throwable cause) {
-            Log.d(getClass().getCanonicalName(), "MQTT Server connection lost");
-        }
-
-        public void messageArrived(String topic, MqttMessage message) {
-            Log.d(getClass().getCanonicalName(), "Message arrived:" + topic
-                    + ":" + message.toString());
-            JSONObject jsonResponse = null;
-            try {
-                String payload = new String(message.getPayload());
-                jsonResponse = new JSONObject(payload);
-            } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            try {
-                if (jsonResponse.has("msgtype")) {
-                    String msgtype = jsonResponse.getString("msgtype");
-                    if (msgtype.equals("locResult")) {
-                        if (mListener != null) {
-                            JSONObject locJson = jsonResponse.getJSONObject("result");
-                            Log.d(getClass().getCanonicalName(), "Location Result: " + locJson.toString());
-                            mListener.onResponseReturned(locJson);
-                        }
-                    }
-                }
-            } catch (final JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-        }
-
-        public void deliveryComplete(IMqttDeliveryToken token) {
-            Log.d(getClass().getCanonicalName(), "Delivery complete");
-        }
-    }
-
     public BearLocApp(Context context, LocListener listener, String mqttServerURI, String algorithmTopic) {
         mContext = context;
         mListener = listener;
         mAlgorithmTopic = algorithmTopic;
 
-        Thread t = Thread.currentThread();
-        t.setPriority(t.getPriority());
-
-        mqttClient = new MqttAndroidClient(mContext, mqttServerURI, MqttClient.generateClientId());
-        mqttClient.setCallback(new AppMqttCallback());
-        MqttConnectOptions options = new MqttConnectOptions();
-        options.setCleanSession(true);
-        new ConnectTask(mqttClient, options).execute();
+        mMQTTClient = new MqttAndroidClient(mContext, mqttServerURI, MqttClient.generateClientId());
+        mMQTTClient.setCallback(mMqttCallback);
+        new ConnectTask().execute();
     }
 
     public boolean getLocation() {
         // TODO blocking call for packing request and waiting for MQTT ack for now
         new LocRequestTask().execute();
         return true;
-    }
-
-    /* Private methods. */
-
-    private boolean sendLocRequest() {
-        boolean success = true;
-
-        final JSONObject request = new JSONObject();
-        String uuid = DeviceUUID.getDeviceUUID(mContext).toString();
-        String epoch = Long.toString(System.currentTimeMillis());
-        String backtopic = uuid + "-" + epoch;
-
-        try {
-            request.put("msgtype", "locationRequest");
-            request.put("uuid", uuid);
-            request.put("epoch", epoch);
-            request.put("backtopic", backtopic);
-        } catch (final JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            success = false;
-        }
-
-        if (success == true) {
-            success = mqttSubscribe(backtopic);
-        }
-
-        if (success == true) {
-            String topic = mAlgorithmTopic;
-            String message = request.toString();
-            Log.d(getClass().getCanonicalName(), "Start posting message" + message);
-            success = postMqttMessage(topic, message);
-        }
-
-        return success;
-    }
-
-    private boolean mqttSubscribe(final String topic) {
-        try {
-            Log.d(getClass().getCanonicalName(), "Start subscribe to " + topic);
-            IMqttToken token = mqttClient.subscribe(topic, 0);
-            token.waitForCompletion(6000);
-            if (token.isComplete()) {
-                Log.d(getClass().getCanonicalName(), "Failed to sub");
-            } else {
-                Log.d(getClass().getCanonicalName(), "Subscribed");
-            }
-            return true;
-        } catch (MqttException e) {
-            Log.d(getClass().getCanonicalName(),
-                    "Subscribe failed with reason code = " + e.getReasonCode());
-            return false;
-        }
-    }
-
-    /**
-     * An MqttMessage holds the application payload and options specifying how
-     * the message is to be delivered The message includes a "payload" (the body
-     * of the message) represented as a byte[].
-     *
-     * @return
-     */
-    private boolean postMqttMessage(final String topic, final String msg) {
-        try {
-            Log.d(getClass().getCanonicalName(), "Start posting message " + msg + " to " + topic);
-            MqttMessage message = new MqttMessage();
-            message.setPayload(msg.getBytes());
-            IMqttDeliveryToken token = mqttClient.publish(topic, message);
-            token.waitForCompletion(6000);
-            if (token.isComplete()) {
-                Log.d(getClass().getCanonicalName(), "Posted!!!");
-            } else {
-                Log.d(getClass().getCanonicalName(), "Failed to post");
-            }
-            return true;
-        } catch (MqttException e) {
-            Log.d(getClass().getCanonicalName(),
-                    "Publish failed with reason code = " + e.getReasonCode());
-            return false;
-        }
     }
 }

@@ -31,7 +31,7 @@
  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
  */
 
-package edu.berkeley.bearloc.sensor;
+package edu.berkeley.bearloc.driver;
 
 import java.util.List;
 
@@ -45,13 +45,11 @@ import android.net.wifi.WifiManager.WifiLock;
 import android.os.Handler;
 
 import edu.berkeley.bearloc.BearLocSensor;
-import edu.berkeley.bearloc.BearLocSensor.Driver;
-import edu.berkeley.bearloc.BearLocSensor.Driver.SensorListener;
 
 public class WiFi implements BearLocSensor.Driver {
 
-    private long mSampleDuration; // millisecond
-    private long mSampleItvl; // millisecond
+    private long mSampleDuration = -1; // millisecond
+    private long mSampleItvl = 0; // millisecond
 
     private boolean mBusy;
     private int mSampleNum;
@@ -67,11 +65,9 @@ public class WiFi implements BearLocSensor.Driver {
         public void onReceive(final Context context, final Intent intent) {
             if (mBusy == true) {
                 final List<ScanResult> results = mWifiManager.getScanResults();
-
                 if (mListener != null) {
                     mListener.onSampleEvent(results);
                 }
-
                 mSampleNum++;
             }
         }
@@ -100,7 +96,7 @@ public class WiFi implements BearLocSensor.Driver {
     }
 
     @Override
-    public boolean start(long duration, long frequency) {
+    public boolean start() {
         if (mBusy == false) {
             if (mWifiManager == null) {
                 return false;
@@ -110,15 +106,13 @@ public class WiFi implements BearLocSensor.Driver {
             i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
             mContext.registerReceiver(mOnScanDone, i);
 
-            mSampleDuration = duration;
-            // TODO need to be more robust
-            mSampleItvl = (long) (1000.0 / frequency);
             mSampleNum = 0;
             mHandler.postDelayed(mWifiScanTask, 0);
-            mHandler.postDelayed(mPauseTask, mSampleDuration);
+            if (mSampleDuration > 0) {
+                mHandler.postDelayed(mPauseTask, mSampleDuration);
+            }
             mBusy = true;
-            mWifiLock = mWifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL,
-                    "BearLoc");
+            mWifiLock = mWifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL, "BearLoc");
             mWifiLock.acquire();
             return true;
         } else {

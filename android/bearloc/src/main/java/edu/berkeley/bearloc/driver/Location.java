@@ -31,7 +31,7 @@
  * Author: Kaifei Chen <kaifei@eecs.berkeley.edu>
  */
 
-package edu.berkeley.bearloc.sensor;
+package edu.berkeley.bearloc.driver;
 
 import edu.berkeley.bearloc.BearLocSensor;
 
@@ -44,7 +44,7 @@ public class Location implements BearLocSensor.Driver {
     }
 
     @Override
-    public boolean start(long duration, long frequency) {
+    public boolean start() {
         // TODO Auto-generated method stub
         return false;
     }
@@ -55,5 +55,6 @@ public class Location implements BearLocSensor.Driver {
         return false;
     }
 
+    // on click listener
 
 }

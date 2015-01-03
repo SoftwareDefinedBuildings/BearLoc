@@ -14,12 +14,12 @@ import (
 var fakeLocation = Location{"US", "CA", "Berkeley", "Leroy Ave", "Soda Hall", "494"}
 
 type Location struct {
-    Country     string      `json:country`
-    State       string      `json:state`
-    City        string      `json:city`
-    Street      string      `json:street`
-    Building    string      `json:building`
-    Locale      string      `json:locale`
+    Country     string      `json:"country"`
+    State       string      `json:"state"`
+    City        string      `json:"city"`
+    Street      string      `json:"street"`
+    Building    string      `json:"building"`
+    Locale      string      `json:"locale"`
 }
 
 type LocRequest struct {
@@ -49,6 +49,7 @@ var jobs = make(chan LocRequest , 100)
 var WifiDataHandler MQTT.MessageHandler = func(client *MQTT.MqttClient, message MQTT.Message) {
     topic := message.Topic()
     msg := message.Payload()
+    fmt.Println(string(msg));
     data := DataPoint{}
     if err := json.Unmarshal(msg, &data); err != nil {
         panic(err)
@@ -57,10 +58,6 @@ var WifiDataHandler MQTT.MessageHandler = func(client *MQTT.MqttClient, message 
 
     select {
     case job := <-jobs:
-        fmt.Println(job.Epoch)
-        fmt.Println(data.Epoch)
-        fmt.Println(job.WifiTopic)
-        fmt.Println(topic)
         if (job.Epoch < data.Epoch && job.WifiTopic == topic) {
             location := fakeLocation//localize(data.data)
             fmt.Println(location)
@@ -70,8 +67,6 @@ var WifiDataHandler MQTT.MessageHandler = func(client *MQTT.MqttClient, message 
                 time.Now().UnixNano() / 1000000,
                 location}
             resultjson, _ := json.Marshal(result)
-            fmt.Println(job.Backtopic)
-            fmt.Println(string(resultjson))
             mqttPublish(client, string(job.Backtopic), string(resultjson))
         }
         fmt.Println("Handled")

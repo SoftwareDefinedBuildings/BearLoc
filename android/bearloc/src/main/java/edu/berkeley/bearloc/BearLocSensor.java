@@ -81,9 +81,22 @@ public class BearLocSensor {
         @Override
         protected Void doInBackground(String... str) {
             String payload = str[0];
+            final JSONObject json = new JSONObject();
+            String uuid = DeviceUUID.getDeviceUUID(mContext).toString();
+            Long epoch = System.currentTimeMillis()/1000;
+
+            try {
+                json.put("msgtype", "wifidata");
+                json.put("uuid", uuid);
+                json.put("epoch", epoch);
+                json.put("data", str);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
             try {
                 MqttMessage message = new MqttMessage();
-                message.setPayload(payload.getBytes());
+                message.setPayload(json.toString().getBytes());
                 IMqttDeliveryToken token = mMQTTClient.publish(mSensorTopic, message);
                 token.waitForCompletion();
             } catch (MqttException e) {

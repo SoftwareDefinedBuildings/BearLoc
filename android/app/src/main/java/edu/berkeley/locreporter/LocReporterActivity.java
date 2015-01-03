@@ -52,6 +52,7 @@ public class LocReporterActivity extends Activity {
 
     private JSONObject mCurLoc;
     private String mCurSem;
+    private String mWifiTopic;
 
     private TextView mLocPrefixTextView;
     private TextView mCurSemLocTextView;
@@ -69,7 +70,7 @@ public class LocReporterActivity extends Activity {
 
         @Override
         public void onClick(View v) {
-            if (mBearLocApp.getLocation() == true) {
+            if (mBearLocApp.getLocation(mWifiTopic) == true) {
                 mLocButton.setEnabled(false);
             }
         }
@@ -109,8 +110,8 @@ public class LocReporterActivity extends Activity {
         mLocButton.setEnabled(true);
 
         String serverURI = getString(R.string.bearloc_server_addr);
-        String wifiTopic = getString(R.string.bearloc_wifi_topic);
-        mWiFiSensor = new BearLocSensor(this, new WiFi(this), serverURI, wifiTopic);
+        mWifiTopic = getString(R.string.bearloc_wifi_topic);
+        mWiFiSensor = new BearLocSensor(this, new WiFi(this), serverURI, mWifiTopic);
         mWiFiSensor.start();
 
         String algorithmTopic = getString(R.string.bearloc_algorithm_topic);

@@ -69,6 +69,8 @@ public class WiFi implements BearLocSensor.Driver {
                     mListener.onSampleEvent(results);
                 }
                 mSampleNum++;
+
+                mHandler.postDelayed(mWifiScanTask, mSampleItvl);
             }
         }
     };
@@ -91,8 +93,7 @@ public class WiFi implements BearLocSensor.Driver {
         mContext = context;
 
         mHandler = new Handler();
-        mWifiManager = (WifiManager) context
-                .getSystemService(Context.WIFI_SERVICE);
+        mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
     }
 
     @Override

@@ -109,12 +109,13 @@ public class BearLocApp {
         }
     }
 
-    private class LocRequestTask extends AsyncTask<Void, Void, Void> {
+    private class LocRequestTask extends AsyncTask<String, Void, Void> {
         @Override
-        protected Void doInBackground(Void... v) {
+        protected Void doInBackground(String... vals) {
+            String wifiTopic = (String) vals[0];
             final JSONObject json = new JSONObject();
             String uuid = DeviceUUID.getDeviceUUID(mContext).toString();
-            String epoch = Long.toString(System.currentTimeMillis());
+            Long epoch = System.currentTimeMillis()/1000;
             String backTopic = uuid + "-" + epoch;
             // TODO handle exceptions
             try {
@@ -129,6 +130,7 @@ public class BearLocApp {
                 json.put("uuid", uuid);
                 json.put("epoch", epoch);
                 json.put("backtopic", backTopic);
+                json.put("wifitopic", wifiTopic);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -159,9 +161,9 @@ public class BearLocApp {
         new ConnectTask().execute();
     }
 
-    public boolean getLocation() {
+    public boolean getLocation(String wifiTopic) {
         // TODO blocking call for packing request and waiting for MQTT ack for now
-        new LocRequestTask().execute();
+        new LocRequestTask().execute(wifiTopic);
         return true;
     }
 }

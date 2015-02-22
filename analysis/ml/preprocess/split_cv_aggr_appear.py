@@ -3,23 +3,22 @@ from sklearn import cross_validation
 import sys
 
 dataf = sys.argv[1]
-#check appearance possibility in every aggr_num scan
 aggr_num = int(sys.argv[2])
 
 with open(dataf) as f:
     header = f.readline()
-    num_mac = len(header.strip().split(",")) - 9
+    num_mac = len(header.strip().split(",")) - 3
     targets = []
     for l in f.readlines():
         splits = l.strip().split(",")
-        targets.append(splits[-5])
+        targets.append(splits[-1])
 
-cv = cross_validation.StratifiedKFold(targets, n_folds=2)
+cv = cross_validation.StratifiedKFold(targets, n_folds=100)
 cv_index = [index for index in cv]
 _, train_index = cv_index[0]
-_, test_index = cv_index[1]
+_, test_index = cv_index[99]
 
-rm_2_cols = lambda x: ",".join(x.strip().split(",")[:-9]) + "\n"
+rm_2_cols = lambda x: ",".join(x.strip().split(",")[2:]) + "\n"
 
 f_train = open("data.train.csv", "w")
 f_train.write(rm_2_cols(header))
@@ -34,9 +33,9 @@ with open(dataf) as f:
     for l in f.readlines():
         if i in train_index:
             vals = l.strip().split(",")
-            room = vals[-5]
+            room = vals[-1]
             for j in range(num_mac):
-                if vals[j] != '100':
+                if vals[j+2] != '?':
                     train_counter[room][j][0] += 1
                 train_counter[room][j][1] += 1
             if train_counter[room][0][1] >= aggr_num:
@@ -45,9 +44,9 @@ with open(dataf) as f:
                 train_counter[room] = [[0.0, 0] for _ in range(num_mac)]
         elif i in test_index:
             vals = l.strip().split(",")
-            room = vals[-5]
+            room = vals[-1]
             for j in range(num_mac):
-                if vals[j] != '100':
+                if vals[j+2] != '?':
                     test_counter[room][j][0] += 1
                 test_counter[room][j][1] += 1
             if test_counter[room][0][1] >= aggr_num:

@@ -9,15 +9,14 @@ with open(dataf) as f:
     targets = []
     for l in f.readlines():
         splits = l.strip().split(",")
-        targets.append(splits[-5])
-print len(set(targets))
-cv = cross_validation.StratifiedKFold(targets, n_folds=2)
+        targets.append(splits[-1])
+
+cv = cross_validation.StratifiedKFold(targets, n_folds=100)
 cv_index = [index for index in cv]
 _, train_index = cv_index[0]
-_, test_index = cv_index[1]
-print len(train_index)
+_, test_index = cv_index[99]
 
-rm_2_cols = lambda x: ",".join(x.strip().split(",")[:-9]) + "," + x.strip().split(",")[-5]+ "\n"
+rm_2_cols = lambda x: ",".join(x.strip().split(",")[2:]) + "\n"
 
 f_train = open("data.train.csv", "w")
 f_train.write(rm_2_cols(header))

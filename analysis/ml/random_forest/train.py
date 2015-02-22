@@ -14,7 +14,7 @@ with open(trainf) as f:
     lines = f.readlines()
     for l in lines:
         vals = l.strip().split(",")
-        X_train.append([float(x) if x != "?" else -150 for x in vals[:-1]])
+        X_train.append([float(x) if x != "0.0" else -150 for x in vals[:-1]])
         y_train.append(vals[-1])
 
 X_train = np.array(X_train)

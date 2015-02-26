@@ -21,7 +21,7 @@
 
     <!-- BearLoc Settings -->
     <string name="bearloc_server_addr">tcp://bearloc.cal-sdb.org:52411</string>
-    <string name="bearloc_algorithm_topic">algorithm001-request</string>
-    <string name="bearloc_wifi_topic">bearloc/wifi</string>
+    <string name="bearloc_algorithm_topic">bearloc/algorithm/dummy</string>
+    <string name="bearloc_wifi_topic">bearloc/wifi/jackwifi</string>
 
 </resources>

@@ -43,6 +43,8 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
+
 import edu.berkeley.bearloc.BearLocApp;
 import edu.berkeley.bearloc.BearLocApp.LocListener;
 import edu.berkeley.bearloc.BearLocSensor;
@@ -53,6 +55,7 @@ public class LocReporterActivity extends Activity {
     private JSONObject mCurLoc;
     private String mCurSem;
     private String mWifiTopic;
+    private HashMap<String, String> sensorMap = new HashMap<String, String>() ;
 
     private TextView mLocPrefixTextView;
     private TextView mCurSemLocTextView;
@@ -70,8 +73,14 @@ public class LocReporterActivity extends Activity {
 
         @Override
         public void onClick(View v) {
-            if (mBearLocApp.getLocation(mWifiTopic) == true) {
-                mLocButton.setEnabled(false);
+            if (mBearLocApp.sessionStarted()) {
+                if (mBearLocApp.stopSession()) {
+                    mLocButton.setText("Start Session");
+                }
+            } else {
+                if (mBearLocApp.startSession(sensorMap)) {
+                    mLocButton.setText("Stop Session");
+                }
             }
         }
 
@@ -81,7 +90,6 @@ public class LocReporterActivity extends Activity {
 
         @Override
         public void onResponseReturned(JSONObject response) {
-            mLocButton.setEnabled(true);
 
             if (response == null) {
                 Toast.makeText(LocReporterActivity.this,
@@ -113,6 +121,7 @@ public class LocReporterActivity extends Activity {
         mWifiTopic = getString(R.string.bearloc_wifi_topic);
         mWiFiSensor = new BearLocSensor(this, new WiFi(this), serverURI, mWifiTopic);
         mWiFiSensor.start();
+        sensorMap.put("wifi", mWifiTopic);
 
         String algorithmTopic = getString(R.string.bearloc_algorithm_topic);
         mBearLocApp = new BearLocApp(this, mLocListener, serverURI, algorithmTopic);

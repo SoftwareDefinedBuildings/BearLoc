@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Audio source api values -->
+    <string name="bearloc_CAMCORDER">5</string> <!-- android.media.MediaRecorder.AudioSource.CAMCORDER -->
+    <string name="bearloc_MIC">1</string> <!-- android.media.MediaRecorder.AudioSource.CAMCORDER -->
+
+    <!-- Audio channel api values -->
+    <string name="bearloc_CHANNEL_IN_MONO">16</string> <!-- android.media.AudioFormat.CHANNEL_IN_MONO -->
+    <string name="bearloc_CHANNEL_IN_STEREO">12</string> <!-- android.media.AudioFormat.CHANNEL_IN_STEREO -->
+
+    <!-- Audio format api values -->
+    <string name="bearloc_ENCODING_PCM_16BIT">2</string> <!-- android.media.AudioFormat.ENCODING_PCM_16BIT -->
+    <string name="bearloc_ENCODING_PCM_8BIT">3</string> <!-- android.media.AudioFormat.ENCODING_PCM_8BIT -->
+
+    <!-- Audio settings strings -->
+    <string name="bearloc_pref_audio_title">Audio</string>
+    <string name="bearloc_pref_audio_enable_summ">Enable Audio recording</string>
+    <string name="bearloc_pref_audio_enable">Record Audio</string>
+    <string name="bearloc_default_audio_enable">true</string>
+    <string name="bearloc_pref_audio_duration_summ">Audio duration in milliseconds</string>
+    <string name="bearloc_pref_audio_duration">Audio Duration</string>
+    <string name="bearloc_default_audio_duration">1000</string>
+    <string name="bearloc_pref_audio_src_summ">The microphone to use</string>
+    <string name="bearloc_pref_audio_src">Audio Source</string>
+    <string name="bearloc_default_audio_src_value">@string/bearloc_CAMCORDER</string>
+    <string name="bearloc_pref_audio_sample_rate_summ">Sample rate in Hertz</string>
+    <string name="bearloc_pref_audio_sample_rate">Audio Sample Rate</string>
+    <string name="bearloc_default_audio_sample_rate_value">44100</string> <!-- Only 44100 is guaranteed to work -->
+    <string name="bearloc_pref_audio_channel_summ">Number of separate audio streams</string>
+    <string name="bearloc_pref_audio_channel">Audio Channel</string>
+    <string name="bearloc_default_audio_channel_value">@string/bearloc_CHANNEL_IN_MONO</string> <!-- Only MONO is guaranteed to work -->
+    <string name="bearloc_pref_audio_format_summ">Number of bits per sample</string>
+    <string name="bearloc_pref_audio_format">Audio Data Format</string>
+    <string name="bearloc_default_audio_format_value">@string/bearloc_ENCODING_PCM_16BIT</string> <!-- Only 16BIT is guaranteed to work -->
+
+
+</resources>

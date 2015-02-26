@@ -48,19 +48,102 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 public class BearLocSensor {
     private MqttAndroidClient mMQTTClient;
     private final Context mContext;
     private final Driver mDriver;
     private String mSensorTopic;  // topic to publish data to
 
+    /*
+     * Gets the number of available cores
+     * (not always the same as the maximum number of cores)
+     */
+    private static int NUMBER_OF_CORES =
+            Runtime.getRuntime().availableProcessors();
+
+    // Sets the amount of time an idle thread waits before terminating
+    private static final int KEEP_ALIVE_TIME = 1;
+    // Sets the Time Unit to seconds
+    private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
+    // Creates a thread pool manager
+    private static ExecutorService mNetworkThreadPool = new ThreadPoolExecutor(
+            NUMBER_OF_CORES,       // Initial pool size
+            NUMBER_OF_CORES,       // Max pool size
+            KEEP_ALIVE_TIME,
+            KEEP_ALIVE_TIME_UNIT,
+            new LinkedBlockingQueue<Runnable>());
+
     private final Driver.SensorListener mListener = new Driver.SensorListener() {
         @Override
         public void onSampleEvent(Object data) {
-            new DataPublishTask().execute(data.toString());
+            mNetworkThreadPool.execute(new DataPublishRunnable(data.toString()));
+            // new DataPublishTask().execute(data.toString());
         }
 
     };
+
+    private class ConnectRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setCleanSession(true);
+            try {
+                IMqttToken token = mMQTTClient.connect(options);
+                token.waitForCompletion();
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class DataPublishRunnable implements Runnable {
+
+        private String mPayload;
+
+        DataPublishRunnable(String _payload) {
+            this.mPayload = _payload;
+        }
+
+        @Override
+        public void run() {
+            final JSONObject json = new JSONObject();
+            String uuid = DeviceUUID.getDeviceUUID(mContext).toString();
+            Long epoch = System.currentTimeMillis()/1000;
+
+            try {
+                json.put("msgtype", "wifidata");
+                json.put("uuid", uuid);
+                json.put("epoch", epoch);
+                json.put("data", this.mPayload);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                MqttMessage message = new MqttMessage();
+                message.setPayload(json.toString().getBytes());
+                IMqttDeliveryToken token = mMQTTClient.publish(mSensorTopic, message);
+                token.waitForCompletion();
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // start can be blocking
+    private class StartRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            mDriver.start();
+        }
+    }
 
     private class ConnectTask extends AsyncTask<Void, Void, Void> {
         @Override
@@ -133,13 +216,15 @@ public class BearLocSensor {
         mSensorTopic = sensorTopic;
 
         mMQTTClient = new MqttAndroidClient(mContext, mqttServerURI, MqttClient.generateClientId());
-        new ConnectTask().execute();
+        // new ConnectTask().execute();
+        mNetworkThreadPool.execute(new ConnectRunnable());
 
         mDriver.setListener(mListener);
     }
 
     public boolean start() {
-        new StartTask().execute();
+        mNetworkThreadPool.execute(new StartRunnable());
+        // new StartTask().execute();
         return true;
     }
 

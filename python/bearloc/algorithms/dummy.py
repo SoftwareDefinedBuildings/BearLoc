@@ -7,12 +7,16 @@ import capnp
 
 import algorithm_capnp # read algorithm.capnp
 
+import random
 
 def localize_impl():
     location = algorithm_capnp.Algorithm.Location.new_message()
-    location.country = 'US'
-    location.building = 'Soda'
-    location.room = '410'
+    location.country = "US"
+    location.state = "CA"
+    location.city = "Berkeley"
+    location.street = "Leroy Ave"
+    location.building = 'Soda Hall'
+    location.locale = str(random.randrange(10000))
     return location
 
 

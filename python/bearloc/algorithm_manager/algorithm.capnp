@@ -8,7 +8,10 @@ interface Algorithm {
 
   struct Location {
     country @0 :Text;
-    building @1 :Text;
-    room @2 :Text;
+    state @1 :Text;
+    city @2 :Text;
+    street @3 :Text;
+    building @4 :Text;
+    locale @5 :Text;
   }
 }

@@ -10,11 +10,18 @@ import algorithm_capnp # read algorithm.capnp
 import paho.mqtt.client as mqtt
 import simplejson as json
 
+algorithm_addr = 'localhost'
+algorithm_port = 60000
+
+mqtt_broker_addr = "bearloc.cal-sdb.org"
+mqtt_broker_port = 52411
+
 algorithm_topic = "bearloc/algorithm/dummy"
 algorithm_map = {} # topic to algorithm isntance mapping
 # TODO add heartbeat suppport
 
-fake_loc = {"msgtype":"locResult", "uuid":"somerandomnumberhaha", "epoch": 142500000, "result": {"country":"US", "state":"CA", "city":"Berkeley", "street":"Leroy Ave", "building":"Soda Hall", "locale":"492"}}
+mqtt_client = None
+capnp_client = None
 
 # The callback for when the client receives a CONNACK response from the broker.
 def on_connect(client, userdata, rc):
@@ -31,20 +38,22 @@ def on_message(client, userdata, msg):
     data = json.loads(str(msg.payload))
     print(msg.topic+" "+str(data))
     back_topic = data["backtopic"]
-    fake_loc_str = json.dumps(fake_loc)
-    client.publish(back_topic, payload=fake_loc_str, qos=1, retain=True)
-    #localize_promise = algorithm.localize()
-    #localize_promise.then(print_location).wait()
+    localize_promise = capnp_client.localize()
+    publish_location_once = lambda response: publish_location(response, back_topic)
+    localize_promise.then(publish_location_once).wait()
 
-def print_location(localize_response):
+def publish_location(localize_response, back_topic):
     location = localize_response.location.to_dict()
     print location
+    response = {"msgtype":"locResult", "uuid":"somerandomnumberhaha", "epoch": 142500000, "result": location}
+    response_str = json.dumps(response)
+    mqtt_client.publish(back_topic, payload=response_str, qos=1, retain=True)
 
 def init_mqtt():
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
-    client.connect("bearloc.cal-sdb.org", 52411, 60)
+    client.connect(mqtt_broker_addr, mqtt_broker_port, 60)
     return client
 
 def init_capnp(address):
@@ -53,8 +62,11 @@ def init_capnp(address):
     return algorithm
 
 def main():
-    client = init_mqtt()
-    client.loop_forever()
+    global mqtt_client
+    global capnp_client
+    mqtt_client = init_mqtt()
+    capnp_client = init_capnp(algorithm_addr+":"+str(algorithm_port))
+    mqtt_client.loop_forever()
     
 
 if __name__ == '__main__':

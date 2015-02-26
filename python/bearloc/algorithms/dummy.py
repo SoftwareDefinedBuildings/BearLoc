@@ -2,6 +2,7 @@
 
 # A dummy localization algorithm, the server of Cap'n Proto
 
+import sys
 import socket
 import capnp
 
@@ -31,7 +32,7 @@ def restore(ref):
 
 
 def main():
-    address = 'localhost:60000'
+    address = sys.argv[1]
     server = capnp.TwoPartyServer(address, restore)
     server.run_forever()
 

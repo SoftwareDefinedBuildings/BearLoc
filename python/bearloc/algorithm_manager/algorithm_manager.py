@@ -24,7 +24,7 @@ control_topic = "bearloc/algorithm/dummy"
 
 timeout = 15 # heartbeat timeout in second
 
-algorithm_exec = "/root/workspace/BearLoc/python/bearloc/algorithms/dummy.py"
+algorithm_exec = "/root/workspace/BearLoc/python/bearloc/algorithms/wifi_rssi.py"
 
 algorithm_processes = []
 
@@ -74,8 +74,9 @@ def on_message(client, userdata, msg):
 
     elif msg.topic in sensor_topic_map:
         capnp_clients = sensor_topic_map[msg.topic]
+        sensor_data = payload_json["data"]
         for capnp_client, result_topic in capnp_clients:
-            localize_promise = capnp_client.localize() # pass the data
+            localize_promise = capnp_client.localize(sensor_data)
             publish_location_once = lambda response: publish_location(response, result_topic)
             localize_promise.then(publish_location_once).wait()
         print("Got data from "+msg.topic)

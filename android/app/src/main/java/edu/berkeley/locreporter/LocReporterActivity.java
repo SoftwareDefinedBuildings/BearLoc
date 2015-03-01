@@ -42,6 +42,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.HashMap;
 
@@ -52,41 +53,73 @@ import edu.berkeley.bearloc.driver.WiFi;
 
 public class LocReporterActivity extends Activity {
 
-    private JSONObject mCurLoc;
-    private String mCurSem;
+    //Wifi
+    private TextView mWifiSemLocTextView;
+    private TextView mWifiPrefixTextView;
+    private Button mWifiButton;
+
+    private JSONObject mWifiLocJson;
+    private String mWifiSemLoc;
+
+    private BearLocApp mWifiBearLocApp;
     private String mWifiTopic;
-    private HashMap<String, String> sensorMap = new HashMap<String, String>() ;
-
-    private TextView mLocPrefixTextView;
-    private TextView mCurSemLocTextView;
-    private Button mLocButton;
-
-    private BearLocApp mBearLocApp;
     private BearLocSensor mWiFiSensor;
+
+    //ABS
+    private TextView mAbsSemLocTextView;
+    private TextView mAbsPrefixTextView;
+    private Button mAbsButton;
+
+    private JSONObject mAbsLocJson;
+    private String mAbsSemLoc;
+    private HashMap<String, String> mAbsSensorMap = new HashMap<String, String>();
+
+    private BearLocApp mAbsBearLocApp;
+    private BearLocSensor mAudioSensor;
+    private String mAudioTopic;
     private BearLocSensor mLocationReporter;
+
+    private HashMap<String, String> mSensorMap = new HashMap<String, String>();
 
     // TODO: define a location class that handles semantics, string and JSON conversions
     final private static String[] mSemantics = new String[]{"country", "state",
             "city", "street", "building", "locale"};
 
-    private OnClickListener mLocateButtonOnClickListener = new OnClickListener() {
+    private OnClickListener mWifiButtonOnClickListener = new OnClickListener() {
 
         @Override
         public void onClick(View v) {
-            if (mBearLocApp.sessionStarted()) {
-                if (mBearLocApp.stopSession()) {
-                    mLocButton.setText("Start Session");
+            if (mWifiBearLocApp.sessionStarted()) {
+                if (mWifiBearLocApp.stopSession()) {
+                    mWifiButton.setText("Start Session");
                 }
             } else {
-                if (mBearLocApp.startSession(sensorMap)) {
-                    mLocButton.setText("Stop Session");
+                if (mWifiBearLocApp.startSession(mSensorMap)) {
+                    mWifiButton.setText("Stop Session");
                 }
             }
         }
 
     };
 
-    private LocListener mLocListener = new LocListener() {
+    private OnClickListener mAbsButtonOnClickListener = new OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            if (mAbsBearLocApp.sessionStarted()) {
+                if (mAbsBearLocApp.stopSession()) {
+                    mAbsButton.setText("Start Session");
+                }
+            } else {
+                if (mAbsBearLocApp.startSession(mSensorMap)) {
+                    mAbsButton.setText("Stop Session");
+                }
+            }
+        }
+
+    };
+
+    private LocListener mWifiLocListener = new LocListener() {
 
         @Override
         public void onResponseReturned(JSONObject response) {
@@ -96,8 +129,22 @@ public class LocReporterActivity extends Activity {
                         R.string.server_no_respond, Toast.LENGTH_SHORT).show();
                 return;
             }
+            onLocReturned("wifi", response);
+        }
 
-            onLocReturned(response);
+    };
+
+    private LocListener mAbsLocListener = new LocListener() {
+
+        @Override
+        public void onResponseReturned(JSONObject response) {
+
+            if (response == null) {
+                Toast.makeText(LocReporterActivity.this,
+                        R.string.server_no_respond, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            onLocReturned("abs", response);
         }
 
     };
@@ -107,24 +154,47 @@ public class LocReporterActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loc_reporter);
 
-        mCurLoc = new JSONObject();
-        mCurSem = mSemantics[mSemantics.length - 1];
-
-        mLocPrefixTextView = (TextView) findViewById(R.id.loc_prefix);
-        mCurSemLocTextView = (TextView) findViewById(R.id.cur_sem_loc);
-
-        mLocButton = (Button) findViewById(R.id.localize);
-        mLocButton.setOnClickListener(mLocateButtonOnClickListener);
-        mLocButton.setEnabled(true);
-
         String serverURI = getString(R.string.bearloc_server_addr);
+
+        // Wifi App
+
+        mWifiLocJson = new JSONObject();
+        mWifiSemLoc = mSemantics[mSemantics.length - 1];
+
+        mWifiSemLocTextView = (TextView) findViewById(R.id.wifi_sem_loc);
+        mWifiPrefixTextView = (TextView) findViewById(R.id.wifi_loc_prefix);
+        mWifiButton = (Button) findViewById(R.id.wifiButton);
+        mWifiButton.setOnClickListener(mWifiButtonOnClickListener);
+        mWifiButton.setEnabled(true);
+
+        String wifiAlgorithmTopic = getString(R.string.bearloc_wifi_algorithm_topic);
+        mWifiBearLocApp = new BearLocApp(this, mWifiLocListener, serverURI, wifiAlgorithmTopic);
+
+        // Abs App
+
+        mAbsLocJson = new JSONObject();
+        mAbsSemLoc = mSemantics[mSemantics.length - 1];
+
+        mAbsSemLocTextView = (TextView) findViewById(R.id.abs_sem_loc);
+        mAbsPrefixTextView = (TextView) findViewById(R.id.abs_loc_prefix);
+        mAbsButton = (Button) findViewById(R.id.wifiButton);
+        mAbsButton.setOnClickListener(mAbsButtonOnClickListener);
+        mAbsButton.setEnabled(true);
+
+        //Sensor Setup
+
         mWifiTopic = getString(R.string.bearloc_wifi_topic);
         mWiFiSensor = new BearLocSensor(this, new WiFi(this), serverURI, mWifiTopic);
         mWiFiSensor.start();
-        sensorMap.put("wifi", mWifiTopic);
+        mSensorMap.put("wifi", mWifiTopic);
 
-        String algorithmTopic = getString(R.string.bearloc_algorithm_topic);
-        mBearLocApp = new BearLocApp(this, mLocListener, serverURI, algorithmTopic);
+        mAudioTopic = getString(R.string.bearloc_audio_topic);
+        mAudioSensor = new BearLocSensor(this, new WiFi(this), serverURI, mAudioTopic);
+        mAudioSensor.start();
+        mSensorMap.put("audio", mAudioTopic);
+
+        String absAlgorithmTopic = getString(R.string.bearloc_abs_algorithm_topic);
+        mAbsBearLocApp = new BearLocApp(this, mAbsLocListener, serverURI, absAlgorithmTopic);
 
         refresh();
     }
@@ -145,22 +215,33 @@ public class LocReporterActivity extends Activity {
      */
     private void refresh() {
         // update location text
-        if (mCurLoc != null) {
-            mLocPrefixTextView.setText(locToStr(mCurLoc, mSemantics, mCurSem));
-            mCurSemLocTextView.setText(mCurSem + ":\n"
-                    + mCurLoc.optString(mCurSem, null));
+        if (mWifiLocJson != null) {
+            mWifiSemLocTextView.setText(locToStr(mWifiLocJson, mSemantics, mWifiSemLoc));
+            mWifiPrefixTextView.setText(mWifiSemLoc + ":"
+                    + mWifiLocJson.optString(mWifiSemLoc, null));
+        }
+
+        if (mAbsLocJson != null) {
+            mAbsSemLocTextView.setText(locToStr(mAbsLocJson, mSemantics, mAbsSemLoc));
+            mAbsPrefixTextView.setText(mAbsSemLoc + ":"
+                    + mAbsLocJson.optString(mAbsSemLoc, null));
         }
     }
 
-    public void onLocReturned(final JSONObject locEvent) {
-        final JSONObject oldLoc = mCurLoc;
-        mCurLoc = locEvent; // The response is JSON Array
-        if (oldLoc == null
-                || oldLoc.toString().equals(mCurLoc.toString()) == false) {
-            refresh();
-            Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT)
-                    .show();
+    public void onLocReturned(String algorithm, final JSONObject locEvent) {
+        JSONObject oldLoc = null;
+        if (algorithm.equals("wifi")) {
+            oldLoc = mWifiLocJson;
+            mWifiLocJson = locEvent; // The response is JSON Array
+        } else if (algorithm.equals("abs")) {
+            oldLoc = mAbsLocJson;
+            mAbsLocJson = locEvent; // The response is JSON Array
         }
+        if (oldLoc == null || oldLoc.toString().equals(locEvent.toString()) == false) {
+            refresh();
+            Toast.makeText(this, R.string.loc_updated, Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     public String locToStr(final JSONObject loc, final String[] sems, final String endSem) {

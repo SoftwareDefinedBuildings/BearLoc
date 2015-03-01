@@ -33,14 +33,8 @@
 
 package edu.berkeley.bearloc.driver;
 
-import java.util.List;
-
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.media.AudioFormat;
-import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Handler;
 
@@ -49,30 +43,40 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.berkeley.bearloc.BearLocSensor;
+import root.gast.audio.record.AudioClipListener;
+import root.gast.audio.record.AudioClipRecorder;
 
 public class Audio implements BearLocSensor.Driver {
 
     private final int STOP = 42;
 
-    private int mSrc;
     private int mSampleRate;
-    private int mChannel;
-    private int mFormat;
-    private int mSampleLength;
-    private int bufferSize;
+    private int mEncoding;
+    private int mSampleLengthMillisSec;
 
-    private AudioRecord mRecorder;
-    private final JSONArray mRaw = new JSONArray();
+    private AudioClipRecorder mAudioClipRecorder;
+    private JSONArray mRaw;
     private Long mStartEpoch;
     private volatile boolean mRun = false;
     private Object runLock = new Object();
-
-    private boolean mBusy;
 
     private Context mContext;
     private SensorListener mListener;
     private Handler mHandler;
     private Handler sampleHandler;
+
+    private AudioClipListener mAudioClipListener = new AudioClipListener() {
+        @Override
+        public boolean heard(short[] audioData, int sampleRate) {
+            for (short b : audioData) {
+                mRaw.put(b);
+            }
+            if (mListener != null) {
+                mListener.onSampleEvent(dump2JSON());
+            }
+            return true;
+        }
+    };
 
     /*
     Default constructor customized for ABS
@@ -81,31 +85,25 @@ public class Audio implements BearLocSensor.Driver {
         mContext = context;
         mHandler = new Handler();
 
-        mSrc = MediaRecorder.AudioSource.MIC;
         mSampleRate = 44100;
-        mChannel = AudioFormat.CHANNEL_IN_MONO;
-        mFormat = AudioFormat.ENCODING_PCM_16BIT;
-        mSampleLength = 1000; //millisecond
+        mEncoding = AudioFormat.ENCODING_PCM_16BIT;
+        mSampleLengthMillisSec = 1000; //millisecond
 
-        bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel, mFormat);
-        mRecorder = new AudioRecord(mSrc, mSampleRate, mChannel, mFormat, bufferSize);
+        mAudioClipRecorder = new AudioClipRecorder(mAudioClipListener);
     }
 
     /*
     Customizable constructor where the user can select sampling options.
      */
-    public Audio(final Context context, int _src, int _sampleRate, int _channel, int _format, int _sampleLength) {
+    public Audio(final Context context, int _sampleRate, int _channel, int _format, int _sampleLength) {
         mContext = context;
         mHandler = new Handler();
 
-        mSrc = _src;
         mSampleRate = _sampleRate;
-        mChannel = _channel;
-        mFormat = _format;
-        mSampleLength = _sampleLength;
+        mEncoding = _format;
+        mSampleLengthMillisSec = _sampleLength;
 
-        bufferSize = AudioRecord.getMinBufferSize(mSampleRate, mChannel, mFormat);
-        mRecorder = new AudioRecord(mSrc, mSampleRate, mChannel, mFormat, bufferSize);
+        mAudioClipRecorder = new AudioClipRecorder(mAudioClipListener);
     }
 
     @Override
@@ -145,23 +143,8 @@ public class Audio implements BearLocSensor.Driver {
     public void makeAudioSample() {
         try {
             mStartEpoch = System.currentTimeMillis();
-            mRecorder.startRecording();
-
-            final byte[] buffer = new byte[bufferSize];
-            while (System.currentTimeMillis() - mStartEpoch < mSampleLength) {
-                // blocking read, which returns when buffer.length bytes are recorded
-                mRecorder.read(buffer, 0, buffer.length); // Bytes
-                for (final byte data : buffer) {
-                    mRaw.put(data);
-                }
-            }
-
-
-            mRecorder.stop();
-            mRecorder.release();
-            if (mListener != null) {
-                mListener.onSampleEvent(dump2JSON());
-            }
+            mRaw = new JSONArray();
+            mAudioClipRecorder.startRecordingForTime(mSampleLengthMillisSec, mSampleRate, mEncoding);
         } catch (final Exception e) {
             e.printStackTrace();
         }
@@ -173,10 +156,11 @@ public class Audio implements BearLocSensor.Driver {
         try {
             audioEvent.put("raw", mRaw);
             audioEvent.put("epoch", mStartEpoch);
-            audioEvent.put("source", mSrc);
-            audioEvent.put("channel", mChannel);
-            audioEvent.put("sampwidth", mFormat);
-            audioEvent.put("framerate", mSampleRate);
+            audioEvent.put("source", MediaRecorder.AudioSource.MIC);
+            audioEvent.put("channel", AudioFormat.CHANNEL_IN_MONO);
+            audioEvent.put("encoding", mEncoding);
+            audioEvent.put("lengthms", mSampleLengthMillisSec);
+            audioEvent.put("samplerate", mSampleRate);
         } catch (final JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

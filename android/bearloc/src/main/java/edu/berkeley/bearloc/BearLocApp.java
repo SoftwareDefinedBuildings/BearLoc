@@ -35,6 +35,7 @@
 package edu.berkeley.bearloc;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Looper;
 import android.util.Log;
 import android.os.Handler;
@@ -84,7 +85,7 @@ public class BearLocApp {
     // Sets the Time Unit to seconds
     private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
     // Creates a thread pool manager
-    private static ExecutorService mNetworkThreadPool = new ThreadPoolExecutor(
+    private ExecutorService mNetworkThreadPool = new ThreadPoolExecutor(
             NUMBER_OF_CORES,       // Initial pool size
             NUMBER_OF_CORES,       // Max pool size
             KEEP_ALIVE_TIME,
@@ -92,7 +93,9 @@ public class BearLocApp {
             new LinkedBlockingQueue<Runnable>());
 
 
-    private MqttCallback mMqttCallback = new MqttCallback() {
+    private MqttCallback mMqttCallback;
+
+    private class MyMqttCallback implements MqttCallback {
         @Override
         public void connectionLost(Throwable cause) {
             Log.d(getClass().getCanonicalName(), "MQTT Server connection lost");
@@ -204,6 +207,7 @@ public class BearLocApp {
         }
     }
 
+
     private class StartSessionRunnable implements Runnable {
 
         private HashMap<String, String> sensorMap;
@@ -274,9 +278,12 @@ public class BearLocApp {
         mSessionStarted = false;
         muuid = DeviceUUID.getDeviceUUID(mContext).toString();
 
+        mMqttCallback = new MyMqttCallback();
+
         mMQTTClient = new MqttAndroidClient(mContext, mqttServerURI, MqttClient.generateClientId());
         mMQTTClient.setCallback(mMqttCallback);
-        mNetworkThreadPool.execute(new ConnectRunnable());
+        AsyncTask.execute(new ConnectRunnable());
+        // mNetworkThreadPool.execute(new ConnectRunnable());
     }
 
     public boolean startSession(HashMap<String, String> sensorMap) {
@@ -286,8 +293,10 @@ public class BearLocApp {
         mSessionEpoch = System.currentTimeMillis()/1000;
         mResultTopic = muuid + "-" + mSessionEpoch;
         mHeartBeatTopic = mResultTopic + "-heartbeat";
-        mNetworkThreadPool.execute(new StartSessionRunnable(sensorMap, muuid, mSessionEpoch,
+        AsyncTask.execute(new StartSessionRunnable(sensorMap, muuid, mSessionEpoch,
                 mResultTopic, mHeartBeatTopic));
+//        mNetworkThreadPool.execute(new StartSessionRunnable(sensorMap, muuid, mSessionEpoch,
+//                mResultTopic, mHeartBeatTopic));
         mNetworkThreadPool.execute(new HeartBeatRunnable(muuid, mHeartBeatTopic));
         mSessionStarted = true;
         return true;
@@ -317,5 +326,10 @@ public class BearLocApp {
 
     public boolean sessionStarted() {
         return mSessionStarted;
+    }
+
+    public void destroy() {
+        mMQTTClient.close();
+        mNetworkThreadPool.shutdownNow();
     }
 }

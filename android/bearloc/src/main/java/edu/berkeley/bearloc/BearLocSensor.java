@@ -71,7 +71,7 @@ public class BearLocSensor {
     // Sets the Time Unit to seconds
     private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
     // Creates a thread pool manager
-    private static ExecutorService mNetworkThreadPool = new ThreadPoolExecutor(
+    private ExecutorService mNetworkThreadPool = new ThreadPoolExecutor(
             NUMBER_OF_CORES,       // Initial pool size
             NUMBER_OF_CORES,       // Max pool size
             KEEP_ALIVE_TIME,
@@ -81,10 +81,27 @@ public class BearLocSensor {
     private final Driver.SensorListener mListener = new Driver.SensorListener() {
         @Override
         public void onSampleEvent(Object data) {
-            mNetworkThreadPool.execute(new DataPublishRunnable(data.toString()));
+            Log.d("BearLocSensor", "Got data");
+            // mNetworkThreadPool.execute(new DataPublishRunnable(data.toString()));
+            AsyncTask.execute(new DataPublishRunnable(data.toString()));
             // new DataPublishTask().execute(data.toString());
         }
 
+    };
+
+    private MqttCallback mMqttCallback = new MqttCallback() {
+        @Override
+        public void connectionLost(Throwable cause) {
+            Log.d(getClass().getCanonicalName(), "MQTT Server connection lost");
+        }
+
+        @Override
+        public void messageArrived(String str, MqttMessage msg) {}
+
+        @Override
+        public void deliveryComplete(IMqttDeliveryToken token) {
+            Log.d("BearLocSensor", "Delivery complete");
+        }
     };
 
     private class ConnectRunnable implements Runnable {
@@ -112,6 +129,7 @@ public class BearLocSensor {
 
         @Override
         public void run() {
+            Log.d("BearLocSensor", "Publishing Data");
             final JSONObject json = new JSONObject();
             String uuid = DeviceUUID.getDeviceUUID(mContext).toString();
             Long epoch = System.currentTimeMillis()/1000;
@@ -129,6 +147,7 @@ public class BearLocSensor {
                 MqttMessage message = new MqttMessage();
                 message.setPayload(json.toString().getBytes());
                 IMqttDeliveryToken token = mMQTTClient.publish(mSensorTopic, message);
+                Log.d("Audio:", mSensorTopic + " published");
                 token.waitForCompletion();
             } catch (MqttException e) {
                 e.printStackTrace();
@@ -216,8 +235,10 @@ public class BearLocSensor {
         mSensorTopic = sensorTopic;
 
         mMQTTClient = new MqttAndroidClient(mContext, mqttServerURI, MqttClient.generateClientId());
-        // new ConnectTask().execute();
-        mNetworkThreadPool.execute(new ConnectRunnable());
+        mMQTTClient.setCallback(mMqttCallback);
+//        new ConnectTask().execute();
+        AsyncTask.execute(new ConnectRunnable());
+        // mNetworkThreadPool.execute(new ConnectRunnable());
 
         mDriver.setListener(mListener);
     }
@@ -230,5 +251,10 @@ public class BearLocSensor {
 
     public boolean stop() {
         return mDriver.stop();
+    }
+
+    public void destroy() {
+        mMQTTClient.close();
+        mNetworkThreadPool.shutdownNow();
     }
 }

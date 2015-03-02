@@ -37,6 +37,7 @@ import android.content.Context;
 import android.media.AudioFormat;
 import android.media.MediaRecorder;
 import android.os.Handler;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,11 +49,10 @@ import root.gast.audio.record.AudioClipRecorder;
 
 public class Audio implements BearLocSensor.Driver {
 
-    private final int STOP = 42;
-
     private int mSampleRate;
     private int mEncoding;
     private int mSampleLengthMillisSec;
+    private long mSampleItvl = 1000; // millisecond
 
     private AudioClipRecorder mAudioClipRecorder;
     private JSONArray mRaw;
@@ -62,12 +62,11 @@ public class Audio implements BearLocSensor.Driver {
 
     private Context mContext;
     private SensorListener mListener;
-    private Handler mHandler;
-    private Handler sampleHandler;
 
     private AudioClipListener mAudioClipListener = new AudioClipListener() {
         @Override
         public boolean heard(short[] audioData, int sampleRate) {
+            Log.d("Audio:", "received "+ audioData.length + " bytes of data at" + sampleRate + "Hz");
             for (short b : audioData) {
                 mRaw.put(b);
             }
@@ -78,12 +77,18 @@ public class Audio implements BearLocSensor.Driver {
         }
     };
 
+    private final Runnable mAudioSampleRunnable = new Runnable() {
+        @Override
+        public void run() {
+            makeAudioSample();
+        }
+    };
+
     /*
     Default constructor customized for ABS
      */
     public Audio(final Context context) {
         mContext = context;
-        mHandler = new Handler();
 
         mSampleRate = 44100;
         mEncoding = AudioFormat.ENCODING_PCM_16BIT;
@@ -97,13 +102,12 @@ public class Audio implements BearLocSensor.Driver {
      */
     public Audio(final Context context, int _sampleRate, int _channel, int _format, int _sampleLength) {
         mContext = context;
-        mHandler = new Handler();
 
         mSampleRate = _sampleRate;
         mEncoding = _format;
         mSampleLengthMillisSec = _sampleLength;
-
         mAudioClipRecorder = new AudioClipRecorder(mAudioClipListener);
+
     }
 
     @Override
@@ -116,16 +120,20 @@ public class Audio implements BearLocSensor.Driver {
      */
     @Override
     public boolean start() {
-        // TODO: How to do message passing between threads
-        synchronized (runLock) {
-            mRun = true;
-        }
-        if (sampleHandler == null) {
-            sampleHandler = new Handler();
-            while (mRun && !sampleHandler.hasMessages(STOP)) {
-                makeAudioSample();
+        if (!mRun) {
+            Log.d("Audio:", "Start recording");
+            synchronized (runLock) {
+                mRun = true;
             }
-            sampleHandler = null;
+            while (mRun) {
+                makeAudioSample();
+                try {
+                    Thread.sleep(mSampleItvl, 0);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            Log.d("Audio:", "Stopped recording");
             return true;
         } else {
             return false;
@@ -134,14 +142,16 @@ public class Audio implements BearLocSensor.Driver {
 
     @Override
     public boolean stop() {
+        Log.d("Audio:", "Stopping recording");
         synchronized (runLock) {
             mRun = false;
         }
-        return mHandler.sendEmptyMessage(STOP);
+        return true;
     }
 
     public void makeAudioSample() {
         try {
+            Log.d("Audio:", "Making sample ...");
             mStartEpoch = System.currentTimeMillis();
             mRaw = new JSONArray();
             mAudioClipRecorder.startRecordingForTime(mSampleLengthMillisSec, mSampleRate, mEncoding);

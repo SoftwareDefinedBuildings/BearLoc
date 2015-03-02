@@ -44,7 +44,12 @@ import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.Handler;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.berkeley.bearloc.BearLocSensor;
+import edu.berkeley.bearloc.DeviceUUID;
 
 public class WiFi implements BearLocSensor.Driver {
 
@@ -60,13 +65,19 @@ public class WiFi implements BearLocSensor.Driver {
     private WifiManager mWifiManager;
     private WifiLock mWifiLock;
 
+    private JSONObject mMeta;
+
     private final BroadcastReceiver mOnScanDone = new BroadcastReceiver() {
         @Override
         public void onReceive(final Context context, final Intent intent) {
             if (mBusy == true) {
                 final List<ScanResult> results = mWifiManager.getScanResults();
+                JSONArray data = new JSONArray();
+                for (ScanResult r : results) {
+                    data.put(formatWifi(r, mMeta));
+                }
                 if (mListener != null) {
-                    mListener.onSampleEvent(results);
+                    mListener.onSampleEvent(data);
                 }
                 mSampleNum++;
 
@@ -75,9 +86,40 @@ public class WiFi implements BearLocSensor.Driver {
         }
     };
 
+    private JSONObject formatWifi(final Object data, final JSONObject meta) {
+        final JSONObject to = new JSONObject();
+        final ScanResult from = (ScanResult) data;
+
+        try {
+            to.put("type", meta.getString("type"));
+            to.put("id", DeviceUUID.getDeviceUUID(mContext));
+            to.put("epoch", meta.getLong("epoch"));
+            to.put("sysnano", meta.getLong("sysnano"));
+            to.put("BSSID", from.BSSID);
+            to.put("SSID", from.SSID);
+            to.put("capability", from.capabilities);
+            to.put("frequency", from.frequency);
+            to.put("RSSI", from.level);
+        } catch (final JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return to;
+    }
+
     private final Runnable mWifiScanTask = new Runnable() {
         @Override
         public void run() {
+            mMeta = new JSONObject();
+            try {
+                mMeta.put("type", "wifi");
+                mMeta.put("sysnano", System.nanoTime());
+                mMeta.put("epoch", System.currentTimeMillis());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
             scan();
         }
     };
@@ -127,7 +169,10 @@ public class WiFi implements BearLocSensor.Driver {
             // If no wifi returned, then return the last know ones
             if (mSampleNum == 0) {
                 final List<ScanResult> results = mWifiManager.getScanResults();
-
+                JSONArray data = new JSONArray();
+                for (ScanResult r : results) {
+                    data.put(formatWifi(r, mMeta));
+                }
                 if (mListener != null) {
                     mListener.onSampleEvent(results);
                 }

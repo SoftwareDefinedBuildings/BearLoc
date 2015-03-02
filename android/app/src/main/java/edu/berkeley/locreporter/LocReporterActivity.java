@@ -35,6 +35,7 @@ package edu.berkeley.locreporter;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -49,6 +50,7 @@ import java.util.HashMap;
 import edu.berkeley.bearloc.BearLocApp;
 import edu.berkeley.bearloc.BearLocApp.LocListener;
 import edu.berkeley.bearloc.BearLocSensor;
+import edu.berkeley.bearloc.driver.Audio;
 import edu.berkeley.bearloc.driver.WiFi;
 
 public class LocReporterActivity extends Activity {
@@ -64,6 +66,7 @@ public class LocReporterActivity extends Activity {
     private BearLocApp mWifiBearLocApp;
     private String mWifiTopic;
     private BearLocSensor mWiFiSensor;
+    private HashMap<String, String> mWifiSensorMap = new HashMap<String, String>();
 
     //ABS
     private TextView mAbsSemLocTextView;
@@ -77,9 +80,8 @@ public class LocReporterActivity extends Activity {
     private BearLocApp mAbsBearLocApp;
     private BearLocSensor mAudioSensor;
     private String mAudioTopic;
-    private BearLocSensor mLocationReporter;
 
-    private HashMap<String, String> mSensorMap = new HashMap<String, String>();
+
 
     // TODO: define a location class that handles semantics, string and JSON conversions
     final private static String[] mSemantics = new String[]{"country", "state",
@@ -94,7 +96,7 @@ public class LocReporterActivity extends Activity {
                     mWifiButton.setText("Start Session");
                 }
             } else {
-                if (mWifiBearLocApp.startSession(mSensorMap)) {
+                if (mWifiBearLocApp.startSession(mWifiSensorMap)) {
                     mWifiButton.setText("Stop Session");
                 }
             }
@@ -111,7 +113,7 @@ public class LocReporterActivity extends Activity {
                     mAbsButton.setText("Start Session");
                 }
             } else {
-                if (mAbsBearLocApp.startSession(mSensorMap)) {
+                if (mAbsBearLocApp.startSession(mAbsSensorMap)) {
                     mAbsButton.setText("Stop Session");
                 }
             }
@@ -144,6 +146,7 @@ public class LocReporterActivity extends Activity {
                         R.string.server_no_respond, Toast.LENGTH_SHORT).show();
                 return;
             }
+            Log.d("Main:", "ABS got response.");
             onLocReturned("abs", response);
         }
 
@@ -177,7 +180,7 @@ public class LocReporterActivity extends Activity {
 
         mAbsSemLocTextView = (TextView) findViewById(R.id.abs_sem_loc);
         mAbsPrefixTextView = (TextView) findViewById(R.id.abs_loc_prefix);
-        mAbsButton = (Button) findViewById(R.id.wifiButton);
+        mAbsButton = (Button) findViewById(R.id.absButton);
         mAbsButton.setOnClickListener(mAbsButtonOnClickListener);
         mAbsButton.setEnabled(true);
 
@@ -186,12 +189,12 @@ public class LocReporterActivity extends Activity {
         mWifiTopic = getString(R.string.bearloc_wifi_topic);
         mWiFiSensor = new BearLocSensor(this, new WiFi(this), serverURI, mWifiTopic);
         mWiFiSensor.start();
-        mSensorMap.put("wifi", mWifiTopic);
+        mWifiSensorMap.put("wifi", mWifiTopic);
 
         mAudioTopic = getString(R.string.bearloc_audio_topic);
-        mAudioSensor = new BearLocSensor(this, new WiFi(this), serverURI, mAudioTopic);
+        mAudioSensor = new BearLocSensor(this, new Audio(this), serverURI, mAudioTopic);
         mAudioSensor.start();
-        mSensorMap.put("audio", mAudioTopic);
+        mAbsSensorMap.put("audio", mAudioTopic);
 
         String absAlgorithmTopic = getString(R.string.bearloc_abs_algorithm_topic);
         mAbsBearLocApp = new BearLocApp(this, mAbsLocListener, serverURI, absAlgorithmTopic);
@@ -207,6 +210,10 @@ public class LocReporterActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        mWifiBearLocApp.destroy();
+        mAbsBearLocApp.destroy();
+        mAudioSensor.destroy();
+        mWiFiSensor.destroy();
         super.onDestroy();
     }
 

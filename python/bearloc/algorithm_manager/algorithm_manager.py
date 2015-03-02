@@ -20,11 +20,11 @@ algorithm_next_port = 10000
 mqtt_broker_addr = "bearloc.cal-sdb.org"
 mqtt_broker_port = 52411
 
-control_topic = "bearloc/algorithm/dummy"
+control_topic = "bearloc/algorithm/abs"
 
 timeout = 15 # heartbeat timeout in second
 
-algorithm_exec = "/root/workspace/BearLoc/python/bearloc/algorithms/dummy.py"
+algorithm_exec = "/root/workspace/BearLoc/python/bearloc/algorithms/abs.py"
 
 algorithm_processes = []
 
@@ -48,7 +48,7 @@ def on_message(client, userdata, msg):
         sensor_map = payload_json["sensormap"]
         result_topic = payload_json["resulttopic"]
         heartbeat_topic = payload_json["heartbeattopic"]
-        
+
         # run a new algorithm instance
         global algorithm_next_port
         addr = algorithm_addr+":"+str(algorithm_next_port)
@@ -74,8 +74,9 @@ def on_message(client, userdata, msg):
 
     elif msg.topic in sensor_topic_map:
         capnp_clients = sensor_topic_map[msg.topic]
+        sensor_data = payload["data"]
         for capnp_client, result_topic in capnp_clients:
-            localize_promise = capnp_client.localize() # pass the data
+            localize_promise = capnp_client.localize(sensor_data) # pass the data
             publish_location_once = lambda response: publish_location(response, result_topic)
             localize_promise.then(publish_location_once).wait()
         print("Got data from "+msg.topic)
@@ -150,7 +151,7 @@ def main():
     global mqtt_client
     mqtt_client = init_mqtt()
     mqtt_client.loop_forever()
-    
+
 
 if __name__ == '__main__':
     main()

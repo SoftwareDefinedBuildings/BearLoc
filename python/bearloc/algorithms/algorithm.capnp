@@ -3,7 +3,7 @@
 interface Algorithm {
   # BearLoc Algorithm Interface
 
-  localize @0 () -> (location: Location);
+  localize @0 (data: Text) -> (location: Location);
   # localize based on input
 
   struct Location {

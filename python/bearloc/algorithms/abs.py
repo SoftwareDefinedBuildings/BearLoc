@@ -23,6 +23,7 @@ def localize_impl():
 
 class DummyAlgorithm(algorithm_capnp.Algorithm.Server):
     def localize(self, data, **kwargs):
+        print(data)
         return localize_impl()
 
 

@@ -24,7 +24,9 @@ control_topic = "bearloc/algorithm/abs"
 
 timeout = 15 # heartbeat timeout in second
 
-algorithm_exec = "/root/workspace/BearLoc/python/bearloc/algorithms/abs.py"
+algorithm_exec = "../algorithms/abs.py"
+
+sensor_requirement = ["audio"]
 
 algorithm_processes = []
 
@@ -61,11 +63,12 @@ def on_message(client, userdata, msg):
 
         # record mapping information and subscribe to sensors
         for sensor_key, sensor_topic in sensor_map.iteritems():
-            if sensor_topic not in sensor_topic_map:
-                sensor_topic_map[sensor_topic] = []
-                mqtt_client.subscribe(sensor_topic)
-                print("Subscribed to "+sensor_topic)
-            sensor_topic_map[sensor_topic].append([capnp_client, result_topic])
+            if (sensor_key in sensor_requirement):
+                if sensor_topic not in sensor_topic_map:
+                    sensor_topic_map[sensor_topic] = []
+                    mqtt_client.subscribe(sensor_topic)
+                    print("Subscribed to "+sensor_topic)
+                sensor_topic_map[sensor_topic].append([capnp_client, result_topic])
 
         # subscribe to heartbeat topic
         heartbeat_topic_map[heartbeat_topic] = [int(time.time()), proc, capnp_client]
@@ -74,7 +77,7 @@ def on_message(client, userdata, msg):
 
     elif msg.topic in sensor_topic_map:
         capnp_clients = sensor_topic_map[msg.topic]
-        sensor_data = payload["data"]
+        sensor_data = payload_json["data"]
         for capnp_client, result_topic in capnp_clients:
             localize_promise = capnp_client.localize(sensor_data) # pass the data
             publish_location_once = lambda response: publish_location(response, result_topic)

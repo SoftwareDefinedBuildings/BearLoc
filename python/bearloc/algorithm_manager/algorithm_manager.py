@@ -17,6 +17,7 @@ import time
 algorithm_addr = 'localhost'
 algorithm_next_port = 10000
 
+
 mqtt_broker_addr = "bearloc.cal-sdb.org"
 mqtt_broker_port = 52411
 
@@ -115,9 +116,6 @@ def check_heartbeat():
             mqtt_client.unsubscribe(heartbeat_topic)
             print("Unsubscribed from "+heartbeat_topic)
     heartbeat_topic_map = new_heartbeat_topic_map
-
-    for capnp_client in tokill_capnp_clients:
-        capnp_client.shutdown()
 
     for proc in tokill_processes:
         proc.kill()

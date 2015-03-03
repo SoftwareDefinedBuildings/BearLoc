@@ -116,6 +116,9 @@ def check_heartbeat():
             print("Unsubscribed from "+heartbeat_topic)
     heartbeat_topic_map = new_heartbeat_topic_map
 
+    for capnp_client in tokill_capnp_clients:
+        capnp_client.shutdown()
+
     for proc in tokill_processes:
         proc.kill()
     algorithm_processes = [proc for proc in algorithm_processes if proc not in tokill_processes]

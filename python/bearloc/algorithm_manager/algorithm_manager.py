@@ -20,7 +20,7 @@ algorithm_next_port = 10000
 mqtt_broker_addr = "bearloc.cal-sdb.org"
 mqtt_broker_port = 52411
 
-control_topic = "bearloc/algorithm/dummy"
+control_topic = "bearloc/algorithm/wifi"
 
 timeout = 15 # heartbeat timeout in second
 

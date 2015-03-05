@@ -90,6 +90,7 @@ tmp(tmp < 0) = inf;
 
 freq = freq(loIdx):(rate/frameLen):freq(upIdx);
 frameLen = upIdx - loIdx + 1;
+frameLen
 frameSpecsPower = frameSpecsPower(loIdx:upIdx, :);
 
 % Sort each remaining column

@@ -53,6 +53,7 @@ def on_message(client, userdata, msg):
         heartbeat_topic = payload_json["heartbeattopic"]
 
         # run a new algorithm instance
+        print "starting new algorithm instance"
         global algorithm_next_port
         addr = algorithm_addr+":"+str(algorithm_next_port)
         algorithm_next_port = algorithm_next_port + 1
@@ -139,6 +140,7 @@ def init_mqtt():
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect(mqtt_broker_addr, mqtt_broker_port, 60)
+    print("connected to" + mqtt_broker_addr)
     return client
 
 def init_capnp(address):

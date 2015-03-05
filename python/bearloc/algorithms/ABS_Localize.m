@@ -1,29 +1,32 @@
-function [locList, distList, confidence] = ABS_Localize(testFile, varargin)
+function rv = ABS_Localize(testFile, varargin)
 
-% If next point have more than cutIncGap distances from 
+testFile
+
+% If next point have more than cutIncGap distances from
 % nearst sigature in DB, cut the result list from next one
-cutIncGap = 0.3; 
+cutIncGap = 0.3;
 varThrld = 100;
 
 dbPath = './data/cooked/';
 dbName = 'ABS_SigDB.mat';
 rawPath = './data/raw/';
+%rawPath = '';
 rawConfig = ABS_Config([rawPath, 'Config.csv']);
 % take only training data
-trainConfig = rawConfig(strcmp('Train', rawConfig(:,8)), :); 
-    
+trainConfig = rawConfig(strcmp('Train', rawConfig(:,8)), :);
+
 db = ABS_GetDB(dbPath, dbName, rawPath, trainConfig);
 %Add this to test DB point number vs accracy, remove this line soon after
 %that, sorry for bad coding style
 %db = removerows(db,'ind',varargin{2});
-    
+
 if nargin == 1
-    sig = ABS_GetSignature([rawPath, testFile]);
+    sig = ABS_GetSignature(testFile);
 else
     sig = varargin{1};
 end
 
-    
+
 distList = zeros(1, size(db, 1));
 for i = 1:size(db, 1)
     distList(i) = pdist2(db{i,2}, sig);
@@ -52,3 +55,9 @@ if nargin == 1
         warning('Test file is in training set.');
     end
 end
+
+% rv = [locList, distList, confidence];
+rv = locList(1,:);
+rv
+% rv = {locList;};
+% rv

@@ -17,23 +17,24 @@ Ubuntu Installation Instruction
 2. sudo apt-get upgrade
 3. sudo apt-get install python
 4. sudo apt-get install build-essential
-5. sudo apt-get install python-dev
-6. sudo apt-get install wget
-7. cd ~\
-8. git clone https://github.com/sandstorm-io/capnproto.git
-9. cd capnproto/c++
-10. ./setup-autotools.sh
-11. autoreconf -i
-12. ./configure
-13. make -j6 check
-14. sudo make install
-15. cd ~/
-15. wget https://bootstrap.pypa.io/get-pip.py
-16. sudo python get-pip.py
-16. sudo pip install -U cython
-17. sudo pip install -U setuptools
-18. sudo pip install pycapnp
-19. git clone this-repo-address
+6. sudo apt-get install git
+7. sudo apt-get install python-dev
+8. sudo apt-get install wget
+9. cd ~\
+10. git clone https://github.com/sandstorm-io/capnproto.git
+11. cd capnproto/c++
+12. ./setup-autotools.sh
+13. autoreconf -i
+14. ./configure
+15. make -j6 check
+16. sudo make install
+17. cd ~/
+18. wget https://bootstrap.pypa.io/get-pip.py
+19. sudo python get-pip.py
+20. sudo pip install -U cython
+21. sudo pip install -U setuptools
+22. sudo pip install pycapnp
+23. git clone this-repo-address
 
 
 You should be done

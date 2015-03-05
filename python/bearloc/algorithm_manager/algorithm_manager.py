@@ -59,6 +59,7 @@ def on_message(client, userdata, msg):
         proc = subprocess.Popen([algorithm_exec, addr], stderr=subprocess.PIPE)
         algorithm_processes.append(proc)
         print proc.stderr.readline() # wait for the algorithm instance to be ready, kinda hack
+        print(addr)
         capnp_client = init_capnp(addr)
         print("Initiated a new algorithm instance")
 

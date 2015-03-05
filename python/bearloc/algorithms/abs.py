@@ -9,7 +9,8 @@ import wave
 import atexit
 import os
 import random
-import ast
+import simplejson as json
+import struct
 
 # import matlab.engine
 import capnp
@@ -22,7 +23,9 @@ def convert2wave(raw, filename, channel, sampwidth, framerate, nframes):
     wavf.setsampwidth(sampwidth)
     wavf.setframerate(framerate)
     wavf.setnframes(nframes)
-    wavf.writeframesraw(raw)
+    print "here!!!"
+    wavf.writeframesraw(struct.pack(len(raw)*'h', *raw))
+    print "done!!!"
     wavf.close()
 
 def localize_impl():
@@ -38,13 +41,13 @@ def localize_impl():
 
 class DummyAlgorithm(algorithm_capnp.Algorithm.Server):
     def localize(self, data, **kwargs):
-        data_dict = ast.literal_eval(data)
-        print(type(data))
-        print(type(data["raw"]))
-        print(type(data["raw"][0]))
-        convert2wave(data[raw], "temp.wav"，1, 2, 44100, len(data))
+        data_dict = json.loads(data)
+        print(type(data_dict))
+        print(type(data_dict["raw"]))
+        print(type(data_dict["raw"][0]))
+        convert2wave(data_dict["raw"], "temp.wav", 1, 2, 44100, len(data))
         #rv = eng.ABS_Localize('temp.wav')
-        os.remove("temp.wav")
+        #os.remove("temp.wav")
         return localize_impl()
 
 def restore(ref):

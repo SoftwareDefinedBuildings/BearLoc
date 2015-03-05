@@ -27,7 +27,9 @@ Ubuntu Installation Instruction
 12. ./configure
 13. make -j6 check
 14. sudo make install
+15. cd ~/
 15. wget https://bootstrap.pypa.io/get-pip.py
+16. sudo python get-pip.py
 16. sudo pip install -U cython
 17. sudo pip install -U setuptools
 18. sudo pip install pycapnp

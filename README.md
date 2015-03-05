@@ -30,7 +30,7 @@ Ubuntu Installation Instruction
 13. sudo pip install -U cython
 14. sudo pip install -U setuptools
 15. sudo pip install pycapnp
-16. git clone <this repo's address>
+16. git clone this-repo-address
 
 
 You should be done

@@ -48,6 +48,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.berkeley.bearloc.BearLocFormat;
 import edu.berkeley.bearloc.BearLocSensor;
 import edu.berkeley.bearloc.DeviceUUID;
 
@@ -73,8 +74,14 @@ public class WiFi implements BearLocSensor.Driver {
             if (mBusy == true) {
                 final List<ScanResult> results = mWifiManager.getScanResults();
                 JSONArray data = new JSONArray();
+                try {
+                    mMeta.put("sysnano", System.nanoTime());
+                    mMeta.put("epoch", System.currentTimeMillis());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 for (ScanResult r : results) {
-                    data.put(formatWifi(r, mMeta));
+                    data.put(BearLocFormat.format("wifi", r, mMeta));
                 }
                 if (mListener != null) {
                     mListener.onSampleEvent(data);
@@ -86,36 +93,13 @@ public class WiFi implements BearLocSensor.Driver {
         }
     };
 
-    private JSONObject formatWifi(final Object data, final JSONObject meta) {
-        final JSONObject to = new JSONObject();
-        final ScanResult from = (ScanResult) data;
-
-        try {
-            to.put("type", meta.getString("type"));
-            to.put("id", DeviceUUID.getDeviceUUID(mContext));
-            to.put("epoch", meta.getLong("epoch"));
-            to.put("sysnano", meta.getLong("sysnano"));
-            to.put("BSSID", from.BSSID);
-            to.put("SSID", from.SSID);
-            to.put("capability", from.capabilities);
-            to.put("frequency", from.frequency);
-            to.put("RSSI", from.level);
-        } catch (final JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        return to;
-    }
-
     private final Runnable mWifiScanTask = new Runnable() {
         @Override
         public void run() {
             mMeta = new JSONObject();
             try {
                 mMeta.put("type", "wifi");
-                mMeta.put("sysnano", System.nanoTime());
-                mMeta.put("epoch", System.currentTimeMillis());
+                mMeta.put("uuid", DeviceUUID.getDeviceUUID(mContext));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -171,7 +155,7 @@ public class WiFi implements BearLocSensor.Driver {
                 final List<ScanResult> results = mWifiManager.getScanResults();
                 JSONArray data = new JSONArray();
                 for (ScanResult r : results) {
-                    data.put(formatWifi(r, mMeta));
+                    data.put(BearLocFormat.format("wifi", r, mMeta));
                 }
                 if (mListener != null) {
                     mListener.onSampleEvent(results);

@@ -135,7 +135,7 @@ public class BearLocSensor {
             Long epoch = System.currentTimeMillis();
 
             try {
-                json.put("msgtype", "wifidata");
+                json.put("msgtype", "data");
                 json.put("uuid", uuid);
                 json.put("epoch", epoch);
                 json.put("data", this.mPayload);
@@ -147,7 +147,7 @@ public class BearLocSensor {
                 MqttMessage message = new MqttMessage();
                 message.setPayload(json.toString().getBytes());
                 IMqttDeliveryToken token = mMQTTClient.publish(mSensorTopic, message);
-                Log.d("Audio:", mSensorTopic + " published");
+                Log.d("BearLocSensor", mSensorTopic + " published");
                 token.waitForCompletion();
             } catch (MqttException e) {
                 e.printStackTrace();
@@ -254,6 +254,7 @@ public class BearLocSensor {
     }
 
     public void destroy() {
+        mMQTTClient.unregisterResources();
         mMQTTClient.close();
         mNetworkThreadPool.shutdownNow();
     }

@@ -43,6 +43,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.berkeley.bearloc.BearLocFormat;
 import edu.berkeley.bearloc.BearLocSensor;
 import root.gast.audio.record.AudioClipListener;
 import root.gast.audio.record.AudioClipRecorder;
@@ -56,12 +57,12 @@ public class Audio implements BearLocSensor.Driver {
 
     private AudioClipRecorder mAudioClipRecorder;
     private JSONArray mRaw;
-    private Long mStartEpoch;
     private volatile boolean mRun = false;
     private Object runLock = new Object();
 
-    private Context mContext;
     private SensorListener mListener;
+
+    private JSONObject mMeta;
 
     private AudioClipListener mAudioClipListener = new AudioClipListener() {
         @Override
@@ -71,7 +72,7 @@ public class Audio implements BearLocSensor.Driver {
                 mRaw.put(b);
             }
             if (mListener != null) {
-                mListener.onSampleEvent(dump2JSON());
+                mListener.onSampleEvent(BearLocFormat.format("audio", mRaw, mMeta));
             }
             return true;
         }
@@ -88,7 +89,6 @@ public class Audio implements BearLocSensor.Driver {
     Default constructor customized for ABS
      */
     public Audio(final Context context) {
-        mContext = context;
 
         mSampleRate = 44100;
         mEncoding = AudioFormat.ENCODING_PCM_16BIT;
@@ -101,7 +101,6 @@ public class Audio implements BearLocSensor.Driver {
     Customizable constructor where the user can select sampling options.
      */
     public Audio(final Context context, int _sampleRate, int _channel, int _format, int _sampleLength) {
-        mContext = context;
 
         mSampleRate = _sampleRate;
         mEncoding = _format;
@@ -150,33 +149,25 @@ public class Audio implements BearLocSensor.Driver {
     }
 
     public void makeAudioSample() {
+        mMeta = new JSONObject();
+        try {
+            mMeta.put("type", "wifi");
+            mMeta.put("sysnano", System.nanoTime());
+            mMeta.put("epoch", System.currentTimeMillis());
+            mMeta.put("source", MediaRecorder.AudioSource.MIC);
+            mMeta.put("channel", AudioFormat.CHANNEL_IN_MONO);
+            mMeta.put("encoding", mEncoding);
+            mMeta.put("samplerate", mSampleRate);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        mRaw = new JSONArray();
         try {
             Log.d("Audio:", "Making sample ...");
-            mStartEpoch = System.currentTimeMillis();
-            mRaw = new JSONArray();
             mAudioClipRecorder.startRecordingForTime(mSampleLengthMillisSec, mSampleRate, mEncoding);
         } catch (final Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private JSONObject dump2JSON() {
-        final JSONObject audioEvent = new JSONObject();
-
-        try {
-            audioEvent.put("raw", mRaw);
-            audioEvent.put("epoch", mStartEpoch);
-            audioEvent.put("source", MediaRecorder.AudioSource.MIC);
-            audioEvent.put("channel", AudioFormat.CHANNEL_IN_MONO);
-            audioEvent.put("encoding", mEncoding);
-            audioEvent.put("lengthms", mSampleLengthMillisSec);
-            audioEvent.put("samplerate", mSampleRate);
-        } catch (final JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        return audioEvent;
     }
 
 

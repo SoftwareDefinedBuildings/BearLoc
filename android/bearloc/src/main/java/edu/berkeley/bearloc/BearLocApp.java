@@ -35,10 +35,8 @@
 package edu.berkeley.bearloc;
 
 import android.content.Context;
-import android.os.AsyncTask;
-import android.os.Looper;
-import android.util.Log;
 import android.os.Handler;
+import android.util.Log;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -57,8 +55,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-//For data collection only
 import edu.berkeley.sdb.util.Logger;
+
+//For data collection only
 
 public class BearLocApp {
 
@@ -291,7 +290,6 @@ public class BearLocApp {
 
         mMQTTClient = new MqttAndroidClient(mContext, mqttServerURI, MqttClient.generateClientId());
         mMQTTClient.setCallback(mMqttCallback);
-//        AsyncTask.execute(new ConnectRunnable());
         mNetworkThreadPool.execute(new ConnectRunnable());
     }
 
@@ -302,8 +300,6 @@ public class BearLocApp {
         mSessionEpoch = System.currentTimeMillis()/1000;
         mResultTopic = muuid + "-" + mSessionEpoch;
         mHeartBeatTopic = mResultTopic + "-heartbeat";
-//        AsyncTask.execute(new StartSessionRunnable(sensorMap, muuid, mSessionEpoch,
-//                mResultTopic, mHeartBeatTopic));
         mNetworkThreadPool.execute(new StartSessionRunnable(sensorMap, muuid, mSessionEpoch,
                 mResultTopic, mHeartBeatTopic));
         mNetworkThreadPool.execute(new HeartBeatRunnable(muuid, mHeartBeatTopic));
@@ -338,6 +334,7 @@ public class BearLocApp {
     }
 
     public void destroy() {
+        mMQTTClient.unregisterResources();
         mMQTTClient.close();
         mNetworkThreadPool.shutdownNow();
     }

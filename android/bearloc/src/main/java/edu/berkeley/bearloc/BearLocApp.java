@@ -57,6 +57,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+//For data collection only
+import edu.berkeley.sdb.util.Logger;
+
 public class BearLocApp {
 
     private final int STOP = 42;
@@ -124,6 +127,12 @@ public class BearLocApp {
             try {
                 if (json.has("msgtype") && json.getString("msgtype").equals("locResult")) {
                     JSONObject loc = json.getJSONObject("result");
+                    Long t4 = System.currentTimeMillis();
+                    Long t1 = json.getLong("epoch");
+                    Long t2 = json.getLong("recvtime");
+                    Long t3 = json.getLong("donetime");
+                    String logmsg = String.format("T1:%d;T2:%d;T3:%d;T4:%d", t1, t2, t3, t4);
+                    Logger.d(mContext, "EVAL(ms)", logmsg);
                     synchronized (mListenerLock) {
                         mListener.onResponseReturned(loc);
                         lastLocation = loc;
@@ -282,8 +291,8 @@ public class BearLocApp {
 
         mMQTTClient = new MqttAndroidClient(mContext, mqttServerURI, MqttClient.generateClientId());
         mMQTTClient.setCallback(mMqttCallback);
-        AsyncTask.execute(new ConnectRunnable());
-        // mNetworkThreadPool.execute(new ConnectRunnable());
+//        AsyncTask.execute(new ConnectRunnable());
+        mNetworkThreadPool.execute(new ConnectRunnable());
     }
 
     public boolean startSession(HashMap<String, String> sensorMap) {
@@ -293,10 +302,10 @@ public class BearLocApp {
         mSessionEpoch = System.currentTimeMillis()/1000;
         mResultTopic = muuid + "-" + mSessionEpoch;
         mHeartBeatTopic = mResultTopic + "-heartbeat";
-        AsyncTask.execute(new StartSessionRunnable(sensorMap, muuid, mSessionEpoch,
-                mResultTopic, mHeartBeatTopic));
-//        mNetworkThreadPool.execute(new StartSessionRunnable(sensorMap, muuid, mSessionEpoch,
+//        AsyncTask.execute(new StartSessionRunnable(sensorMap, muuid, mSessionEpoch,
 //                mResultTopic, mHeartBeatTopic));
+        mNetworkThreadPool.execute(new StartSessionRunnable(sensorMap, muuid, mSessionEpoch,
+                mResultTopic, mHeartBeatTopic));
         mNetworkThreadPool.execute(new HeartBeatRunnable(muuid, mHeartBeatTopic));
         mSessionStarted = true;
         return true;

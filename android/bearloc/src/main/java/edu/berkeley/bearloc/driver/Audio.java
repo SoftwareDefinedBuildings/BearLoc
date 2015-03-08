@@ -52,7 +52,7 @@ public class Audio implements BearLocSensor.Driver {
     private int mSampleRate;
     private int mEncoding;
     private int mSampleLengthMillisSec;
-    private long mSampleItvl = 1000; // millisecond
+    private long mSampleItvl = 4000; // millisecond
 
     private AudioClipRecorder mAudioClipRecorder;
     private JSONArray mRaw;

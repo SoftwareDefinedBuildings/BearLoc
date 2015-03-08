@@ -1,2 +1,2 @@
-include ':app', ':bearloc'
+include ':app', ':bearloc', ':util'
 include ':gastLibrary'

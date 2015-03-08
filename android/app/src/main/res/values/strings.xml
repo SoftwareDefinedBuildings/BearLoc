@@ -29,7 +29,7 @@
 
     <!-- BearLoc Settings -->
     <string name="bearloc_server_addr">tcp://bearloc.cal-sdb.org:52411</string>
-    <string name="bearloc_wifi_algorithm_topic">bearloc/algorithm/dummy</string>
+    <string name="bearloc_wifi_algorithm_topic">bearloc/algorithm/wifi</string>
     <string name="bearloc_abs_algorithm_topic">bearloc/algorithm/abs</string>
     <string name="bearloc_wifi_topic">bearloc/wifi/jackwifi</string>
     <string name="bearloc_audio_topic">bearloc/audio/jackaudio</string>

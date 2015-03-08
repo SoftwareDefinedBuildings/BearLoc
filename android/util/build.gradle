@@ -20,8 +20,5 @@ android {
 }
 
 dependencies {
-    compile files('libs/org.eclipse.paho.android.service-1.0.1.jar')
-    compile files('libs/org.eclipse.paho.client.mqttv3-1.0.1.jar')
-    compile project(':gastLibrary')
-    compile project(':util')
+    compile fileTree(dir: 'libs', include: ['*.jar'])
 }

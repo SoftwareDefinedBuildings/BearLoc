@@ -82,8 +82,8 @@ public class BearLocSensor {
         @Override
         public void onSampleEvent(Object data) {
             Log.d("BearLocSensor", "Got data");
-            // mNetworkThreadPool.execute(new DataPublishRunnable(data.toString()));
-            AsyncTask.execute(new DataPublishRunnable(data.toString()));
+            mNetworkThreadPool.execute(new DataPublishRunnable(data.toString()));
+//            AsyncTask.execute(new DataPublishRunnable(data));
             // new DataPublishTask().execute(data.toString());
         }
 
@@ -121,9 +121,9 @@ public class BearLocSensor {
 
     private class DataPublishRunnable implements Runnable {
 
-        private String mPayload;
+        private Object mPayload;
 
-        DataPublishRunnable(String _payload) {
+        DataPublishRunnable(Object _payload) {
             this.mPayload = _payload;
         }
 
@@ -132,7 +132,7 @@ public class BearLocSensor {
             Log.d("BearLocSensor", "Publishing Data");
             final JSONObject json = new JSONObject();
             String uuid = DeviceUUID.getDeviceUUID(mContext).toString();
-            Long epoch = System.currentTimeMillis()/1000;
+            Long epoch = System.currentTimeMillis();
 
             try {
                 json.put("msgtype", "wifidata");
@@ -237,8 +237,8 @@ public class BearLocSensor {
         mMQTTClient = new MqttAndroidClient(mContext, mqttServerURI, MqttClient.generateClientId());
         mMQTTClient.setCallback(mMqttCallback);
 //        new ConnectTask().execute();
-        AsyncTask.execute(new ConnectRunnable());
-        // mNetworkThreadPool.execute(new ConnectRunnable());
+//        AsyncTask.execute(new ConnectRunnable());
+        mNetworkThreadPool.execute(new ConnectRunnable());
 
         mDriver.setListener(mListener);
     }

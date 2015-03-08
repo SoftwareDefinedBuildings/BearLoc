@@ -192,12 +192,12 @@ public class LocReporterActivity extends Activity {
         mWifiSensorMap.put("wifi", mWifiTopic);
 
         mAudioTopic = getString(R.string.bearloc_audio_topic);
-        mAudioSensor = new BearLocSensor(this, new Audio(this), serverURI, mAudioTopic);
-        mAudioSensor.start();
-        mAbsSensorMap.put("audio", mAudioTopic);
+//        mAudioSensor = new BearLocSensor(this, new Audio(this), serverURI, mAudioTopic);
+//        mAudioSensor.start();
+//        mAbsSensorMap.put("audio", mAudioTopic);
 
         String absAlgorithmTopic = getString(R.string.bearloc_abs_algorithm_topic);
-        mAbsBearLocApp = new BearLocApp(this, mAbsLocListener, serverURI, absAlgorithmTopic);
+//        mAbsBearLocApp = new BearLocApp(this, mAbsLocListener, serverURI, absAlgorithmTopic);
 
         refresh();
     }

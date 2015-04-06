@@ -55,9 +55,9 @@ import edu.berkeley.bearloc.DeviceUUID;
 public class WiFi implements BearLocSensor.Driver {
 
     private long mSampleDuration = -1; // millisecond
-    private long mSampleItvl = 0; // millisecond
+    private long mSampleItvl = 2000; // millisecond
 
-    private boolean mBusy;
+    private boolean mRun;
     private int mSampleNum;
 
     private Context mContext;
@@ -66,49 +66,34 @@ public class WiFi implements BearLocSensor.Driver {
     private WifiManager mWifiManager;
     private WifiLock mWifiLock;
 
-    private JSONObject mMeta;
-
     private final BroadcastReceiver mOnScanDone = new BroadcastReceiver() {
         @Override
         public void onReceive(final Context context, final Intent intent) {
-            if (mBusy == true) {
+            if (mRun == true) {
                 final List<ScanResult> results = mWifiManager.getScanResults();
                 JSONArray data = new JSONArray();
-                try {
-                    mMeta.put("sysnano", System.nanoTime());
-                    mMeta.put("epoch", System.currentTimeMillis());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+
                 for (ScanResult r : results) {
-                    data.put(BearLocFormat.format("wifi", r, mMeta));
+                    data.put(BearLocFormat.format("wifi", r, makeMeta()));
                 }
                 if (mListener != null) {
                     mListener.onSampleEvent(data);
                 }
                 mSampleNum++;
 
-                mHandler.postDelayed(mWifiScanTask, mSampleItvl);
+                mHandler.postDelayed(mWifiScanRunnable, mSampleItvl);
             }
         }
     };
 
-    private final Runnable mWifiScanTask = new Runnable() {
+    private final Runnable mWifiScanRunnable = new Runnable() {
         @Override
         public void run() {
-            mMeta = new JSONObject();
-            try {
-                mMeta.put("type", "wifi");
-                mMeta.put("uuid", DeviceUUID.getDeviceUUID(mContext));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
             scan();
         }
     };
 
-    private final Runnable mPauseTask = new Runnable() {
+    private final Runnable mPauseRunnable = new Runnable() {
         @Override
         public void run() {
             stop();
@@ -123,8 +108,13 @@ public class WiFi implements BearLocSensor.Driver {
     }
 
     @Override
+    public void setListener(SensorListener listener) {
+        mListener = listener;
+    }
+
+    @Override
     public boolean start() {
-        if (mBusy == false) {
+        if (mRun == false) {
             if (mWifiManager == null) {
                 return false;
             }
@@ -134,11 +124,12 @@ public class WiFi implements BearLocSensor.Driver {
             mContext.registerReceiver(mOnScanDone, i);
 
             mSampleNum = 0;
-            mHandler.postDelayed(mWifiScanTask, 0);
+            mRun = true;
+            mHandler.postDelayed(mWifiScanRunnable, 0);
             if (mSampleDuration > 0) {
-                mHandler.postDelayed(mPauseTask, mSampleDuration);
+                mHandler.postDelayed(mPauseRunnable, mSampleDuration);
             }
-            mBusy = true;
+
             mWifiLock = mWifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL, "BearLoc");
             mWifiLock.acquire();
             return true;
@@ -149,37 +140,48 @@ public class WiFi implements BearLocSensor.Driver {
 
     @Override
     public boolean stop() {
-        if (mBusy == true) {
+        if (mRun == true) {
             // If no wifi returned, then return the last know ones
             if (mSampleNum == 0) {
                 final List<ScanResult> results = mWifiManager.getScanResults();
                 JSONArray data = new JSONArray();
                 for (ScanResult r : results) {
-                    data.put(BearLocFormat.format("wifi", r, mMeta));
+                    data.put(BearLocFormat.format("wifi", r, makeMeta()));
                 }
                 if (mListener != null) {
-                    mListener.onSampleEvent(results);
+                    mListener.onSampleEvent(data);
                 }
             }
-            mBusy = false;
+
             mWifiLock.release();
             mWifiLock = null;
-            mHandler.removeCallbacks(mWifiScanTask);
-            mHandler.removeCallbacks(mPauseTask);
+            mHandler.removeCallbacks(mWifiScanRunnable);
+            mHandler.removeCallbacks(mPauseRunnable);
             mContext.unregisterReceiver(mOnScanDone);
+
+            mRun = false;
         }
         return true;
-    }
-
-    public void setListener(SensorListener listener) {
-        mListener = listener;
     }
 
     private void scan() {
         final boolean success = mWifiManager.startScan();
 
         if (success == false) {
-            mHandler.postDelayed(mWifiScanTask, mSampleItvl);
+            mHandler.postDelayed(mWifiScanRunnable, mSampleItvl);
         }
+    }
+
+    private JSONObject makeMeta() {
+        JSONObject meta = new JSONObject();
+        try {
+            meta.put("type", "wifi");
+            meta.put("uuid", DeviceUUID.getDeviceUUID(mContext));
+            meta.put("sysnano", System.nanoTime());
+            meta.put("epoch", System.currentTimeMillis());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return meta;
     }
 }

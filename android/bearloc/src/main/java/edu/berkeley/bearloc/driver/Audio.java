@@ -45,34 +45,44 @@ import org.json.JSONObject;
 
 import edu.berkeley.bearloc.BearLocFormat;
 import edu.berkeley.bearloc.BearLocSensor;
+import edu.berkeley.bearloc.DeviceUUID;
 import root.gast.audio.record.AudioClipListener;
 import root.gast.audio.record.AudioClipRecorder;
 
 public class Audio implements BearLocSensor.Driver {
 
-    private int mSampleRate;
-    private int mEncoding;
-    private int mSampleLengthMillisSec;
-    private long mSampleItvl = 4000; // millisecond
+    private long mSampleDuration = -1; // millisecond
+    private long mSampleItvl = 2000; // millisecond
 
-    private AudioClipRecorder mAudioClipRecorder;
-    private JSONArray mRaw;
-    private volatile boolean mRun = false;
-    private Object runLock = new Object();
+    private int mSampleRate = 44100;
+    private int mEncoding = AudioFormat.ENCODING_PCM_16BIT;
+    private int mSampleLengthMillisSec = 1000; //millisecond
+    private int mSource = MediaRecorder.AudioSource.MIC;
+    private int mChannel = AudioFormat.CHANNEL_IN_MONO;
 
+    private boolean mRun = false;
+    private int mSampleNum;
+
+    private Context mContext;
+    private Handler mHandler;
     private SensorListener mListener;
-
-    private JSONObject mMeta;
+    private AudioClipRecorder mAudioClipRecorder;
 
     private AudioClipListener mAudioClipListener = new AudioClipListener() {
         @Override
         public boolean heard(short[] audioData, int sampleRate) {
-            Log.d("Audio:", "received "+ audioData.length + " bytes of data at" + sampleRate + "Hz");
-            for (short b : audioData) {
-                mRaw.put(b);
-            }
-            if (mListener != null) {
-                mListener.onSampleEvent(BearLocFormat.format("audio", mRaw, mMeta));
+            if (mRun == true) {
+                Log.d("Audio:", "received " + audioData.length*2 + " bytes of data at " + sampleRate + "Hz");
+                JSONArray data = new JSONArray();
+                for (short b : audioData) {
+                    data.put(b);
+                }
+                if (mListener != null) {
+                    mListener.onSampleEvent(BearLocFormat.format("audio", data, makeMeta()));
+                }
+                mSampleNum++;
+
+                mHandler.postDelayed(mAudioSampleRunnable, mSampleItvl);
             }
             return true;
         }
@@ -81,7 +91,14 @@ public class Audio implements BearLocSensor.Driver {
     private final Runnable mAudioSampleRunnable = new Runnable() {
         @Override
         public void run() {
-            makeAudioSample();
+            sample();
+        }
+    };
+
+    private final Runnable mPauseRunnable = new Runnable() {
+        @Override
+        public void run() {
+            stop();
         }
     };
 
@@ -89,24 +106,10 @@ public class Audio implements BearLocSensor.Driver {
     Default constructor customized for ABS
      */
     public Audio(final Context context) {
+        mContext = context;
 
-        mSampleRate = 44100;
-        mEncoding = AudioFormat.ENCODING_PCM_16BIT;
-        mSampleLengthMillisSec = 1000; //millisecond
-
+        mHandler = new Handler();
         mAudioClipRecorder = new AudioClipRecorder(mAudioClipListener);
-    }
-
-    /*
-    Customizable constructor where the user can select sampling options.
-     */
-    public Audio(final Context context, int _sampleRate, int _channel, int _format, int _sampleLength) {
-
-        mSampleRate = _sampleRate;
-        mEncoding = _format;
-        mSampleLengthMillisSec = _sampleLength;
-        mAudioClipRecorder = new AudioClipRecorder(mAudioClipListener);
-
     }
 
     @Override
@@ -119,20 +122,19 @@ public class Audio implements BearLocSensor.Driver {
      */
     @Override
     public boolean start() {
-        if (!mRun) {
+        if (mRun == false) {
+            if (mAudioClipRecorder == null) {
+                return false;
+            }
+
             Log.d("Audio:", "Start recording");
-            synchronized (runLock) {
-                mRun = true;
+            mSampleNum = 0;
+            mRun = true;
+            mHandler.postDelayed(mAudioSampleRunnable, 0);
+            if (mSampleDuration > 0) {
+                mHandler.postDelayed(mPauseRunnable, mSampleDuration);
             }
-            while (mRun) {
-                makeAudioSample();
-                try {
-                    Thread.sleep(mSampleItvl, 0);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            Log.d("Audio:", "Stopped recording");
+
             return true;
         } else {
             return false;
@@ -142,26 +144,16 @@ public class Audio implements BearLocSensor.Driver {
     @Override
     public boolean stop() {
         Log.d("Audio:", "Stopping recording");
-        synchronized (runLock) {
+        if (mRun == true) {
+            mHandler.removeCallbacks(mAudioSampleRunnable);
+            mHandler.removeCallbacks(mPauseRunnable);
+
             mRun = false;
         }
         return true;
     }
 
-    public void makeAudioSample() {
-        mMeta = new JSONObject();
-        try {
-            mMeta.put("type", "wifi");
-            mMeta.put("sysnano", System.nanoTime());
-            mMeta.put("epoch", System.currentTimeMillis());
-            mMeta.put("source", MediaRecorder.AudioSource.MIC);
-            mMeta.put("channel", AudioFormat.CHANNEL_IN_MONO);
-            mMeta.put("encoding", mEncoding);
-            mMeta.put("samplerate", mSampleRate);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mRaw = new JSONArray();
+    private void sample() {
         try {
             Log.d("Audio:", "Making sample ...");
             mAudioClipRecorder.startRecordingForTime(mSampleLengthMillisSec, mSampleRate, mEncoding);
@@ -170,5 +162,20 @@ public class Audio implements BearLocSensor.Driver {
         }
     }
 
-
+    private JSONObject makeMeta() {
+        JSONObject meta = new JSONObject();
+        try {
+            meta.put("type", "audio");
+            meta.put("uuid", DeviceUUID.getDeviceUUID(mContext));
+            meta.put("sysnano", System.nanoTime());
+            meta.put("epoch", System.currentTimeMillis());
+            meta.put("source", mSource);
+            meta.put("channel", mChannel);
+            meta.put("encoding", mEncoding);
+            meta.put("samplerate", mSampleRate);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return meta;
+    }
 }

@@ -146,7 +146,6 @@ public class LocReporterActivity extends Activity {
                         R.string.server_no_respond, Toast.LENGTH_SHORT).show();
                 return;
             }
-            Log.d("Main:", "ABS got response.");
             onLocReturned("abs", response);
         }
 
@@ -161,19 +160,27 @@ public class LocReporterActivity extends Activity {
 
         // Wifi App
 
-        mWifiLocJson = new JSONObject();
-        mWifiSemLoc = mSemantics[mSemantics.length - 1];
+//        mWifiLocJson = new JSONObject();
+//        mWifiSemLoc = mSemantics[mSemantics.length - 1];
+//
+//        mWifiSemLocTextView = (TextView) findViewById(R.id.wifi_sem_loc);
+//        mWifiPrefixTextView = (TextView) findViewById(R.id.wifi_loc_prefix);
+//        mWifiButton = (Button) findViewById(R.id.wifiButton);
+//        mWifiButton.setOnClickListener(mWifiButtonOnClickListener);
+//        mWifiButton.setEnabled(true);
+//
+//        String wifiAlgorithmTopic = getString(R.string.bearloc_wifi_algorithm_topic);
+//        mWifiBearLocApp = new BearLocApp(this, mWifiLocListener, serverURI, wifiAlgorithmTopic);
 
-        mWifiSemLocTextView = (TextView) findViewById(R.id.wifi_sem_loc);
-        mWifiPrefixTextView = (TextView) findViewById(R.id.wifi_loc_prefix);
-        mWifiButton = (Button) findViewById(R.id.wifiButton);
-        mWifiButton.setOnClickListener(mWifiButtonOnClickListener);
-        mWifiButton.setEnabled(true);
+        // WiFi Sensor Setup
 
-        String wifiAlgorithmTopic = getString(R.string.bearloc_wifi_algorithm_topic);
-        mWifiBearLocApp = new BearLocApp(this, mWifiLocListener, serverURI, wifiAlgorithmTopic);
+//        mWifiTopic = getString(R.string.bearloc_wifi_topic);
+//        mWiFiSensor = new BearLocSensor(this, new WiFi(this), serverURI, mWifiTopic);
+//        mWiFiSensor.start();
+//        mWifiSensorMap.put("wifi", mWifiTopic);
 
-        // Abs App
+
+        // ABS App
 
         mAbsLocJson = new JSONObject();
         mAbsSemLoc = mSemantics[mSemantics.length - 1];
@@ -184,20 +191,16 @@ public class LocReporterActivity extends Activity {
         mAbsButton.setOnClickListener(mAbsButtonOnClickListener);
         mAbsButton.setEnabled(true);
 
-        //Sensor Setup
-
-        mWifiTopic = getString(R.string.bearloc_wifi_topic);
-        mWiFiSensor = new BearLocSensor(this, new WiFi(this), serverURI, mWifiTopic);
-        mWiFiSensor.start();
-        mWifiSensorMap.put("wifi", mWifiTopic);
+        // ABS Sensor
 
         mAudioTopic = getString(R.string.bearloc_audio_topic);
-//        mAudioSensor = new BearLocSensor(this, new Audio(this), serverURI, mAudioTopic);
-//        mAudioSensor.start();
-//        mAbsSensorMap.put("audio", mAudioTopic);
+        mAudioSensor = new BearLocSensor(this, new Audio(this), serverURI, mAudioTopic);
+        mAudioSensor.start();
+        mAbsSensorMap.put("audio", mAudioTopic);
 
         String absAlgorithmTopic = getString(R.string.bearloc_abs_algorithm_topic);
-//        mAbsBearLocApp = new BearLocApp(this, mAbsLocListener, serverURI, absAlgorithmTopic);
+        mAbsBearLocApp = new BearLocApp(this, mAbsLocListener, serverURI, absAlgorithmTopic);
+
 
         refresh();
     }
@@ -211,7 +214,7 @@ public class LocReporterActivity extends Activity {
     @Override
     protected void onDestroy() {
         mWifiBearLocApp.destroy();
-        mAbsBearLocApp.destroy();
+//        mAbsBearLocApp.destroy();
         mAudioSensor.destroy();
         mWiFiSensor.destroy();
         super.onDestroy();

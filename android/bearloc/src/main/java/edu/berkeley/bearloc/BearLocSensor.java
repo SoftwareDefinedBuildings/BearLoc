@@ -66,25 +66,25 @@ public class BearLocSensor {
     private static int NUMBER_OF_CORES =
             Runtime.getRuntime().availableProcessors();
 
-    // Sets the amount of time an idle thread waits before terminating
-    private static final int KEEP_ALIVE_TIME = 1;
-    // Sets the Time Unit to seconds
-    private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
-    // Creates a thread pool manager
-    private ExecutorService mNetworkThreadPool = new ThreadPoolExecutor(
-            NUMBER_OF_CORES,       // Initial pool size
-            NUMBER_OF_CORES,       // Max pool size
-            KEEP_ALIVE_TIME,
-            KEEP_ALIVE_TIME_UNIT,
-            new LinkedBlockingQueue<Runnable>());
+//    // Sets the amount of time an idle thread waits before terminating
+//    private static final int KEEP_ALIVE_TIME = 1;
+//    // Sets the Time Unit to seconds
+//    private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
+//    // Creates a thread pool manager
+//    private ExecutorService mNetworkThreadPool = new ThreadPoolExecutor(
+//            NUMBER_OF_CORES,       // Initial pool size
+//            NUMBER_OF_CORES,       // Max pool size
+//            KEEP_ALIVE_TIME,
+//            KEEP_ALIVE_TIME_UNIT,
+//            new LinkedBlockingQueue<Runnable>());
 
     private final Driver.SensorListener mListener = new Driver.SensorListener() {
         @Override
         public void onSampleEvent(Object data) {
-            Log.d("BearLocSensor", "Got data");
-            mNetworkThreadPool.execute(new DataPublishRunnable(data.toString()));
+            Log.d("BearLocSensor", "Got sensor data");
+//            mNetworkThreadPool.execute(new DataPublishRunnable(data.toString()));
 //            AsyncTask.execute(new DataPublishRunnable(data));
-            // new DataPublishTask().execute(data.toString());
+            new DataPublishTask().execute(data.toString());
         }
 
     };
@@ -104,65 +104,65 @@ public class BearLocSensor {
         }
     };
 
-    private class ConnectRunnable implements Runnable {
+//    private class ConnectRunnable implements Runnable {
+//
+//        @Override
+//        public void run() {
+//            MqttConnectOptions options = new MqttConnectOptions();
+//            options.setCleanSession(true);
+//            try {
+//                IMqttToken token = mMQTTClient.connect(options);
+//                token.waitForCompletion();
+//            } catch (MqttException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
-        @Override
-        public void run() {
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setCleanSession(true);
-            try {
-                IMqttToken token = mMQTTClient.connect(options);
-                token.waitForCompletion();
-            } catch (MqttException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+//    private class DataPublishRunnable implements Runnable {
+//
+//        private Object mPayload;
+//
+//        DataPublishRunnable(Object _payload) {
+//            this.mPayload = _payload;
+//        }
+//
+//        @Override
+//        public void run() {
+//            Log.d("BearLocSensor", "Publishing Data");
+//            final JSONObject json = new JSONObject();
+//            String uuid = DeviceUUID.getDeviceUUID(mContext).toString();
+//            Long epoch = System.currentTimeMillis();
+//
+//            try {
+//                json.put("msgtype", "data");
+//                json.put("uuid", uuid);
+//                json.put("epoch", epoch);
+//                json.put("data", this.mPayload);
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//
+//            try {
+//                MqttMessage message = new MqttMessage();
+//                message.setPayload(json.toString().getBytes());
+//                IMqttDeliveryToken token = mMQTTClient.publish(mSensorTopic, message);
+//                token.waitForCompletion();
+//                Log.d("BearLocSensor", mSensorTopic + " published");
+//            } catch (MqttException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
-    private class DataPublishRunnable implements Runnable {
-
-        private Object mPayload;
-
-        DataPublishRunnable(Object _payload) {
-            this.mPayload = _payload;
-        }
-
-        @Override
-        public void run() {
-            Log.d("BearLocSensor", "Publishing Data");
-            final JSONObject json = new JSONObject();
-            String uuid = DeviceUUID.getDeviceUUID(mContext).toString();
-            Long epoch = System.currentTimeMillis();
-
-            try {
-                json.put("msgtype", "data");
-                json.put("uuid", uuid);
-                json.put("epoch", epoch);
-                json.put("data", this.mPayload);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                MqttMessage message = new MqttMessage();
-                message.setPayload(json.toString().getBytes());
-                IMqttDeliveryToken token = mMQTTClient.publish(mSensorTopic, message);
-                Log.d("BearLocSensor", mSensorTopic + " published");
-                token.waitForCompletion();
-            } catch (MqttException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    // start can be blocking
-    private class StartRunnable implements Runnable {
-
-        @Override
-        public void run() {
-            mDriver.start();
-        }
-    }
+//    // start can be blocking
+//    private class StartRunnable implements Runnable {
+//
+//        @Override
+//        public void run() {
+//            mDriver.start();
+//        }
+//    }
 
     private class ConnectTask extends AsyncTask<Void, Void, Void> {
         @Override
@@ -182,16 +182,17 @@ public class BearLocSensor {
     private class DataPublishTask extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... str) {
+            Log.d("BearLocSensor", "Publishing Data");
             String payload = str[0];
             final JSONObject json = new JSONObject();
             String uuid = DeviceUUID.getDeviceUUID(mContext).toString();
-            Long epoch = System.currentTimeMillis()/1000;
+            Long epoch = System.currentTimeMillis();
 
             try {
-                json.put("msgtype", "wifidata");
+                json.put("msgtype", "data");
                 json.put("uuid", uuid);
                 json.put("epoch", epoch);
-                json.put("data", str);
+                json.put("data", payload);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -200,7 +201,8 @@ public class BearLocSensor {
                 MqttMessage message = new MqttMessage();
                 message.setPayload(json.toString().getBytes());
                 IMqttDeliveryToken token = mMQTTClient.publish(mSensorTopic, message);
-                token.waitForCompletion();
+//                token.waitForCompletion();
+                Log.d("BearLocSensor", mSensorTopic + " published");
             } catch (MqttException e) {
                 e.printStackTrace();
             }
@@ -236,16 +238,16 @@ public class BearLocSensor {
 
         mMQTTClient = new MqttAndroidClient(mContext, mqttServerURI, MqttClient.generateClientId());
         mMQTTClient.setCallback(mMqttCallback);
-//        new ConnectTask().execute();
+        new ConnectTask().execute();
 //        AsyncTask.execute(new ConnectRunnable());
-        mNetworkThreadPool.execute(new ConnectRunnable());
+//        mNetworkThreadPool.execute(new ConnectRunnable());
 
         mDriver.setListener(mListener);
     }
 
     public boolean start() {
-        mNetworkThreadPool.execute(new StartRunnable());
-        // new StartTask().execute();
+//        mNetworkThreadPool.execute(new StartRunnable());
+        new StartTask().execute();
         return true;
     }
 
@@ -256,6 +258,6 @@ public class BearLocSensor {
     public void destroy() {
         mMQTTClient.unregisterResources();
         mMQTTClient.close();
-        mNetworkThreadPool.shutdownNow();
+//        mNetworkThreadPool.shutdownNow();
     }
 }
